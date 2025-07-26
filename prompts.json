@@ -1,0 +1,140 @@
+{
+  "prompts": {
+    "84d285f4-cc5c-42d2-89fc-f5aa0fd534d7": {
+      "id": "84d285f4-cc5c-42d2-89fc-f5aa0fd534d7",
+      "name": "Test Prompt",
+      "text": "Hello world",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.478542",
+      "modified_at": "2025-07-25T21:34:06.478542"
+    },
+    "00dbba03-0975-4ec4-af4b-6ec137eb94a8": {
+      "id": "00dbba03-0975-4ec4-af4b-6ec137eb94a8",
+      "name": "Test Prompt",
+      "text": "Hello world",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.479760",
+      "modified_at": "2025-07-25T21:34:06.479760"
+    },
+    "d06ed1cf-f73d-4506-8f48-34d25e2da895": {
+      "id": "d06ed1cf-f73d-4506-8f48-34d25e2da895",
+      "name": "Test Prompt",
+      "text": "Hello world",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.480790",
+      "modified_at": "2025-07-25T21:34:06.480790"
+    },
+    "8eb8795e-d9af-4301-be5c-edf4af0c2647": {
+      "id": "8eb8795e-d9af-4301-be5c-edf4af0c2647",
+      "name": "Test Prompt",
+      "text": "Hello world",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.482438",
+      "modified_at": "2025-07-25T21:34:06.482438"
+    },
+    "11d2d6f0-d4bc-4685-ab74-8cd0365787c2": {
+      "id": "11d2d6f0-d4bc-4685-ab74-8cd0365787c2",
+      "name": "Prompt 1",
+      "text": "Text 1",
+      "category": "cat1",
+      "created_at": "2025-07-25T21:34:06.532227",
+      "modified_at": "2025-07-25T21:34:06.532227"
+    },
+    "67a536ac-9a22-4369-a51e-cfa55a6ab610": {
+      "id": "67a536ac-9a22-4369-a51e-cfa55a6ab610",
+      "name": "Prompt 2",
+      "text": "Text 2",
+      "category": "cat2",
+      "created_at": "2025-07-25T21:34:06.533319",
+      "modified_at": "2025-07-25T21:34:06.533319"
+    },
+    "8e026151-e34a-4820-ab21-096787999478": {
+      "id": "8e026151-e34a-4820-ab21-096787999478",
+      "name": "Prompt 1",
+      "text": "Text 1",
+      "category": "cat1",
+      "created_at": "2025-07-25T21:34:06.558382",
+      "modified_at": "2025-07-25T21:34:06.558382"
+    },
+    "6ee91224-3df3-4677-81d7-12b9ac2720a4": {
+      "id": "6ee91224-3df3-4677-81d7-12b9ac2720a4",
+      "name": "Prompt 2",
+      "text": "Text 2",
+      "category": "cat1",
+      "created_at": "2025-07-25T21:34:06.558806",
+      "modified_at": "2025-07-25T21:34:06.558806"
+    },
+    "fec7a0ea-48dd-4c7d-8c23-0826632467d4": {
+      "id": "fec7a0ea-48dd-4c7d-8c23-0826632467d4",
+      "name": "Prompt 3",
+      "text": "Text 3",
+      "category": "cat2",
+      "created_at": "2025-07-25T21:34:06.559434",
+      "modified_at": "2025-07-25T21:34:06.559434"
+    },
+    "5fe4967c-000c-4f06-be32-da4da73e5695": {
+      "id": "5fe4967c-000c-4f06-be32-da4da73e5695",
+      "name": "New Name",
+      "text": "New Text",
+      "category": "new_cat",
+      "created_at": "2025-07-25T21:34:06.594125",
+      "modified_at": "2025-07-25T21:34:06.594609"
+    },
+    "53b41afb-160c-4767-a547-73af91c7874e": {
+      "id": "53b41afb-160c-4767-a547-73af91c7874e",
+      "name": "Original",
+      "text": "Updated Text",
+      "category": "original",
+      "created_at": "2025-07-25T21:34:06.598442",
+      "modified_at": "2025-07-25T21:34:06.599171"
+    },
+    "ad66d3e6-f4de-4cf6-8ff5-2e0a9308a85b": {
+      "id": "ad66d3e6-f4de-4cf6-8ff5-2e0a9308a85b",
+      "name": "Hello World",
+      "text": "Some text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.605887",
+      "modified_at": "2025-07-25T21:34:06.605887"
+    },
+    "effa8215-29c9-4058-b7d5-0a2869a13cfd": {
+      "id": "effa8215-29c9-4058-b7d5-0a2869a13cfd",
+      "name": "Goodbye",
+      "text": "Other text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.606610",
+      "modified_at": "2025-07-25T21:34:06.606610"
+    },
+    "0a4e3259-d2cd-47f7-80c9-27c968c2e4b4": {
+      "id": "0a4e3259-d2cd-47f7-80c9-27c968c2e4b4",
+      "name": "Prompt 1",
+      "text": "Hello world text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.621802",
+      "modified_at": "2025-07-25T21:34:06.621802"
+    },
+    "6395bfb9-e814-423c-8d29-8d9646a942b8": {
+      "id": "6395bfb9-e814-423c-8d29-8d9646a942b8",
+      "name": "Prompt 2",
+      "text": "Goodbye text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.622610",
+      "modified_at": "2025-07-25T21:34:06.622610"
+    },
+    "511c6d63-f0f8-4e09-b567-4dd132348bab": {
+      "id": "511c6d63-f0f8-4e09-b567-4dd132348bab",
+      "name": "HELLO WORLD",
+      "text": "Some text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.638466",
+      "modified_at": "2025-07-25T21:34:06.638466"
+    },
+    "e38710b1-994c-4182-89f6-4bc41355f81f": {
+      "id": "e38710b1-994c-4182-89f6-4bc41355f81f",
+      "name": "Test Prompt",
+      "text": "Some text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.651395",
+      "modified_at": "2025-07-25T21:34:06.651395"
+    }
+  }
+}

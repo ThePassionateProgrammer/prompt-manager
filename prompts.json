@@ -1,13 +1,5 @@
 {
   "prompts": {
-    "84d285f4-cc5c-42d2-89fc-f5aa0fd534d7": {
-      "id": "84d285f4-cc5c-42d2-89fc-f5aa0fd534d7",
-      "name": "Test Prompt",
-      "text": "Hello world",
-      "category": "test",
-      "created_at": "2025-07-25T21:34:06.478542",
-      "modified_at": "2025-07-25T21:34:06.478542"
-    },
     "00dbba03-0975-4ec4-af4b-6ec137eb94a8": {
       "id": "00dbba03-0975-4ec4-af4b-6ec137eb94a8",
       "name": "Test Prompt",
@@ -30,7 +22,7 @@
       "text": "Hello world",
       "category": "test",
       "created_at": "2025-07-25T21:34:06.482438",
-      "modified_at": "2025-07-25T21:34:06.482438"
+      "modified_at": "2025-07-26T15:46:25.048998"
     },
     "11d2d6f0-d4bc-4685-ab74-8cd0365787c2": {
       "id": "11d2d6f0-d4bc-4685-ab74-8cd0365787c2",
@@ -135,6 +127,22 @@
       "category": "test",
       "created_at": "2025-07-25T21:34:06.651395",
       "modified_at": "2025-07-25T21:34:06.651395"
+    },
+    "6046ca2c-e87c-48aa-a1a2-83a3d58da796": {
+      "id": "6046ca2c-e87c-48aa-a1a2-83a3d58da796",
+      "name": "Test Prompt",
+      "text": "This is a test prompt updated",
+      "category": "general",
+      "created_at": "2025-07-26T12:02:04.836348",
+      "modified_at": "2025-07-26T12:24:10.992241"
+    },
+    "3cd401c3-fafd-474d-a12e-00afc6ec515c": {
+      "id": "3cd401c3-fafd-474d-a12e-00afc6ec515c",
+      "name": "Hello",
+      "text": "This is my first prompt",
+      "category": "error",
+      "created_at": "2025-07-26T12:23:47.539238",
+      "modified_at": "2025-07-26T12:23:47.539238"
     }
   }
 }

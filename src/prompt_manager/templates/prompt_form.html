@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if prompt and prompt.id %}Edit Prompt{% else %}New Prompt{% endif %} - Prompt Manager
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-{% if prompt and prompt.id %}edit{% else %}plus{% endif %} me-2"></i>
+                    {% if prompt and prompt.id %}Edit Prompt{% else %}Create New Prompt{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="prompt-form">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Prompt Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="name" 
+                                       name="name" 
+                                       value="{{ prompt.name if prompt else '' }}"
+                                       placeholder="Enter a descriptive name for your prompt"
+                                       required
+                                       maxlength="100">
+                                <div class="form-text">Choose a clear, descriptive name for your prompt.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="category" class="form-label">
+                                    <i class="fas fa-folder me-1"></i>Category
+                                </label>
+                                <select class="form-select" id="category" name="category">
+                                    <option value="general" {% if not prompt or prompt.category == 'general' %}selected{% endif %}>General</option>
+                                    {% for category in categories %}
+                                        {% if category != 'general' %}
+                                            <option value="{{ category }}" {% if prompt and prompt.category == category %}selected{% endif %}>
+                                                {{ category }}
+                                            </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <option value="new-category">+ Add New Category</option>
+                                </select>
+                                <div class="form-text">Organize your prompts with categories.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="text" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Prompt Text <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" 
+                                  id="text" 
+                                  name="text" 
+                                  rows="8"
+                                  placeholder="Enter your prompt text here..."
+                                  required
+                                  maxlength="10000">{{ prompt.text if prompt else '' }}</textarea>
+                        <div class="form-text">
+                            Write your prompt text. You can include placeholders like {variable} for dynamic content.
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancel
+                            </a>
+                            {% if prompt and prompt.id %}
+                                <a href="{{ url_for('view_prompt', prompt_id=prompt.id) }}" class="btn btn-outline-primary ms-2">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if prompt and prompt.id %}Update Prompt{% else %}Create Prompt{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Prompt Tips -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Prompt Writing Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-check-circle text-success me-1"></i>Do:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-arrow-right text-muted me-1"></i>Be specific and clear</li>
+                            <li><i class="fas fa-arrow-right text-muted me-1"></i>Include context and examples</li>
+                            <li><i class="fas fa-arrow-right text-muted me-1"></i>Use placeholders for variables</li>
+                            <li><i class="fas fa-arrow-right text-muted me-1"></i>Test your prompts thoroughly</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-times-circle text-danger me-1"></i>Don't:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-arrow-right text-muted me-1"></i>Be too vague or ambiguous</li>
+                            <li><i class="fas fa-arrow-right text-muted me-1"></i>Forget to include constraints</li>
+                            <li><i class="fas fa-arrow-right text-muted me-1"></i>Make prompts too long or complex</li>
+                            <li><i class="fas fa-arrow-right text-muted me-1"></i>Ignore output format requirements</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle new category option
+document.getElementById('category').addEventListener('change', function() {
+    if (this.value === 'new-category') {
+        const newCategory = prompt('Enter the name for your new category:');
+        if (newCategory && newCategory.trim()) {
+            // Create a new option
+            const option = document.createElement('option');
+            option.value = newCategory.trim();
+            option.textContent = newCategory.trim();
+            option.selected = true;
+            
+            // Insert before the "Add New Category" option
+            this.insertBefore(option, this.lastElementChild);
+        } else {
+            // Reset to general if no category entered
+            this.value = 'general';
+        }
+    }
+});
+
+// Form validation
+document.getElementById('prompt-form').addEventListener('submit', function(e) {
+    const name = document.getElementById('name').value.trim();
+    const text = document.getElementById('text').value.trim();
+    
+    if (!name) {
+        e.preventDefault();
+        alert('Please enter a prompt name.');
+        document.getElementById('name').focus();
+        return;
+    }
+    
+    if (!text) {
+        e.preventDefault();
+        alert('Please enter prompt text.');
+        document.getElementById('text').focus();
+        return;
+    }
+    
+    if (name.length > 100) {
+        e.preventDefault();
+        alert('Prompt name cannot exceed 100 characters.');
+        document.getElementById('name').focus();
+        return;
+    }
+    
+    if (text.length > 10000) {
+        e.preventDefault();
+        alert('Prompt text cannot exceed 10,000 characters.');
+        document.getElementById('text').focus();
+        return;
+    }
+});
+
+// Character counter for textarea
+document.getElementById('text').addEventListener('input', function() {
+    const maxLength = 10000;
+    const currentLength = this.value.length;
+    const remaining = maxLength - currentLength;
+    
+    // Update character count display
+    let counter = document.getElementById('char-counter');
+    if (!counter) {
+        counter = document.createElement('div');
+        counter.id = 'char-counter';
+        counter.className = 'form-text text-end';
+        this.parentNode.appendChild(counter);
+    }
+    
+    counter.textContent = `${currentLength}/${maxLength} characters`;
+    
+    if (remaining < 100) {
+        counter.className = 'form-text text-end text-warning';
+    } else {
+        counter.className = 'form-text text-end';
+    }
+    
+    if (remaining < 0) {
+        counter.className = 'form-text text-end text-danger';
+    }
+});
+</script>
+{% endblock %} 

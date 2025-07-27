@@ -2,10 +2,15 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from typing import Dict, Any, Optional
 import json
+import os
 
 from .prompt_manager import PromptManager
 from .business.prompt_validator import PromptValidator, ValidationError
 from .business.search_service import SearchService
+from .business.llm_provider import OpenAIProvider
+from .business.key_loader import load_openai_api_key
+
+ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
 
 
 class PromptManagerAPI:
@@ -201,6 +206,46 @@ class PromptManagerAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
         
+        @self.app.route('/api/llm/chat', methods=['POST'])
+        def llm_chat():
+            try:
+                data = request.get_json()
+                if not data or 'prompt' not in data:
+                    return jsonify({'error': 'Missing prompt'}), 400
+                prompt = data['prompt']
+                try:
+                    api_key = load_openai_api_key()
+                except ValueError as e:
+                    return jsonify({'error': str(e)}), 400
+                provider = OpenAIProvider(api_key=api_key)
+                try:
+                    response = provider.send_prompt(prompt)
+                except Exception as e:
+                    return jsonify({'error': str(e)}), 500
+                return jsonify({'response': response}), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/llm/config', methods=['GET'])
+        def get_llm_config():
+            provider = 'openai'  # Only OpenAI for now
+            key = os.getenv('OPENAI_API_KEY')
+            has_key = bool(key)
+            return jsonify({'provider': provider, 'has_key': has_key}), 200
+
+        @self.app.route('/api/llm/config', methods=['POST'])
+        def set_llm_config():
+            data = request.get_json()
+            provider = data.get('provider')
+            api_key = data.get('api_key')
+            if provider != 'openai':
+                return jsonify({'error': 'Only OpenAI is supported for now'}), 400
+            if not api_key:
+                return jsonify({'error': 'api_key is required'}), 400
+            # Write to .env (overwrite or add)
+            _set_env_key('OPENAI_API_KEY', api_key, ENV_PATH)
+            return jsonify({'success': True}), 200
+        
         @self.app.route('/api/health', methods=['GET'])
         def health_check():
             """Health check endpoint."""
@@ -209,3 +254,21 @@ class PromptManagerAPI:
     def run(self, host: str = '0.0.0.0', port: int = 5000, debug: bool = False):
         """Run the API server."""
         self.app.run(host=host, port=port, debug=debug) 
+
+
+def _set_env_key(key, value, env_path):
+    """Set or update a key in the .env file."""
+    lines = []
+    if os.path.exists(env_path):
+        with open(env_path) as f:
+            lines = f.readlines()
+    found = False
+    for i, line in enumerate(lines):
+        if line.startswith(f'{key}='):
+            lines[i] = f'{key}={value}\n'
+            found = True
+            break
+    if not found:
+        lines.append(f'{key}={value}\n')
+    with open(env_path, 'w') as f:
+        f.writelines(lines) 

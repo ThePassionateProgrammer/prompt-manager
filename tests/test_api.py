@@ -5,6 +5,7 @@ import json
 import tempfile
 import os
 from src.prompt_manager.api import PromptManagerAPI
+from unittest.mock import patch, MagicMock
 
 
 class TestPromptManagerAPI:
@@ -358,3 +359,66 @@ class TestPromptManagerAPI:
         data = json.loads(response.data)
         assert len(data) == 1
         assert data[0]['name'] == 'Python Tutorial' 
+
+def test_llm_chat_success(client):
+    """Test /api/llm/chat returns a response from the LLM provider."""
+    with patch('prompt_manager.api.OpenAIProvider') as mock_provider, \
+         patch('prompt_manager.api.load_openai_api_key') as mock_key_loader:
+        mock_key_loader.return_value = 'sk-test'
+        mock_instance = mock_provider.return_value
+        mock_instance.send_prompt.return_value = 'LLM response'
+        response = client.post('/api/llm/chat', json={"prompt": "Hello"})
+        assert response.status_code == 200
+        assert response.json == {"response": "LLM response"}
+
+def test_llm_chat_missing_key(client):
+    """Test /api/llm/chat returns error if key is missing."""
+    with patch('prompt_manager.api.load_openai_api_key') as mock_key_loader:
+        mock_key_loader.side_effect = ValueError('No key')
+        response = client.post('/api/llm/chat', json={"prompt": "Hello"})
+        assert response.status_code == 400
+        assert 'error' in response.json
+
+def test_llm_chat_provider_error(client):
+    """Test /api/llm/chat returns error if provider fails."""
+    with patch('prompt_manager.api.OpenAIProvider') as mock_provider, \
+         patch('prompt_manager.api.load_openai_api_key') as mock_key_loader:
+        mock_key_loader.return_value = 'sk-test'
+        mock_instance = mock_provider.return_value
+        mock_instance.send_prompt.side_effect = Exception('Provider error')
+        response = client.post('/api/llm/chat', json={"prompt": "Hello"})
+        assert response.status_code == 500
+        assert 'error' in response.json 
+
+def test_get_llm_config_key(client, monkeypatch):
+    """Test GET /api/llm/config returns the current provider and key status."""
+    monkeypatch.setenv('OPENAI_API_KEY', 'sk-test')
+    response = client.get('/api/llm/config')
+    assert response.status_code == 200
+    assert response.json['provider'] == 'openai'
+    assert response.json['has_key'] is True
+
+def test_get_llm_config_key_missing(client, monkeypatch):
+    """Test GET /api/llm/config returns has_key False if key is missing."""
+    monkeypatch.delenv('OPENAI_API_KEY', raising=False)
+    response = client.get('/api/llm/config')
+    assert response.status_code == 200
+    assert response.json['has_key'] is False
+
+def test_set_llm_config_key(client, tmp_path):
+    """Test POST /api/llm/config sets the OpenAI API key in .env."""
+    env_path = tmp_path / '.env'
+    with patch('prompt_manager.api.ENV_PATH', str(env_path)):
+        response = client.post('/api/llm/config', json={"provider": "openai", "api_key": "sk-newkey"})
+        assert response.status_code == 200
+        assert response.json['success'] is True
+        # Check that the key was written
+        with open(env_path) as f:
+            content = f.read()
+        assert 'OPENAI_API_KEY=sk-newkey' in content
+
+def test_set_llm_config_key_missing_value(client):
+    """Test POST /api/llm/config returns error if api_key is missing."""
+    response = client.post('/api/llm/config', json={"provider": "openai"})
+    assert response.status_code == 400
+    assert 'error' in response.json 

@@ -24,48 +24,62 @@
     const history = getHistory();
     const chatDiv = document.getElementById('chat-history');
     chatDiv.innerHTML = '';
-    for (const msg of history) {
-      const msgDiv = document.createElement('div');
-      msgDiv.className = 'mb-2';
-      if (msg.role === 'user') {
-        msgDiv.innerHTML = `<div class='fw-bold text-primary'>You:</div><div>${msg.content}</div>`;
-      } else {
-        msgDiv.innerHTML = `<div class='fw-bold text-success'>LLM:</div><div>${msg.content}</div>`;
-      }
-      chatDiv.appendChild(msgDiv);
-    }
+    history.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = msg.role === 'user' ? 'text-end mb-2' : 'text-start mb-2';
+      div.innerHTML = `<span class="badge bg-${msg.role === 'user' ? 'primary' : 'secondary'}">${msg.role === 'user' ? 'You' : 'LLM'}</span> <span>${msg.text}</span>`;
+      chatDiv.appendChild(div);
+    });
     chatDiv.scrollTop = chatDiv.scrollHeight;
   }
-  renderHistory();
-
-  document.getElementById('chat-form').onsubmit = async function(e) {
+  function sendMessage(text) {
+    const history = getHistory();
+    history.push({role: 'user', text});
+    setHistory(history);
+    renderHistory();
+    fetch('/api/llm/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({prompt: text})
+    })
+    .then(r => r.json())
+    .then(data => {
+      const history = getHistory();
+      history.push({role: 'llm', text: data.response || data.error || 'Error'});
+      setHistory(history);
+      renderHistory();
+    })
+    .catch(() => {
+      const history = getHistory();
+      history.push({role: 'llm', text: 'Error contacting LLM API'});
+      setHistory(history);
+      renderHistory();
+    });
+  }
+  document.getElementById('chat-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
-    if (!text) return;
-    let history = getHistory();
-    history.push({ role: 'user', content: text });
-    setHistory(history);
-    renderHistory();
-    input.value = '';
-    // Send to backend
-    const resp = await fetch('/api/llm/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: text })
-    });
-    const data = await resp.json();
-    if (resp.ok && data.response) {
-      history = getHistory();
-      history.push({ role: 'llm', content: data.response });
-      setHistory(history);
-      renderHistory();
-    } else {
-      history = getHistory();
-      history.push({ role: 'llm', content: '[Error: ' + (data.error || 'Unknown error') + ']' });
-      setHistory(history);
-      renderHistory();
+    if (text) {
+      sendMessage(text);
+      input.value = '';
     }
-  };
+  });
+  // On page load, check for ?inject=...
+  function getQueryParam(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+  }
+  window.addEventListener('DOMContentLoaded', function() {
+    renderHistory();
+    const inject = getQueryParam('inject');
+    if (inject) {
+      const input = document.getElementById('chat-input');
+      input.value = inject;
+      // Optionally auto-send the injected prompt:
+      // sendMessage(inject);
+      // input.value = '';
+    }
+  });
 </script>
 {% endblock %} 

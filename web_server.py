@@ -13,7 +13,7 @@ def main():
     """Start the web server."""
     print("Starting Prompt Manager Web Server...")
     print("Web interface will be available at: http://localhost:8000")
-    print("Make sure the API server is running on http://localhost:5000")
+    print("Make sure the API server is running on http://localhost:5002")
     print()
     print("Features:")
     print("  - Browse and search prompts")

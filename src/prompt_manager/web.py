@@ -10,7 +10,7 @@ from .api import PromptManagerAPI
 class PromptManagerWeb:
     """Web interface for prompt manager."""
     
-    def __init__(self, api_host: str = 'localhost', api_port: int = 5000):
+    def __init__(self, api_host: str = 'localhost', api_port: int = 5002):
         self.api_base_url = f"http://{api_host}:{api_port}/api"
         self.app = Flask(__name__)
         self.app.secret_key = 'prompt-manager-secret-key'  # For flash messages
@@ -192,14 +192,47 @@ class PromptManagerWeb:
         @self.app.route('/setup', methods=['GET'])
         def setup():
             # Fetch provider/key status from backend API
-            import requests
-            try:
-                resp = requests.get('http://localhost:5001/api/llm/config')
-                data = resp.json()
-                has_key = data.get('has_key', False)
-            except Exception:
-                has_key = False
+            config = self._api_request('GET', '/llm/config')
+            has_key = config.get('has_key', False) if 'error' not in config else False
             return render_template('setup.html', has_key=has_key, message=None, message_type=None)
+        
+        @self.app.route('/api/llm/config', methods=['POST'])
+        def save_llm_config():
+            """Save LLM configuration."""
+            data = request.get_json()
+            provider = data.get('provider')
+            api_key = data.get('api_key')
+            
+            if not provider or not api_key:
+                return jsonify({'error': 'Provider and API key are required'}), 400
+            
+            result = self._api_request('POST', '/llm/config', {
+                'provider': provider,
+                'api_key': api_key
+            })
+            
+            if 'error' in result:
+                return jsonify({'error': result['error']}), 400
+            else:
+                return jsonify({'success': True}), 200
+        
+        @self.app.route('/api/llm/chat', methods=['POST'])
+        def llm_chat():
+            """Send a message to the LLM."""
+            data = request.get_json()
+            prompt = data.get('prompt')
+            
+            if not prompt:
+                return jsonify({'error': 'Prompt is required'}), 400
+            
+            result = self._api_request('POST', '/llm/chat', {
+                'prompt': prompt
+            })
+            
+            if 'error' in result:
+                return jsonify({'error': result['error']}), 400
+            else:
+                return jsonify({'response': result.get('response', '')}), 200
     
     def run(self, host: str = '0.0.0.0', port: int = 8000, debug: bool = False):
         """Run the web server."""

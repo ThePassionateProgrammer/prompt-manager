@@ -233,6 +233,24 @@ class PromptManagerWeb:
                 return jsonify({'error': result['error']}), 400
             else:
                 return jsonify({'response': result.get('response', '')}), 200
+        
+        @self.app.route('/builder', methods=['GET'])
+        def prompt_builder():
+            """Show the prompt builder interface."""
+            return render_template('prompt_builder.html')
+        
+        @self.app.route('/api/prompt-builder/pieces', methods=['GET'])
+        def get_prompt_pieces():
+            """Get prompt pieces for the builder."""
+            result = self._api_request('GET', '/prompt-builder/pieces')
+            return jsonify(result)
+        
+        @self.app.route('/api/prompt-builder/build', methods=['POST'])
+        def build_prompt():
+            """Build a prompt from pieces."""
+            data = request.get_json()
+            result = self._api_request('POST', '/prompt-builder/build', data)
+            return jsonify(result)
     
     def run(self, host: str = '0.0.0.0', port: int = 8000, debug: bool = False):
         """Run the web server."""

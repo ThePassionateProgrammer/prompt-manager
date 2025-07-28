@@ -9,8 +9,17 @@ from .business.prompt_validator import PromptValidator, ValidationError
 from .business.search_service import SearchService
 from .business.llm_provider import OpenAIProvider
 from .business.key_loader import load_openai_api_key
+from .business.key_loader import save_openai_api_key
+from .business.prompt_builder import PromptBuilder
+import uuid
 
 ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
+
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        return super().default(obj)
 
 
 class PromptManagerAPI:
@@ -21,6 +30,9 @@ class PromptManagerAPI:
         self.validator = PromptValidator()
         self.search_service = SearchService()
         self.app = Flask(__name__)
+        self.app.json_encoder = UUIDEncoder
+        self.prompt_manager = PromptManager()
+        self.prompt_builder = PromptBuilder()
         CORS(self.app)
         self._setup_routes()
     
@@ -214,7 +226,7 @@ class PromptManagerAPI:
                     return jsonify({'error': 'Missing prompt'}), 400
                 prompt = data['prompt']
                 try:
-                    api_key = load_openai_api_key()
+                    api_key = load_openai_api_key(env_path=ENV_PATH)
                 except ValueError as e:
                     return jsonify({'error': str(e)}), 400
                 provider = OpenAIProvider(api_key=api_key)
@@ -245,6 +257,45 @@ class PromptManagerAPI:
             # Write to .env (overwrite or add)
             _set_env_key('OPENAI_API_KEY', api_key, ENV_PATH)
             return jsonify({'success': True}), 200
+        
+        @self.app.route('/api/prompt-builder/pieces', methods=['GET'])
+        def get_prompt_pieces():
+            """Get all available prompt pieces for the builder."""
+            try:
+                return jsonify({
+                    'roles': self.prompt_builder.get_available_roles(),
+                    'voices': self.prompt_builder.get_available_voices(),
+                    'contexts': self.prompt_builder.get_available_contexts(),
+                    'audiences': self.prompt_builder.get_available_audiences(),
+                    'formats': self.prompt_builder.get_available_formats()
+                }), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/api/prompt-builder/build', methods=['POST'])
+        def build_prompt():
+            """Build a prompt from selected pieces."""
+            try:
+                data = request.get_json()
+                if not data:
+                    return jsonify({'error': 'No data provided'}), 400
+                
+                prompt = self.prompt_builder.build_prompt(
+                    role_category=data.get('role_category'),
+                    role=data.get('role'),
+                    voice=data.get('voice'),
+                    context_category=data.get('context_category'),
+                    context=data.get('context'),
+                    audience=data.get('audience'),
+                    format_type=data.get('format_type'),
+                    custom_text=data.get('custom_text')
+                )
+                
+                return jsonify({'prompt': prompt}), 200
+            except ValueError as e:
+                return jsonify({'error': str(e)}), 400
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
         
         @self.app.route('/api/health', methods=['GET'])
         def health_check():

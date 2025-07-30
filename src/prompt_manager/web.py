@@ -84,12 +84,14 @@ class PromptManagerWeb:
                 text = request.form.get('text', '').strip()
                 category = request.form.get('category', 'general').strip()
                 
+                # Client-side validation
                 if not name or not text:
                     flash('Name and text are required', 'error')
                     return render_template('prompt_form.html', 
                                         prompt=None, 
                                         categories=self._api_request('GET', '/categories'))
                 
+                # Server-side validation via API
                 result = self._api_request('POST', '/prompts', {
                     'name': name,
                     'text': text,
@@ -97,7 +99,11 @@ class PromptManagerWeb:
                 })
                 
                 if 'error' in result:
-                    flash(f'Error creating prompt: {result["error"]}', 'error')
+                    # Handle validation errors from API
+                    if 'Validation failed' in result.get('error', ''):
+                        flash('Name and text are required', 'error')
+                    else:
+                        flash(f'Error creating prompt: {result["error"]}', 'error')
                     return render_template('prompt_form.html', 
                                         prompt={'name': name, 'text': text, 'category': category},
                                         categories=self._api_request('GET', '/categories'))

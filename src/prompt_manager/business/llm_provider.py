@@ -8,13 +8,30 @@ class LLMProvider(ABC):
         pass
 
 class OpenAIProvider(LLMProvider):
-    def __init__(self, api_key: Optional[str]):
-        if not api_key:
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key
+        self.client = None
+        self._initialized = False
+    
+    def _initialize_client(self):
+        """Lazy initialization of the OpenAI client."""
+        if self._initialized:
+            return
+        
+        if not self.api_key:
             raise ValueError("OpenAI API key is required")
-        self.client = openai.OpenAI(api_key=api_key)
+        
+        try:
+            self.client = openai.OpenAI(api_key=self.api_key)
+            self._initialized = True
+        except Exception as e:
+            raise RuntimeError(f"Failed to initialize OpenAI client: {e}")
 
     def send_prompt(self, prompt: str, **kwargs) -> str:
+        """Send a prompt to the LLM."""
         try:
+            self._initialize_client()
+            
             response = self.client.chat.completions.create(
                 model=kwargs.get('model', 'gpt-3.5-turbo'),
                 messages=[{"role": "user", "content": prompt}],

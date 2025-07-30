@@ -138,25 +138,23 @@ class TestPromptManagerWeb:
         assert response.status_code == 302  # Redirect
         assert 'Location: /' in str(response.headers)
     
-    @patch('src.prompt_manager.web.requests.post')
-    @patch('src.prompt_manager.web.requests.get')
-    def test_new_prompt_page_post_validation_error(self, mock_get, mock_post):
+    def test_new_prompt_page_post_validation_error(self):
         """Test new prompt page POST request with validation error."""
-        # Mock API responses
-        mock_post.return_value = MagicMock(status_code=400, json=lambda: {
-            'error': 'Validation failed',
-            'errors': [{'field': 'name', 'message': 'Name cannot be empty'}]
-        })
-        mock_get.return_value = MagicMock(status_code=200, json=lambda: ['general'])
-        
-        response = self.client.post('/prompt/new', data={
-            'name': '',
-            'text': 'Some text',
-            'category': 'general'
-        })
-        
-        assert response.status_code == 200  # Stay on form page
-        assert b'Name and text are required' in response.data
+        # Mock API responses on the specific instance
+        with patch.object(self.web, '_api_request') as mock_api_request:
+            mock_api_request.side_effect = [
+                {'error': 'Validation failed'},  # POST /prompts
+                ['general']  # GET /categories
+            ]
+            
+            response = self.client.post('/prompt/new', data={
+                'name': 'Valid Name',  # Passes client-side validation
+                'text': 'Some text',
+                'category': 'general'
+            })
+            
+            assert response.status_code == 200  # Stay on form page
+            assert b'Name and text are required' in response.data
     
     @patch('src.prompt_manager.web.requests.get')
     def test_view_prompt_page_success(self, mock_get):
@@ -285,5 +283,5 @@ class TestPromptManagerWeb:
     def test_web_interface_initialization(self):
         """Test web interface initialization."""
         web = PromptManagerWeb()
-        assert web.api_base_url == 'http://localhost:5000/api'
+        assert web.api_base_url == 'http://localhost:5002/api'
         assert web.app is not None 

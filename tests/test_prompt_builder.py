@@ -60,14 +60,16 @@ class TestPromptBuilder:
         builder = PromptBuilder()
         
         # When: Building a prompt with just a role
-        prompt = builder.build_prompt(
+        result = builder.build_prompt(
             role_category="technical",
             role="senior_developer"
         )
         
         # Then: Should return the role text
-        assert "senior software developer" in prompt
-        assert "10+ years of experience" in prompt
+        assert "senior software developer" in result["prompt"]
+        assert "10+ years of experience" in result["prompt"]
+        assert result["model"] == "gpt-4-turbo"
+        assert result["temperature"] == 0.7
     
     def test_can_build_prompt_with_multiple_pieces(self):
         """Test that a prompt can be built with multiple pieces."""
@@ -75,7 +77,7 @@ class TestPromptBuilder:
         builder = PromptBuilder()
         
         # When: Building a prompt with multiple pieces
-        prompt = builder.build_prompt(
+        result = builder.build_prompt(
             role_category="technical",
             role="code_reviewer",
             voice="technical",
@@ -84,10 +86,11 @@ class TestPromptBuilder:
         )
         
         # Then: Should combine all pieces
-        assert "expert code reviewer" in prompt
-        assert "technical terminology" in prompt
-        assert "reviewing code" in prompt
-        assert "best practices" in prompt
+        assert "expert code reviewer" in result["prompt"]
+        assert "technical terminology" in result["prompt"]
+        assert "reviewing code" in result["prompt"]
+        assert "model" in result
+        assert "temperature" in result
     
     def test_can_build_prompt_with_custom_text(self):
         """Test that a prompt can be built with custom text."""
@@ -95,15 +98,17 @@ class TestPromptBuilder:
         builder = PromptBuilder()
         
         # When: Building a prompt with custom text
-        prompt = builder.build_prompt(
+        result = builder.build_prompt(
             role_category="technical",
             role="senior_developer",
             custom_text="Please review this Python code for best practices."
         )
         
         # Then: Should include both role and custom text
-        assert "senior software developer" in prompt
-        assert "Please review this Python code for best practices." in prompt
+        assert "senior software developer" in result["prompt"]
+        assert "Please review this Python code for best practices." in result["prompt"]
+        assert "model" in result
+        assert "temperature" in result
     
     def test_build_prompt_returns_empty_string_when_no_pieces(self):
         """Test that build_prompt returns empty string when no pieces provided."""
@@ -111,10 +116,12 @@ class TestPromptBuilder:
         builder = PromptBuilder()
         
         # When: Building a prompt with no pieces
-        prompt = builder.build_prompt()
+        result = builder.build_prompt()
         
-        # Then: Should return empty string
-        assert prompt == ""
+        # Then: Should return empty string in prompt field
+        assert result["prompt"] == ""
+        assert "model" in result
+        assert "temperature" in result
     
     def test_raises_error_for_invalid_role_category(self):
         """Test that error is raised for invalid role category."""

@@ -64,5 +64,11 @@
     "conversational": "Format the response as a natural conversation with a friendly tone",
     "technical": "Format the response with code examples, technical details, and specifications",
     "executive": "Format the response with high-level summaries and key takeaways"
+  },
+  "models": {
+    "gpt-4": "GPT-4 - Most capable model for complex tasks",
+    "gpt-4-turbo": "GPT-4 Turbo - Fast and efficient for most tasks",
+    "gpt-3.5-turbo": "GPT-3.5 Turbo - Good balance of speed and capability",
+    "gpt-4o": "GPT-4o - Latest model with improved performance"
   }
 } 

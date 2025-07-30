@@ -26,14 +26,20 @@ class PromptManagerAPI:
     """REST API for prompt manager operations."""
     
     def __init__(self, storage_file: str = "prompts.json"):
+        # Single PromptManager instance
         self.manager = PromptManager(storage_file)
+        
+        # Initialize business logic components
         self.validator = PromptValidator()
         self.search_service = SearchService()
+        self.prompt_builder = PromptBuilder()
+        
+        # Initialize Flask app
         self.app = Flask(__name__)
         self.app.json_encoder = UUIDEncoder
-        self.prompt_manager = PromptManager()
-        self.prompt_builder = PromptBuilder()
         CORS(self.app)
+        
+        # Setup routes
         self._setup_routes()
     
     def _setup_routes(self):
@@ -267,7 +273,8 @@ class PromptManagerAPI:
                     'voices': self.prompt_builder.get_available_voices(),
                     'contexts': self.prompt_builder.get_available_contexts(),
                     'audiences': self.prompt_builder.get_available_audiences(),
-                    'formats': self.prompt_builder.get_available_formats()
+                    'formats': self.prompt_builder.get_available_formats(),
+                    'models': self.prompt_builder.get_available_models()
                 }), 200
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
@@ -280,7 +287,7 @@ class PromptManagerAPI:
                 if not data:
                     return jsonify({'error': 'No data provided'}), 400
                 
-                prompt = self.prompt_builder.build_prompt(
+                result = self.prompt_builder.build_prompt(
                     role_category=data.get('role_category'),
                     role=data.get('role'),
                     voice=data.get('voice'),
@@ -288,10 +295,14 @@ class PromptManagerAPI:
                     context=data.get('context'),
                     audience=data.get('audience'),
                     format_type=data.get('format_type'),
-                    custom_text=data.get('custom_text')
+                    custom_text=data.get('custom_text'),
+                    model=data.get('model'),
+                    temperature=data.get('temperature'),
+                    max_tokens=data.get('max_tokens'),
+                    min_tokens=data.get('min_tokens')
                 )
                 
-                return jsonify({'prompt': prompt}), 200
+                return jsonify(result), 200
             except ValueError as e:
                 return jsonify({'error': str(e)}), 400
             except Exception as e:

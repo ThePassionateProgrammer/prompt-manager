@@ -43,6 +43,10 @@ class PromptBuilder:
         """Get all available formats."""
         return self.pieces_data.get("formats", {})
     
+    def get_available_models(self) -> Dict[str, str]:
+        """Get all available models."""
+        return self.pieces_data.get("models", {})
+    
     def get_role_text(self, category: str, role: str) -> str:
         """Get the text for a specific role."""
         roles = self.get_available_roles()
@@ -82,6 +86,13 @@ class PromptBuilder:
             raise ValueError(f"Format '{format_type}' not found")
         return formats[format_type]
     
+    def get_model_text(self, model: str) -> str:
+        """Get the text for a specific model."""
+        models = self.get_available_models()
+        if model not in models:
+            raise ValueError(f"Model '{model}' not found")
+        return models[model]
+    
     def build_prompt(self, 
                     role_category: Optional[str] = None,
                     role: Optional[str] = None,
@@ -90,7 +101,11 @@ class PromptBuilder:
                     context: Optional[str] = None,
                     audience: Optional[str] = None,
                     format_type: Optional[str] = None,
-                    custom_text: Optional[str] = None) -> str:
+                    custom_text: Optional[str] = None,
+                    model: Optional[str] = None,
+                    temperature: Optional[float] = None,
+                    max_tokens: Optional[int] = None,
+                    min_tokens: Optional[int] = None) -> Dict[str, Any]:
         """Build a complete prompt from selected pieces."""
         prompt_parts = []
         
@@ -120,9 +135,23 @@ class PromptBuilder:
         
         # Combine all parts
         if not prompt_parts:
-            return ""
+            return {
+                "prompt": "",
+                "model": model or "gpt-4-turbo",
+                "temperature": temperature or 0.7,
+                "max_tokens": max_tokens or 1000,
+                "min_tokens": min_tokens or 50
+            }
         
-        return "\n\n".join(prompt_parts)
+        result = {
+            "prompt": "\n\n".join(prompt_parts),
+            "model": model or "gpt-4-turbo",
+            "temperature": temperature or 0.7,
+            "max_tokens": max_tokens or 1000,
+            "min_tokens": min_tokens or 50
+        }
+        
+        return result
     
     def get_prompt_preview(self, **kwargs) -> str:
         """Get a preview of the prompt without building the full version."""

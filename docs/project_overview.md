@@ -44,4 +44,46 @@ A Python tool for managing AI/LLM prompts with CLI, web, and API interfaces. Sto
 
 ## Usage Examples
 
+**Template Builder Flow**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    USER INTERACTION FLOW                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                               │
+│  STEP 1: Enter prompt text with bracketed variables          │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ TEXT FIELD: "AS A [ROLE], help me [ACTION]"               │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                                               │
+│  STEP 2: Generate button detects [ROLE] and [ACTION]         │
+│  ┌─────────────────┐                                         │
+│  │   GENERATE      │                                         │
+│  └─────────────────┘                                         │
+│                                                               │
+│  STEP 3: System creates dropdown for [ROLE]                  │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ [ROLE]: [Dropdown ▼]  Options: CHEF, COACH, DEVELOPER    │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                                               │
+│  STEP 4: System creates dropdown for [ACTION]                │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ [ACTION]: [Dropdown ▼]  (Options change based on [ROLE])  │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                                               │
+│  STEP 5: User selects values, prompt gets populated          │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ "AS A CHEF, help me create a recipe" (final prompt)      │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                                               │
+│  STEP 6: Start button opens ChatGPT with complete prompt     │
+│  ┌─────────────────┐    ┌─────────────────────────────────────┐ │
+│  │     START       │───▶│ OPENS CHATGPT WITH FINAL PROMPT    │ │
+│  └─────────────────┘    └─────────────────────────────────────┘ │
+│                                                               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+This example shows how the template system automatically detects bracketed variables like `[ROLE]` and `[ACTION]` and creates interactive dropdowns for building dynamic prompts.
+
 ## Future Enhancements

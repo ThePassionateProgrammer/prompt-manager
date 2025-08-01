@@ -86,4 +86,30 @@ A Python tool for managing AI/LLM prompts with CLI, web, and API interfaces. Sto
 
 This example shows how the template system automatically detects bracketed variables like `[ROLE]` and `[ACTION]` and creates interactive dropdowns for building dynamic prompts.
 
+**Mermaid Flow Diagram**
+
+```mermaid
+flowchart TD
+    A[Enter prompt text<br/>with &lbrack;ROLE&rbrack; and &lbrack;ACTION&rbrack;] --> B[Click Generate button]
+    B --> C[System detects<br/>bracketed variables]
+    C --> D[Create &lbrack;ROLE&rbrack; dropdown<br/>with options: CHEF, COACH, DEVELOPER]
+    D --> E[User selects &lbrack;ROLE&rbrack;]
+    E --> F[Create &lbrack;ACTION&rbrack; dropdown<br/>with role-specific options]
+    F --> G[User selects &lbrack;ACTION&rbrack;]
+    G --> H[Populate final prompt<br/>AS A CHEF, help me create a recipe]
+    H --> I[Click Start button]
+    I --> J[Open ChatGPT<br/>with complete prompt]
+    
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#f3e5f5
+    style D fill:#e8f5e8
+    style E fill:#fff8e1
+    style F fill:#e8f5e8
+    style G fill:#fff8e1
+    style H fill:#fce4ec
+    style I fill:#fff3e0
+    style J fill:#e1f5fe
+```
+
 ## Future Enhancements

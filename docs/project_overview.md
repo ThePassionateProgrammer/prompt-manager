@@ -15,6 +15,27 @@ A Python tool for managing AI/LLM prompts with CLI, web, and API interfaces. Sto
 
 ## Features
 
+**Core Management**
+- Category organization for logical grouping
+- Advanced search across names and content
+- Version tracking with creation and modification timestamps
+
+**Template System**
+- Dynamic prompt templates with variable slots
+- Context-aware prompt building
+
+**Multiple Interfaces**
+- Command-line interface for quick operations
+- Web interface with modern Bootstrap UI
+- REST API for programmatic access
+- Real-time search with instant results
+
+**AI Integration**
+- Add API keys and store them safely
+- You can configure a variety of LLMs, local and remote to use
+- Chat interface for prompt testing and usage
+
+
 ## User Interfaces
 
 ## Template System

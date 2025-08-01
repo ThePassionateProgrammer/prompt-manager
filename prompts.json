@@ -8,14 +8,6 @@
       "created_at": "2025-07-25T21:34:06.479760",
       "modified_at": "2025-07-29T11:00:01.644069"
     },
-    "d06ed1cf-f73d-4506-8f48-34d25e2da895": {
-      "id": "d06ed1cf-f73d-4506-8f48-34d25e2da895",
-      "name": "Test Prompt",
-      "text": "Hello world",
-      "category": "test",
-      "created_at": "2025-07-25T21:34:06.480790",
-      "modified_at": "2025-07-25T21:34:06.480790"
-    },
     "8eb8795e-d9af-4301-be5c-edf4af0c2647": {
       "id": "8eb8795e-d9af-4301-be5c-edf4af0c2647",
       "name": "Test Prompt",
@@ -159,6 +151,14 @@
       "category": "general",
       "created_at": "2025-07-30T12:44:05.198241",
       "modified_at": "2025-07-30T12:44:05.198241"
+    },
+    "2b6bf0af-e2c6-4197-a8ae-c1e253d2032e": {
+      "id": "2b6bf0af-e2c6-4197-a8ae-c1e253d2032e",
+      "name": "Hello",
+      "text": "As a [role] I want [action]",
+      "category": "general",
+      "created_at": "2025-08-01T16:14:27.979105",
+      "modified_at": "2025-08-01T16:14:27.979105"
     }
   }
 }

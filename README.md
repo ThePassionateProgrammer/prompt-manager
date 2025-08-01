@@ -73,6 +73,42 @@ python prompt_manager.py search "search term"
 python prompt_manager.py --storage my_prompts.json add "My Prompt" --text "Text"
 ```
 
+### Web Interface
+
+The prompt manager includes a web interface for easy interaction:
+
+```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Start the web server
+python enhanced_simple_server.py
+```
+
+This will:
+1. Start a Flask web server (usually on port 8000)
+2. Open your browser to `http://localhost:8000`
+3. Provide a web interface for:
+   - Adding new prompts
+   - Viewing existing prompts
+   - Searching prompts
+   - Deleting prompts
+   - Template builder for data-driven prompts
+
+**Features of the Web Interface:**
+- **Bootstrap UI**: Modern, responsive design
+- **Real-time search**: Instant search results as you type
+- **Template Builder**: Interactive prompt template system with cascading dependencies
+- **Port Management**: Automatically handles port conflicts
+- **Flash Messages**: Clear feedback for all operations
+
+**Template Builder:**
+The web interface includes an advanced template builder that allows you to:
+- Create prompt templates with dynamic slots
+- Define cascading dependencies between variables
+- Build prompts interactively with dropdown selections
+- Save and reuse templates
+
 ### Programmatic Usage
 
 You can also use the prompt manager programmatically:

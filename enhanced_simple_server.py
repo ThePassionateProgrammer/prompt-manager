@@ -126,6 +126,20 @@ from test_template_builder import TemplateBuilder, PromptTemplate
 
 template_builder = TemplateBuilder()
 
+# Predefined categories for better organization
+PREDEFINED_CATEGORIES = [
+    "general",
+    "writing",
+    "coding",
+    "analysis",
+    "creative",
+    "business",
+    "education",
+    "research",
+    "template",
+    "custom"
+]
+
 # Add some default templates
 user_story_template = PromptTemplate(
     name="User Story",
@@ -282,7 +296,11 @@ HTML_TEMPLATE = """
                         </div>
                         <div class="mb-3">
                             <label for="category" class="form-label">Category</label>
-                            <input type="text" class="form-control" id="category" name="category" value="general">
+                            <select class="form-select" id="category" name="category">
+                                {% for cat in predefined_categories %}
+                                    <option value="{{ cat }}" {% if cat == 'general' %}selected{% endif %}>{{ cat|title }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -339,7 +357,11 @@ HTML_TEMPLATE = """
                         </div>
                         <div class="mb-3">
                             <label for="editCategory" class="form-label">Category</label>
-                            <input type="text" class="form-control" id="editCategory" name="category" value="general">
+                            <select class="form-select" id="editCategory" name="category">
+                                {% for cat in predefined_categories %}
+                                    <option value="{{ cat }}">{{ cat|title }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -393,7 +415,11 @@ HTML_TEMPLATE = """
             document.getElementById('editPromptId').value = promptId;
             document.getElementById('editName').value = promptName;
             document.getElementById('editText').value = promptText;
-            document.getElementById('editCategory').value = promptCategory;
+            
+            // Set the selected category in the dropdown
+            const categorySelect = document.getElementById('editCategory');
+            categorySelect.value = promptCategory;
+            
             const modal = new bootstrap.Modal(document.getElementById('editPromptModal'));
             modal.show();
         }
@@ -593,10 +619,10 @@ def index():
             }
             prompt_dicts.append(prompt_dict)
         
-        return render_template_string(HTML_TEMPLATE, prompts=prompt_dicts, current_query='')
+        return render_template_string(HTML_TEMPLATE, prompts=prompt_dicts, current_query='', predefined_categories=PREDEFINED_CATEGORIES)
     except Exception as e:
         flash(f'Error loading prompts: {str(e)}', 'error')
-        return render_template_string(HTML_TEMPLATE, prompts=[], current_query='')
+        return render_template_string(HTML_TEMPLATE, prompts=[], current_query='', predefined_categories=PREDEFINED_CATEGORIES)
 
 @app.route('/add', methods=['POST'])
 def add_prompt():
@@ -639,7 +665,7 @@ def search():
             }
             prompt_dicts.append(prompt_dict)
         
-        return render_template_string(HTML_TEMPLATE, prompts=prompt_dicts, current_query=query)
+        return render_template_string(HTML_TEMPLATE, prompts=prompt_dicts, current_query=query, predefined_categories=PREDEFINED_CATEGORIES)
     except Exception as e:
         flash(f'Error searching prompts: {str(e)}', 'error')
         return redirect(url_for('index'))

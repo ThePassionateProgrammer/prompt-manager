@@ -1,0 +1,21 @@
+Template: As a [role], I want to [what], so that I can [why]
+Variables: ['role', 'what', 'why']
+---
+Template: Review this code as a [reviewer] with focus on [aspect]
+Variables: ['reviewer', 'aspect']
+---
+Template: I found a bug in [component] that [description]
+Variables: ['component', 'description']
+---
+Template: This is a simple prompt without variables
+Variables: []
+---
+Template: Multiple [var1] and [var2] and [var3] variables
+Variables: ['var1', 'var2', 'var3']
+---
+Template: [single] variable only
+Variables: ['single']
+---
+Template: No variables in this template at all
+Variables: []
+---

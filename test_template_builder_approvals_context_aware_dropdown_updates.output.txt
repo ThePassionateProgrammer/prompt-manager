@@ -1,0 +1,20 @@
+Scenario: Programmer role selection
+Variable: what
+Context: {'role': 'Programmer'}
+Options: ['Write code', 'Create tests', 'Refactor', 'Debug', 'Optimize']
+---
+Scenario: Chef role selection
+Variable: what
+Context: {'role': 'Chef'}
+Options: ['Shop for food', 'Prepare lunch', 'Plan dinner party', 'Cook meal', 'Bake dessert']
+---
+Scenario: Programmer + Write code context
+Variable: why
+Context: {'role': 'Programmer', 'what': 'Write code'}
+Options: ['Build better software', 'Solve problems', 'Learn new skills', 'Improve efficiency']
+---
+Scenario: Chef + Shop for food context
+Variable: why
+Context: {'role': 'Chef', 'what': 'Shop for food'}
+Options: ['Cook delicious meals', 'Feed my family', 'Save money', 'Eat healthy']
+---

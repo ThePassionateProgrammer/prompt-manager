@@ -1,0 +1,101 @@
+Template: As a [role], I want to [what]
+Dropdowns: {
+  "role": {
+    "options": [
+      "Programmer",
+      "Chef",
+      "Soccer Coach",
+      "Teacher",
+      "Designer"
+    ]
+  },
+  "what": {
+    "options": [
+      "Write code",
+      "Shop for food",
+      "Create tests",
+      "Prepare lunch",
+      "Plan dinner party",
+      "Refactor"
+    ]
+  }
+}
+---
+Template: Review this [component] as a [reviewer]
+Dropdowns: {
+  "component": {
+    "options": [
+      "API endpoint",
+      "Database",
+      "Frontend",
+      "Backend",
+      "UI component"
+    ]
+  },
+  "reviewer": {
+    "options": [
+      "Senior Developer",
+      "Junior Developer",
+      "Architect",
+      "QA Engineer"
+    ]
+  }
+}
+---
+Template: I need to [action] the [target] because [reason]
+Dropdowns: {
+  "action": {
+    "options": [
+      "Write code",
+      "Create tests",
+      "Refactor",
+      "Shop for food",
+      "Prepare lunch"
+    ]
+  },
+  "target": {
+    "options": [
+      "bug",
+      "feature",
+      "performance",
+      "security issue"
+    ]
+  },
+  "reason": {
+    "options": [
+      "it's causing crashes",
+      "users need it",
+      "it's too slow",
+      "it's insecure"
+    ]
+  }
+}
+---
+Template: The [subject] should [behavior] when [condition]
+Dropdowns: {
+  "subject": {
+    "options": [
+      "user",
+      "system",
+      "component",
+      "feature"
+    ]
+  },
+  "behavior": {
+    "options": [
+      "respond",
+      "update",
+      "display",
+      "process"
+    ]
+  },
+  "condition": {
+    "options": [
+      "user clicks",
+      "data changes",
+      "time expires",
+      "error occurs"
+    ]
+  }
+}
+---

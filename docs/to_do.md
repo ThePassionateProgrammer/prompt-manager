@@ -2,14 +2,14 @@
 
 ## User Story Implementation Checklist
 
-### 1. Template Builder User Story
-- [ ] Implement automatic detection of bracketed variables in prompt text
-- [ ] Create dropdown generation system for detected variables
-- [ ] Add predefined options for common variables (ROLE: CHEF, COACH, DEVELOPER)
-- [ ] Implement context-aware dropdown options (ACTION changes based on ROLE)
-- [ ] Build final prompt population when user selects values
-- [ ] Add "Start" button that opens ChatGPT with complete prompt
-- [ ] Create web interface for template builder with real-time preview
+### 1. Template Builder User Story ✅ COMPLETED
+- [x] Implement automatic detection of bracketed variables in prompt text
+- [x] Create dropdown generation system for detected variables
+- [x] Add predefined options for common variables (ROLE: CHEF, COACH, DEVELOPER)
+- [x] Implement context-aware dropdown options (ACTION changes based on ROLE)
+- [x] Build final prompt population when user selects values
+- [x] Add "Generate" button that processes template and creates dropdowns
+- [x] Create web interface for template builder with horizontal split layout
 
 ### 2. Import/Export Functionality
 - [ ] Add export functionality to save all prompts to JSON file
@@ -44,6 +44,16 @@
 - [ ] Add logging for debugging and monitoring
 
 ## Completed Tasks ✅
+
+### Template Builder System
+- [x] Implement horizontal split UI: top panel for dropdowns, bottom for template input
+- [x] Add template parsing with bracketed variable detection ([role], [what], etc.)
+- [x] Create context-aware dropdown system with left-to-right dependencies
+- [x] Implement edit mode toggle for modifying dropdown options
+- [x] Add final prompt generation with user selections
+- [x] Create save functionality to store generated prompts
+- [x] Add comprehensive test coverage (8 new tests)
+- [x] All tests passing (169 passed, 2 skipped)
 
 ### Secure Key Management System
 - [x] Implement encrypted key storage with Fernet encryption

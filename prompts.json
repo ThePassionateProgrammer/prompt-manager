@@ -1,21 +1,5 @@
 {
   "prompts": {
-    "00dbba03-0975-4ec4-af4b-6ec137eb94a8": {
-      "id": "00dbba03-0975-4ec4-af4b-6ec137eb94a8",
-      "name": "Test Prompt",
-      "text": "Hello world",
-      "category": "new_cat",
-      "created_at": "2025-07-25T21:34:06.479760",
-      "modified_at": "2025-07-29T11:00:01.644069"
-    },
-    "8eb8795e-d9af-4301-be5c-edf4af0c2647": {
-      "id": "8eb8795e-d9af-4301-be5c-edf4af0c2647",
-      "name": "Test Prompt",
-      "text": "Hello world",
-      "category": "test",
-      "created_at": "2025-07-25T21:34:06.482438",
-      "modified_at": "2025-07-26T15:46:25.048998"
-    },
     "67a536ac-9a22-4369-a51e-cfa55a6ab610": {
       "id": "67a536ac-9a22-4369-a51e-cfa55a6ab610",
       "name": "Prompt 2",
@@ -154,11 +138,35 @@
     },
     "2b6bf0af-e2c6-4197-a8ae-c1e253d2032e": {
       "id": "2b6bf0af-e2c6-4197-a8ae-c1e253d2032e",
-      "name": "Hello",
-      "text": "As a [role] I want [action]",
-      "category": "general",
+      "name": "Template Test",
+      "text": "AS A [ROLE], help me [ACTION]",
+      "category": "template",
       "created_at": "2025-08-01T16:14:27.979105",
-      "modified_at": "2025-08-01T16:14:27.979105"
+      "modified_at": "2025-08-02T08:08:04.307296"
+    },
+    "f8b1e9b9-a0aa-476f-b4d2-6e18c6aa50a5": {
+      "id": "f8b1e9b9-a0aa-476f-b4d2-6e18c6aa50a5",
+      "name": "Test Prompt",
+      "text": "This is a test prompt",
+      "category": "test",
+      "created_at": "2025-08-02T08:06:52.302324",
+      "modified_at": "2025-08-02T08:06:52.302324"
+    },
+    "43bb35d7-4393-4d67-bfe6-b32b76f896be": {
+      "id": "43bb35d7-4393-4d67-bfe6-b32b76f896be",
+      "name": "Test Writing Prompt",
+      "text": "This is a writing prompt",
+      "category": "writing",
+      "created_at": "2025-08-02T08:36:26.290180",
+      "modified_at": "2025-08-02T08:36:26.290180"
+    },
+    "7b6d5207-b556-4290-91eb-5717d37b361d": {
+      "id": "7b6d5207-b556-4290-91eb-5717d37b361d",
+      "name": "David Bernstein",
+      "text": "hello",
+      "category": "general",
+      "created_at": "2025-08-02T09:37:57.139989",
+      "modified_at": "2025-08-02T09:37:57.139989"
     }
   }
 }

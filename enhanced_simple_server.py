@@ -445,76 +445,105 @@ TEMPLATE_BUILDER_HTML = """
     <title>Template Builder - Prompt Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .template-builder-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .top-panel {
+            flex: 1;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .bottom-panel {
+            flex: 0 0 200px;
+            background-color: #ffffff;
+            border-top: 2px solid #dee2e6;
+            padding: 20px;
+        }
+        .dropdown-container {
+            margin-bottom: 15px;
+        }
+        .dropdown-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        .edit-mode-active {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+        }
+        .final-prompt {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1><i class="fas fa-puzzle-piece me-2"></i>Template Builder</h1>
-                    <a href="/" class="btn btn-secondary">
+    <div class="template-builder-container">
+        <!-- Header -->
+        <div class="bg-primary text-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0"><i class="fas fa-puzzle-piece me-2"></i>Template Builder</h1>
+                <div>
+                    <button id="editModeBtn" class="btn btn-outline-light me-2">
+                        <i class="fas fa-edit me-1"></i>Edit Mode
+                    </button>
+                    <a href="/" class="btn btn-outline-light">
                         <i class="fas fa-arrow-left me-1"></i>Back to Prompts
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Template Selection -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-list me-2"></i>Select Template</h5>
-                        <select id="templateSelect" class="form-select">
-                            <option value="">Choose a template...</option>
-                            {% for template in templates %}
-                                <option value="{{ template.name }}">{{ template.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Template Builder Form -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-edit me-2"></i>Build Prompt</h5>
-                        <form id="templateForm">
-                            <div id="slotFields">
-                                <!-- Slot fields will be dynamically added here -->
+        <!-- Top Panel - Dropdowns Area -->
+        <div class="top-panel">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <h4 class="mb-3"><i class="fas fa-list me-2"></i>Template Variables</h4>
+                        <div id="dropdownsArea">
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-arrow-down fa-2x mb-3"></i>
+                                <p>Enter a template below and click "Generate" to create dropdowns</p>
                             </div>
-                            <button type="submit" class="btn btn-primary mt-3">
-                                <i class="fas fa-magic me-1"></i>Generate Prompt
+                        </div>
+                        <div id="finalPromptArea" class="final-prompt" style="display: none;">
+                            <h5><i class="fas fa-file-alt me-2"></i>Final Prompt</h5>
+                            <div id="finalPromptText"></div>
+                            <button id="savePromptBtn" class="btn btn-success btn-sm mt-2">
+                                <i class="fas fa-save me-1"></i>Save as Prompt
                             </button>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Generated Prompt -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-file-alt me-2"></i>Generated Prompt</h5>
-                        <div id="generatedPrompt" class="alert alert-info" style="display: none;">
-                            <!-- Generated prompt will appear here -->
+        <!-- Bottom Panel - Template Input -->
+        <div class="bottom-panel">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1 me-3">
+                                <label for="templateInput" class="form-label">
+                                    <i class="fas fa-edit me-1"></i>Template Text
+                                </label>
+                                <textarea id="templateInput" class="form-control" rows="3" 
+                                    placeholder="Enter template with variables in brackets, e.g., 'As a [role], I want to [what], so that I can [why]'"></textarea>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <button id="generateBtn" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-magic me-1"></i>Generate
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -524,76 +553,205 @@ TEMPLATE_BUILDER_HTML = """
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const templates = {{ templates|tojson }};
-        
-        document.getElementById('templateSelect').addEventListener('change', function() {
-            const templateName = this.value;
-            const template = templates.find(t => t.name === templateName);
+        let editMode = false;
+        let currentTemplate = '';
+        let currentSelections = {};
+        let dropdownsData = {};
+
+        // Edit Mode Toggle
+        document.getElementById('editModeBtn').addEventListener('click', function() {
+            editMode = !editMode;
+            this.classList.toggle('btn-outline-light');
+            this.classList.toggle('btn-warning');
             
-            if (template) {
-                generateSlotFields(template);
+            if (editMode) {
+                this.innerHTML = '<i class="fas fa-check me-1"></i>Edit Mode Active';
+                document.getElementById('dropdownsArea').classList.add('edit-mode-active');
             } else {
-                document.getElementById('slotFields').innerHTML = '';
-            }
-        });
-        
-        function generateSlotFields(template) {
-            const slotFields = document.getElementById('slotFields');
-            slotFields.innerHTML = '';
-            
-            for (const [slotName, options] of Object.entries(template.slots)) {
-                const fieldGroup = document.createElement('div');
-                fieldGroup.className = 'mb-3';
-                
-                fieldGroup.innerHTML = `
-                    <label for="${slotName}" class="form-label">${slotName.charAt(0).toUpperCase() + slotName.slice(1)}</label>
-                    <select name="${slotName}" id="${slotName}" class="form-select" required>
-                        <option value="">Choose ${slotName}...</option>
-                        ${options.map(option => `<option value="${option}">${option}</option>`).join('')}
-                    </select>
-                `;
-                
-                slotFields.appendChild(fieldGroup);
-            }
-        }
-        
-        document.getElementById('templateForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const templateName = document.getElementById('templateSelect').value;
-            const values = {};
-            
-            // Collect form values
-            const formData = new FormData(this);
-            for (const [key, value] of formData.entries()) {
-                if (value) {
-                    values[key] = value;
-                }
+                this.innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode';
+                document.getElementById('dropdownsArea').classList.remove('edit-mode-active');
             }
             
-            // Send to API
-            fetch('/api/templates/build', {
+            // Toggle edit mode on server
+            fetch('/template/edit-mode', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    template_name: templateName,
-                    values: values
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: editMode })
+            });
+        });
+
+        // Generate Button
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            const templateText = document.getElementById('templateInput').value.trim();
+            if (!templateText) {
+                alert('Please enter a template text');
+                return;
+            }
+            
+            currentTemplate = templateText;
+            
+            fetch('/template/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ template: templateText })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
                     alert('Error: ' + data.error);
                 } else {
-                    const promptDiv = document.getElementById('generatedPrompt');
-                    promptDiv.innerHTML = data.prompt;
-                    promptDiv.style.display = 'block';
+                    dropdownsData = data.dropdowns;
+                    createDropdowns(data.dropdowns);
                 }
             })
             .catch(error => {
                 alert('Error: ' + error);
+            });
+        });
+
+        function createDropdowns(dropdowns) {
+            const dropdownsArea = document.getElementById('dropdownsArea');
+            dropdownsArea.innerHTML = '';
+            
+            const variables = Object.keys(dropdowns);
+            
+            variables.forEach((variable, index) => {
+                const dropdownContainer = document.createElement('div');
+                dropdownContainer.className = 'dropdown-container';
+                dropdownContainer.innerHTML = `
+                    <div class="dropdown-label">${variable.charAt(0).toUpperCase() + variable.slice(1)}</div>
+                    <select id="dropdown_${variable}" class="form-select" data-variable="${variable}">
+                        <option value="">Select ${variable}...</option>
+                        ${dropdowns[variable].options.map(option => 
+                            `<option value="${option}">${option}</option>`
+                        ).join('')}
+                    </select>
+                `;
+                
+                dropdownsArea.appendChild(dropdownContainer);
+                
+                // Add change listener for context-aware updates
+                const dropdown = document.getElementById(`dropdown_${variable}`);
+                dropdown.addEventListener('change', function() {
+                    const selectedValue = this.value;
+                    const variableName = this.dataset.variable;
+                    
+                    if (selectedValue) {
+                        currentSelections[variableName] = selectedValue;
+                        
+                        // Update subsequent dropdowns based on this selection
+                        updateSubsequentDropdowns(variableName, selectedValue, index);
+                    }
+                    
+                    // Generate final prompt
+                    generateFinalPrompt();
+                });
+            });
+        }
+
+        function updateSubsequentDropdowns(changedVariable, selectedValue, changedIndex) {
+            const variables = Object.keys(dropdownsData);
+            
+            // Update dropdowns to the right of the changed one
+            for (let i = changedIndex + 1; i < variables.length; i++) {
+                const variableName = variables[i];
+                const dropdown = document.getElementById(`dropdown_${variableName}`);
+                
+                // Get context from previous selections
+                const context = {};
+                for (let j = 0; j < i; j++) {
+                    const prevVariable = variables[j];
+                    const prevDropdown = document.getElementById(`dropdown_${prevVariable}`);
+                    if (prevDropdown.value) {
+                        context[prevVariable] = prevDropdown.value;
+                    }
+                }
+                
+                // Update options for this dropdown
+                fetch('/template/update-options', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        variable: variableName,
+                        context: context
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.options) {
+                        // Update dropdown options
+                        dropdown.innerHTML = `<option value="">Select ${variableName}...</option>` +
+                            data.options.map(option => `<option value="${option}">${option}</option>`).join('');
+                        
+                        // Clear the selection since options changed
+                        dropdown.value = '';
+                        delete currentSelections[variableName];
+                        
+                        // Clear subsequent dropdowns
+                        for (let k = i + 1; k < variables.length; k++) {
+                            const nextVariable = variables[k];
+                            const nextDropdown = document.getElementById(`dropdown_${nextVariable}`);
+                            nextDropdown.value = '';
+                            delete currentSelections[nextVariable];
+                        }
+                        
+                        generateFinalPrompt();
+                    }
+                })
+                .catch(error => console.error('Error updating options:', error));
+            }
+        }
+
+        function generateFinalPrompt() {
+            if (Object.keys(currentSelections).length === 0) {
+                document.getElementById('finalPromptArea').style.display = 'none';
+                return;
+            }
+            
+            fetch('/template/generate-final', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    template: currentTemplate,
+                    selections: currentSelections
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.final_prompt) {
+                    document.getElementById('finalPromptText').textContent = data.final_prompt;
+                    document.getElementById('finalPromptArea').style.display = 'block';
+                }
+            })
+            .catch(error => console.error('Error generating final prompt:', error));
+        }
+
+        // Save Prompt Button
+        document.getElementById('savePromptBtn').addEventListener('click', function() {
+            const finalPrompt = document.getElementById('finalPromptText').textContent;
+            if (!finalPrompt) {
+                alert('No prompt to save');
+                return;
+            }
+            
+            // Create a name for the prompt
+            const promptName = `Template: ${Object.keys(currentSelections).join(' → ')}`;
+            
+            // Save to prompts (you can implement this as needed)
+            fetch('/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `name=${encodeURIComponent(promptName)}&text=${encodeURIComponent(finalPrompt)}&category=template`
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Prompt saved successfully!');
+                } else {
+                    alert('Error saving prompt');
+                }
+            })
+            .catch(error => {
+                alert('Error saving prompt: ' + error);
             });
         });
     </script>
@@ -750,21 +908,168 @@ def build_prompt():
     except Exception as e:
         return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
 
-@app.route('/templates')
+@app.route('/template-builder')
 def template_builder_page():
-    """Template builder page."""
+    """Template builder page with the new UI design."""
+    return render_template_string(TEMPLATE_BUILDER_HTML)
+
+# Template Builder API Routes
+@app.route('/template/parse', methods=['POST'])
+def parse_template():
+    """Parse template text and extract bracketed variables."""
     try:
-        templates = []
-        for template in template_builder.templates:
-            templates.append({
-                "name": template.name,
-                "pattern": template.pattern,
-                "slots": template.slots
-            })
-        return render_template_string(TEMPLATE_BUILDER_HTML, templates=templates)
+        data = request.get_json()
+        template_text = data.get('template', '')
+        
+        # Extract variables in brackets [variable]
+        import re
+        variables = re.findall(r'\[([^\]]+)\]', template_text)
+        
+        return json.dumps({
+            'variables': variables,
+            'template': template_text
+        }), 200, {'Content-Type': 'application/json'}
     except Exception as e:
-        flash(f'Error loading templates: {str(e)}', 'error')
-        return render_template_string(TEMPLATE_BUILDER_HTML, templates=[])
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/template/generate-dropdowns', methods=['POST'])
+def generate_dropdowns():
+    """Generate dropdown options for detected variables."""
+    try:
+        data = request.get_json()
+        template_text = data.get('template', '')
+        
+        # Extract variables
+        import re
+        variables = re.findall(r'\[([^\]]+)\]', template_text)
+        
+        # Define default options for common variables
+        default_options = {
+            'role': ['Programmer', 'Chef', 'Soccer Coach', 'Teacher', 'Designer'],
+            'what': ['Write code', 'Shop for food', 'Create tests', 'Prepare lunch', 'Plan dinner party', 'Refactor'],
+            'why': ['Build better software', 'Cook delicious meals', 'Improve code quality', 'Feed my family', 'Host friends'],
+            'action': ['Write code', 'Create tests', 'Refactor', 'Shop for food', 'Prepare lunch'],
+            'context': ['Web development', 'Mobile app', 'Backend API', 'Kitchen', 'Restaurant']
+        }
+        
+        dropdowns = {}
+        for var in variables:
+            dropdowns[var] = {
+                'options': default_options.get(var, [f'Option 1 for {var}', f'Option 2 for {var}'])
+            }
+        
+        return json.dumps({
+            'dropdowns': dropdowns,
+            'template': template_text
+        }), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/template/update-options', methods=['POST'])
+def update_options():
+    """Update dropdown options based on context (selections from previous dropdowns)."""
+    try:
+        data = request.get_json()
+        variable = data.get('variable', '')
+        context = data.get('context', {})
+        
+        # Define context-aware options
+        context_options = {
+            'what': {
+                'Programmer': ['Write code', 'Create tests', 'Refactor', 'Debug', 'Optimize'],
+                'Chef': ['Shop for food', 'Prepare lunch', 'Plan dinner party', 'Cook meal', 'Bake dessert'],
+                'Soccer Coach': ['Train players', 'Plan strategy', 'Analyze games', 'Motivate team', 'Teach skills']
+            },
+            'why': {
+                'Write code': ['Build better software', 'Solve problems', 'Learn new skills', 'Improve efficiency'],
+                'Shop for food': ['Cook delicious meals', 'Feed my family', 'Save money', 'Eat healthy'],
+                'Create tests': ['Ensure quality', 'Prevent bugs', 'Build confidence', 'Document behavior']
+            }
+        }
+        
+        # Get options based on context
+        if variable in context_options:
+            # Find the most relevant context key
+            for context_key, options in context_options[variable].items():
+                if context_key in context.values():
+                    return json.dumps({'options': options}), 200, {'Content-Type': 'application/json'}
+        
+        # Fallback to default options
+        default_options = {
+            'what': ['Write code', 'Shop for food', 'Create tests', 'Prepare lunch'],
+            'why': ['Build better software', 'Cook delicious meals', 'Improve quality', 'Feed my family']
+        }
+        
+        return json.dumps({'options': default_options.get(variable, [f'Option for {variable}'])}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/template/generate-final', methods=['POST'])
+def generate_final_prompt():
+    """Generate final prompt by replacing variables with user selections."""
+    try:
+        data = request.get_json()
+        template_text = data.get('template', '')
+        selections = data.get('selections', {})
+        
+        # Replace each variable with its selection
+        final_prompt = template_text
+        for variable, value in selections.items():
+            final_prompt = final_prompt.replace(f'[{variable}]', value)
+        
+        return json.dumps({
+            'final_prompt': final_prompt,
+            'template': template_text,
+            'selections': selections
+        }), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/template/edit-mode', methods=['POST'])
+def toggle_edit_mode():
+    """Toggle edit mode for the template builder."""
+    try:
+        data = request.get_json()
+        enabled = data.get('enabled', False)
+        
+        return json.dumps({
+            'edit_mode': enabled
+        }), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/template/generate', methods=['POST'])
+def generate_template():
+    """Main generate endpoint that processes template and returns dropdowns."""
+    try:
+        data = request.get_json()
+        template_text = data.get('template', '')
+        
+        # Extract variables
+        import re
+        variables = re.findall(r'\[([^\]]+)\]', template_text)
+        
+        # Generate dropdowns (reuse the logic from generate_dropdowns)
+        default_options = {
+            'role': ['Programmer', 'Chef', 'Soccer Coach', 'Teacher', 'Designer'],
+            'what': ['Write code', 'Shop for food', 'Create tests', 'Prepare lunch', 'Plan dinner party', 'Refactor'],
+            'why': ['Build better software', 'Cook delicious meals', 'Improve code quality', 'Feed my family', 'Host friends'],
+            'action': ['Write code', 'Create tests', 'Refactor', 'Shop for food', 'Prepare lunch'],
+            'context': ['Web development', 'Mobile app', 'Backend API', 'Kitchen', 'Restaurant']
+        }
+        
+        dropdowns = {}
+        for var in variables:
+            dropdowns[var] = {
+                'options': default_options.get(var, [f'Option 1 for {var}', f'Option 2 for {var}'])
+            }
+        
+        return json.dumps({
+            'dropdowns': dropdowns,
+            'template': template_text
+        }), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
 
 if __name__ == '__main__':
     print("🚀 Starting Enhanced Simple Prompt Manager Web Server...")

@@ -43,6 +43,25 @@
 - [ ] Improve UI/UX based on user testing
 - [ ] Add logging for debugging and monitoring
 
+## Completed Tasks ✅
+
+### Secure Key Management System
+- [x] Implement encrypted key storage with Fernet encryption
+- [x] Add SecureKeyManager class with PBKDF2 key derivation
+- [x] Store keys in ~/.prompt_manager/keys.enc with master password
+- [x] Maintain backward compatibility with environment variables
+- [x] Add comprehensive test coverage for secure operations
+- [x] Update LLM provider to use secure key management
+- [x] All tests passing (161 passed, 2 skipped for environment isolation)
+
+### Edit Functionality
+- [x] Add edit button to each prompt card
+- [x] Create edit modal with form fields for name, text, and category
+- [x] Add /edit route to handle form submission
+- [x] Add JavaScript editPrompt() function to populate modal
+- [x] Test edit functionality with curl commands
+- [x] Edit functionality is working and updates prompts correctly
+
 ## Notes
 - Focus on completing one task at a time
 - Test each feature thoroughly before moving to next

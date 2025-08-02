@@ -18,8 +18,13 @@ class OpenAIProvider(LLMProvider):
         if self._initialized:
             return
         
+        # If no API key provided, try to load from secure storage
         if not self.api_key:
-            raise ValueError("OpenAI API key is required")
+            try:
+                from .key_loader import load_openai_api_key
+                self.api_key = load_openai_api_key()
+            except ValueError:
+                raise ValueError("OpenAI API key is required")
         
         try:
             self.client = openai.OpenAI(api_key=self.api_key)

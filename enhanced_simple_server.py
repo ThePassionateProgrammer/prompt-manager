@@ -230,6 +230,9 @@ HTML_TEMPLATE = """
                                             <button class="btn btn-outline-primary btn-sm" onclick="viewPrompt('{{ prompt.id }}', '{{ prompt.name }}', '{{ prompt.text|replace("'", "\\'")|replace('"', '\\"') }}')">
                                                 <i class="fas fa-eye me-1"></i>View
                                             </button>
+                                            <button class="btn btn-outline-warning btn-sm" onclick="editPrompt('{{ prompt.id }}', '{{ prompt.name }}', '{{ prompt.text|replace("'", "\\'")|replace('"', '\\"') }}', '{{ prompt.category }}')">
+                                                <i class="fas fa-edit me-1"></i>Edit
+                                            </button>
                                             <button class="btn btn-outline-danger btn-sm" onclick="deletePrompt('{{ prompt.id }}', '{{ prompt.name }}')">
                                                 <i class="fas fa-trash me-1"></i>Delete
                                             </button>
@@ -315,6 +318,39 @@ HTML_TEMPLATE = """
         </div>
     </div>
 
+    <!-- Edit Prompt Modal -->
+    <div class="modal fade" id="editPromptModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Prompt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="/edit" id="editForm">
+                    <input type="hidden" id="editPromptId" name="prompt_id">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="editName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editText" class="form-label">Text</label>
+                            <textarea class="form-control" id="editText" name="text" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCategory" class="form-label">Category</label>
+                            <input type="text" class="form-control" id="editCategory" name="category" value="general">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Prompt</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog">
@@ -350,6 +386,15 @@ HTML_TEMPLATE = """
             document.getElementById('delete-prompt-name').textContent = promptName;
             document.getElementById('delete-form').action = `/delete/${promptId}`;
             const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+
+        function editPrompt(promptId, promptName, promptText, promptCategory) {
+            document.getElementById('editPromptId').value = promptId;
+            document.getElementById('editName').value = promptName;
+            document.getElementById('editText').value = promptText;
+            document.getElementById('editCategory').value = promptCategory;
+            const modal = new bootstrap.Modal(document.getElementById('editPromptModal'));
             modal.show();
         }
 
@@ -607,6 +652,40 @@ def delete_prompt(prompt_id):
         flash('Prompt deleted successfully!', 'success')
     except Exception as e:
         flash(f'Error deleting prompt: {str(e)}', 'error')
+    
+    return redirect(url_for('index'))
+
+@app.route('/edit', methods=['POST'])
+def edit_prompt():
+    """Edit a prompt."""
+    try:
+        prompt_id = request.form.get('prompt_id', '').strip()
+        name = request.form.get('name', '').strip()
+        text = request.form.get('text', '').strip()
+        category = request.form.get('category', 'general').strip()
+        
+        if not prompt_id or not name or not text:
+            flash('Prompt ID, name, and text are required', 'error')
+            return redirect(url_for('index'))
+        
+        # Get the existing prompt to update it
+        prompt = manager.get_prompt(prompt_id)
+        if not prompt:
+            flash('Prompt not found', 'error')
+            return redirect(url_for('index'))
+        
+        # Update the prompt
+        prompt.name = name
+        prompt.text = text
+        prompt.category = category
+        prompt.update_text(text)  # This updates the modified_at timestamp
+        
+        # Save the updated prompt
+        manager.save_prompts()
+        
+        flash('Prompt updated successfully!', 'success')
+    except Exception as e:
+        flash(f'Error updating prompt: {str(e)}', 'error')
     
     return redirect(url_for('index'))
 

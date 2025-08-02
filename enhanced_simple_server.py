@@ -12,6 +12,7 @@ import socket
 import subprocess
 import sys
 import os
+from datetime import datetime
 
 def check_port_available(port):
     """Check if a port is available."""
@@ -192,9 +193,20 @@ HTML_TEMPLATE = """
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1><i class="fas fa-comments me-2"></i>Prompt Manager</h1>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPromptModal">
-                        <i class="fas fa-plus me-1"></i>New Prompt
-                    </button>
+                    <div class="d-flex gap-2">
+                        <a href="/template-builder" class="btn btn-outline-primary">
+                            <i class="fas fa-magic me-1"></i>Template Builder
+                        </a>
+                        <a href="/export" class="btn btn-outline-success">
+                            <i class="fas fa-download me-1"></i>Export
+                        </a>
+                        <a href="/import" class="btn btn-outline-info">
+                            <i class="fas fa-upload me-1"></i>Import
+                        </a>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPromptModal">
+                            <i class="fas fa-plus me-1"></i>New Prompt
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -759,6 +771,54 @@ TEMPLATE_BUILDER_HTML = """
 </html>
 """
 
+# Import Template
+IMPORT_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Prompts - Prompt Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1><i class="fas fa-upload me-2"></i>Import Prompts from JSON</h1>
+        <p>Select a JSON file containing prompt data to import.</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data" action="/import">
+            <div class="mb-3">
+                <label for="jsonFile" class="form-label">
+                    <i class="fas fa-file-upload me-1"></i>Choose JSON File
+                </label>
+                <input type="file" class="form-control" id="jsonFile" name="file" accept=".json" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-upload me-1"></i>Import Prompts
+            </button>
+        </form>
+        <a href="/" class="btn btn-secondary mt-3">
+            <i class="fas fa-arrow-left me-1"></i>Back to Prompts
+        </a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+"""
+
 @app.route('/')
 def index():
     """Home page - list all prompts."""
@@ -872,6 +932,121 @@ def edit_prompt():
         flash(f'Error updating prompt: {str(e)}', 'error')
     
     return redirect(url_for('index'))
+
+@app.route('/export', methods=['GET'])
+def export_prompts():
+    """Export all prompts to a JSON file."""
+    try:
+        # Get all prompts
+        prompts = manager.get_all_prompts()
+        
+        # Convert to JSON-serializable format
+        export_data = {
+            'export_date': datetime.now().isoformat(),
+            'total_prompts': len(prompts),
+            'prompts': []
+        }
+        
+        for prompt in prompts:
+            export_data['prompts'].append({
+                'id': prompt.id,
+                'name': prompt.name,
+                'text': prompt.text,
+                'category': prompt.category,
+                'created_at': prompt.created_at,
+                'modified_at': prompt.modified_at
+            })
+        
+        # Create response with JSON file
+        from flask import send_file
+        import tempfile
+        import os
+        
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(export_data, f, indent=2)
+            temp_file = f.name
+        
+        # Send file and clean up
+        response = send_file(
+            temp_file,
+            as_attachment=True,
+            download_name=f'prompts_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json',
+            mimetype='application/json'
+        )
+        
+        # Clean up temp file after sending
+        response.call_on_close(lambda: os.unlink(temp_file))
+        
+        flash(f'Successfully exported {len(prompts)} prompts to JSON file', 'success')
+        return response
+        
+    except Exception as e:
+        flash(f'Error exporting prompts: {str(e)}', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/import', methods=['GET', 'POST'])
+def import_prompts():
+    """Import prompts from a JSON file."""
+    if request.method == 'GET':
+        # Show import form
+        return render_template_string(IMPORT_TEMPLATE)
+    
+    # Handle file upload
+    if 'file' not in request.files:
+        flash('No file selected', 'error')
+        return redirect(url_for('import_prompts'))
+    
+    file = request.files['file']
+    if file.filename == '':
+        flash('No file selected', 'error')
+        return redirect(url_for('import_prompts'))
+    
+    if not file.filename.endswith('.json'):
+        flash('Please select a JSON file', 'error')
+        return redirect(url_for('import_prompts'))
+    
+    try:
+        # Parse JSON file
+        import_data = json.load(file)
+        
+        if 'prompts' not in import_data:
+            flash('Invalid file format: missing prompts array', 'error')
+            return redirect(url_for('import_prompts'))
+        
+        # Import prompts
+        imported_count = 0
+        skipped_count = 0
+        
+        for prompt_data in import_data['prompts']:
+            try:
+                # Check if prompt already exists (by name)
+                existing_prompts = manager.search_prompts(prompt_data.get('name', ''))
+                if existing_prompts:
+                    skipped_count += 1
+                    continue
+                
+                # Create new prompt
+                manager.add_prompt(
+                    name=prompt_data.get('name', 'Imported Prompt'),
+                    text=prompt_data.get('text', ''),
+                    category=prompt_data.get('category', 'imported')
+                )
+                imported_count += 1
+                
+            except Exception as e:
+                flash(f'Error importing prompt "{prompt_data.get("name", "Unknown")}": {str(e)}', 'error')
+                continue
+        
+        flash(f'Import completed: {imported_count} prompts imported, {skipped_count} skipped (already exist)', 'success')
+        return redirect(url_for('index'))
+        
+    except json.JSONDecodeError:
+        flash('Invalid JSON file', 'error')
+        return redirect(url_for('import_prompts'))
+    except Exception as e:
+        flash(f'Error importing prompts: {str(e)}', 'error')
+        return redirect(url_for('import_prompts'))
 
 # Template Builder Routes
 @app.route('/api/templates')
@@ -1070,6 +1245,11 @@ def generate_template():
         }), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/test')
+def test_route():
+    """Simple test route to verify route registration."""
+    return "Test route working!"
 
 if __name__ == '__main__':
     print("🚀 Starting Enhanced Simple Prompt Manager Web Server...")

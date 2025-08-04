@@ -167,6 +167,22 @@
       "category": "general",
       "created_at": "2025-08-02T09:37:57.139989",
       "modified_at": "2025-08-02T09:37:57.139989"
+    },
+    "a01ec3af-cd37-478e-ba9a-a3d2146258dc": {
+      "id": "a01ec3af-cd37-478e-ba9a-a3d2146258dc",
+      "name": "Template: Role → What → Why",
+      "text": "As a Option 1 for Role, I want to Option for What, so that I can Option for Why.",
+      "category": "template",
+      "created_at": "2025-08-02T17:00:38.194292",
+      "modified_at": "2025-08-02T17:00:38.194292"
+    },
+    "34de7a48-9ea2-4201-a6e4-9eca3ce6e773": {
+      "id": "34de7a48-9ea2-4201-a6e4-9eca3ce6e773",
+      "name": "Template: Role",
+      "text": "As a Option 1 for Role, I want to [What], so that I can [Why].",
+      "category": "template",
+      "created_at": "2025-08-02T17:01:17.494739",
+      "modified_at": "2025-08-02T17:01:17.494739"
     }
   }
 }

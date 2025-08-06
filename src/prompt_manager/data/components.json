@@ -1,0 +1,42 @@
+{
+  "components": {
+    "Role": [
+      {"label": "Programmer", "next_tag": "What"},
+      {"label": "Marketing", "next_tag": "What"},
+      {"label": "Finance", "next_tag": "What"},
+      {"label": "Designer", "next_tag": "What"},
+      {"label": "Manager", "next_tag": "What"}
+    ],
+    "What": [
+      {"label": "Writing Code", "parent": "Programmer", "next_tag": "Why"},
+      {"label": "Testing Feature", "parent": "Programmer", "next_tag": "Why"},
+      {"label": "Gathering Requirements", "parent": "Programmer", "next_tag": "Why"},
+      {"label": "Approve ads", "parent": "Marketing", "next_tag": "Why"},
+      {"label": "Plan brochure", "parent": "Marketing", "next_tag": "Why"},
+      {"label": "Create campaign", "parent": "Marketing", "next_tag": "Why"},
+      {"label": "Review budget", "parent": "Finance", "next_tag": "Why"},
+      {"label": "Analyze costs", "parent": "Finance", "next_tag": "Why"},
+      {"label": "Create wireframes", "parent": "Designer", "next_tag": "Why"},
+      {"label": "Design UI", "parent": "Designer", "next_tag": "Why"},
+      {"label": "Coordinate team", "parent": "Manager", "next_tag": "Why"},
+      {"label": "Set priorities", "parent": "Manager", "next_tag": "Why"}
+    ],
+    "Why": [
+      {"label": "Implement a Feature", "parent": "Writing Code"},
+      {"label": "Fix a Bug", "parent": "Writing Code"},
+      {"label": "Improve Performance", "parent": "Writing Code"},
+      {"label": "Ensure Quality", "parent": "Testing Feature"},
+      {"label": "Prevent Issues", "parent": "Testing Feature"},
+      {"label": "Understand Needs", "parent": "Gathering Requirements"},
+      {"label": "Increase Sales", "parent": "Approve ads"},
+      {"label": "Improve Brand", "parent": "Plan brochure"},
+      {"label": "Reach Customers", "parent": "Create campaign"},
+      {"label": "Control Costs", "parent": "Review budget"},
+      {"label": "Optimize Spending", "parent": "Analyze costs"},
+      {"label": "Clarify Design", "parent": "Create wireframes"},
+      {"label": "Enhance UX", "parent": "Design UI"},
+      {"label": "Improve Efficiency", "parent": "Coordinate team"},
+      {"label": "Focus Efforts", "parent": "Set priorities"}
+    ]
+  }
+} 

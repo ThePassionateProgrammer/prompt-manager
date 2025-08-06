@@ -57,4 +57,28 @@ class TemplateParser:
             }
             combo_boxes.append(combo_box)
         
+        return combo_boxes
+    
+    def update_cascading_selections(self, combo_boxes: List[Dict[str, Any]], 
+                                  changed_index: int) -> List[Dict[str, Any]]:
+        """
+        Update combo boxes when a selection changes, resetting downstream selections.
+        
+        Args:
+            combo_boxes: List of combo box configurations
+            changed_index: Index of the combo box that was changed
+            
+        Returns:
+            Updated combo boxes with downstream selections reset
+        """
+        # Reset all combo boxes downstream from the changed one
+        for i in range(changed_index + 1, len(combo_boxes)):
+            combo_boxes[i]["value"] = ""
+            combo_boxes[i]["enabled"] = False
+            combo_boxes[i]["options"] = []
+        
+        # Enable the next combo box if there is one
+        if changed_index + 1 < len(combo_boxes):
+            combo_boxes[changed_index + 1]["enabled"] = True
+        
         return combo_boxes 

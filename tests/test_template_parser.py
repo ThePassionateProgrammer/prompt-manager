@@ -39,4 +39,19 @@ class TestTemplateParser:
         
         tags = parser.extract_tags(template)
         
-        assert tags == ["Role", "What", "Why"] 
+        assert tags == ["Role", "What", "Why"]
+    
+    def test_generate_combo_boxes_from_template(self):
+        """Test generating combo box data from a template."""
+        parser = TemplateParser()
+        template = "As a [Role], I want to [What], so that I can [Why]"
+        
+        combo_boxes = parser.generate_combo_boxes(template)
+        
+        assert len(combo_boxes) == 3
+        assert combo_boxes[0]["tag"] == "Role"
+        assert combo_boxes[1]["tag"] == "What"
+        assert combo_boxes[2]["tag"] == "Why"
+        assert combo_boxes[0]["enabled"] == True
+        assert combo_boxes[1]["enabled"] == False  # Disabled until Role is selected
+        assert combo_boxes[2]["enabled"] == False  # Disabled until What is selected 

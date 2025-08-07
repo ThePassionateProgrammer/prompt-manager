@@ -53,7 +53,8 @@ class TemplateParser:
                 "enabled": i == 0,  # Only first combo box is enabled initially
                 "index": i,
                 "value": "",  # Empty initial value
-                "options": []  # Will be populated from component data later
+                "options": [],  # Will be populated from component data later
+                "is_custom": False  # Track if user entered custom text
             }
             combo_boxes.append(combo_box)
         
@@ -76,9 +77,34 @@ class TemplateParser:
             combo_boxes[i]["value"] = ""
             combo_boxes[i]["enabled"] = False
             combo_boxes[i]["options"] = []
+            combo_boxes[i]["is_custom"] = False
         
         # Enable the next combo box if there is one
         if changed_index + 1 < len(combo_boxes):
             combo_boxes[changed_index + 1]["enabled"] = True
         
-        return combo_boxes 
+        return combo_boxes
+    
+    def generate_prompt_from_selections(self, template: str, combo_boxes: List[Dict[str, Any]]) -> str:
+        """
+        Generate the final prompt by replacing tags with selected values.
+        
+        Args:
+            template: Original template string with tags
+            combo_boxes: List of combo box configurations with selected values
+            
+        Returns:
+            Final prompt with tags replaced by selections
+        """
+        result = template
+        
+        # Replace each tag with its selected value
+        for combo_box in combo_boxes:
+            tag = combo_box["tag"]
+            value = combo_box.get("value", "")
+            
+            # Replace the tag in the template
+            tag_pattern = f"[{tag}]"
+            result = result.replace(tag_pattern, value)
+        
+        return result 

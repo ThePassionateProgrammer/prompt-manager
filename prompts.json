@@ -3,10 +3,10 @@
     "67a536ac-9a22-4369-a51e-cfa55a6ab610": {
       "id": "67a536ac-9a22-4369-a51e-cfa55a6ab610",
       "name": "Prompt 2",
-      "text": "Text 2",
-      "category": "cat2",
+      "text": "Text 2mkjkbh",
+      "category": "analysis",
       "created_at": "2025-07-25T21:34:06.533319",
-      "modified_at": "2025-07-25T21:34:06.533319"
+      "modified_at": "2025-08-06T17:45:51.255527"
     },
     "8e026151-e34a-4820-ab21-096787999478": {
       "id": "8e026151-e34a-4820-ab21-096787999478",
@@ -183,6 +183,14 @@
       "category": "template",
       "created_at": "2025-08-02T17:01:17.494739",
       "modified_at": "2025-08-02T17:01:17.494739"
+    },
+    "fad31199-bba4-4eca-9055-1d9cc8cfeebe": {
+      "id": "fad31199-bba4-4eca-9055-1d9cc8cfeebe",
+      "name": "Template: Role → What → Why",
+      "text": "As a Option 1 for Role, I want to Option for What, so that I can Option for Why.",
+      "category": "template",
+      "created_at": "2025-08-06T17:10:16.774740",
+      "modified_at": "2025-08-06T17:21:05.931418"
     }
   }
 }

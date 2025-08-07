@@ -99,13 +99,9 @@ class PromptManagerWeb:
                 })
                 
                 if 'error' in result:
-                    # Handle validation errors from API
-                    if 'Validation failed' in result.get('error', ''):
-                        flash('Name and text are required', 'error')
-                    else:
-                        flash(f'Error creating prompt: {result["error"]}', 'error')
+                    flash(f'Error creating prompt: {result["error"]}', 'error')
                     return render_template('prompt_form.html', 
-                                        prompt={'name': name, 'text': text, 'category': category},
+                                        prompt=None, 
                                         categories=self._api_request('GET', '/categories'))
                 else:
                     flash('Prompt created successfully!', 'success')
@@ -129,19 +125,22 @@ class PromptManagerWeb:
         
         @self.app.route('/prompt/<prompt_id>/edit', methods=['GET', 'POST'])
         def edit_prompt(prompt_id):
-            """Edit a prompt."""
+            """Edit a specific prompt."""
             if request.method == 'POST':
                 name = request.form.get('name', '').strip()
                 text = request.form.get('text', '').strip()
                 category = request.form.get('category', 'general').strip()
                 
+                # Client-side validation
                 if not name or not text:
                     flash('Name and text are required', 'error')
+                    prompt = self._api_request('GET', f'/prompts/{prompt_id}')
                     categories = self._api_request('GET', '/categories')
                     return render_template('prompt_form.html', 
-                                        prompt={'id': prompt_id, 'name': name, 'text': text, 'category': category},
+                                        prompt=prompt, 
                                         categories=categories if isinstance(categories, list) else [])
                 
+                # Server-side validation via API
                 result = self._api_request('PUT', f'/prompts/{prompt_id}', {
                     'name': name,
                     'text': text,
@@ -150,13 +149,14 @@ class PromptManagerWeb:
                 
                 if 'error' in result:
                     flash(f'Error updating prompt: {result["error"]}', 'error')
+                    prompt = self._api_request('GET', f'/prompts/{prompt_id}')
                     categories = self._api_request('GET', '/categories')
                     return render_template('prompt_form.html', 
-                                        prompt={'id': prompt_id, 'name': name, 'text': text, 'category': category},
+                                        prompt=prompt, 
                                         categories=categories if isinstance(categories, list) else [])
                 else:
                     flash('Prompt updated successfully!', 'success')
-                    return redirect(url_for('view_prompt', prompt_id=prompt_id))
+                    return redirect(url_for('index'))
             
             prompt = self._api_request('GET', f'/prompts/{prompt_id}')
             
@@ -245,6 +245,11 @@ class PromptManagerWeb:
             """Show the prompt builder interface."""
             return render_template('prompt_builder.html')
         
+        @self.app.route('/template-builder', methods=['GET'])
+        def template_builder():
+            """Show the template builder interface."""
+            return render_template('template_builder.html')
+        
         @self.app.route('/api/prompt-builder/pieces', methods=['GET'])
         def get_prompt_pieces():
             """Get prompt pieces for the builder."""
@@ -256,6 +261,33 @@ class PromptManagerWeb:
             """Build a prompt from pieces."""
             data = request.get_json()
             result = self._api_request('POST', '/prompt-builder/build', data)
+            return jsonify(result)
+        
+        @self.app.route('/api/template-builder/generate', methods=['POST'])
+        def generate_template_combo_boxes():
+            """Generate combo boxes from template."""
+            data = request.get_json()
+            template = data.get('template', '')
+            
+            if not template:
+                return jsonify({'error': 'Template is required'}), 400
+            
+            result = self._api_request('POST', '/template-builder/generate', {
+                'template': template
+            })
+            return jsonify(result)
+        
+        @self.app.route('/api/template-builder/components', methods=['GET'])
+        def get_template_components():
+            """Get component data for template builder."""
+            result = self._api_request('GET', '/template-builder/components')
+            return jsonify(result)
+        
+        @self.app.route('/api/template-builder/build', methods=['POST'])
+        def build_template_prompt():
+            """Build final prompt from template selections."""
+            data = request.get_json()
+            result = self._api_request('POST', '/template-builder/build', data)
             return jsonify(result)
     
     def run(self, host: str = '0.0.0.0', port: int = 8000, debug: bool = False):

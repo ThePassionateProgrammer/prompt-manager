@@ -1,0 +1,485 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">🎯 Template Builder</h2>
+                    <p class="text-muted mb-0">Create dynamic prompts with cascading selections</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary" id="toggle-edit-mode">
+                        <i class="fas fa-edit me-1"></i>Edit Mode
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="clear-form">
+                        <i class="fas fa-eraser me-1"></i>Reset
+                    </button>
+                    <button type="button" class="btn btn-success" id="send-to-chat" disabled>
+                        <i class="fas fa-rocket me-1"></i>Launch to Chat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Left Panel: Template Input -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-code me-2"></i>Template Definition</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="template-input" class="form-label fw-bold">📝 Template</label>
+                        <textarea class="form-control form-control-lg" id="template-input" rows="4" 
+                                  placeholder="Enter your template with tags in brackets, e.g.: As a [Role], I want to [What], so that I can [Why]">As a [Role], I want to [What], so that I can [Why]</textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" id="generate-combo-boxes">
+                            <i class="fas fa-magic me-1"></i>Generate Combo Boxes
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="load-example">
+                            <i class="fas fa-lightbulb me-1"></i>Load Example
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Combo Boxes Container -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Dynamic Selections</h5>
+                </div>
+                <div class="card-body">
+                    <div id="combo-boxes-container">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-arrow-up fa-2x mb-3"></i>
+                            <p>Click "Generate Combo Boxes" to create dynamic selections</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel: Results -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-robot me-2"></i>Generated Prompt</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div id="prompt-preview" class="border rounded p-3 bg-light flex-grow-1" style="min-height: 300px;">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-magic fa-3x mb-3"></i>
+                            <p>Your generated prompt will appear here...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-6">
+                                <button class="btn btn-outline-primary w-100" id="copy-prompt" disabled>
+                                    <i class="fas fa-copy me-1"></i>Copy
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-outline-secondary w-100" id="save-template" disabled>
+                                    <i class="fas fa-save me-1"></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTemplate = "";
+let comboBoxes = [];
+let isEditMode = false;
+let componentData = {};
+
+// Load component data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadComponentData();
+    setupEventListeners();
+});
+
+function loadComponentData() {
+    fetch('/api/template-builder/components')
+        .then(response => response.json())
+        .then(data => {
+            componentData = data;
+        })
+        .catch(error => {
+            console.error('Error loading component data:', error);
+            showAlert('Error loading component data', 'error');
+        });
+}
+
+function setupEventListeners() {
+    // Generate combo boxes button
+    document.getElementById('generate-combo-boxes').addEventListener('click', generateComboBoxes);
+    
+    // Load example button
+    document.getElementById('load-example').addEventListener('click', loadExample);
+    
+    // Toggle edit mode button
+    document.getElementById('toggle-edit-mode').addEventListener('click', toggleEditMode);
+    
+    // Clear form button
+    document.getElementById('clear-form').addEventListener('click', clearForm);
+    
+    // Copy prompt button
+    document.getElementById('copy-prompt').addEventListener('click', copyPrompt);
+    
+    // Send to chat button
+    document.getElementById('send-to-chat').addEventListener('click', sendToChat);
+    
+    // Save template button
+    document.getElementById('save-template').addEventListener('click', saveTemplate);
+}
+
+function generateComboBoxes() {
+    const template = document.getElementById('template-input').value.trim();
+    
+    if (!template) {
+        showAlert('Please enter a template', 'error');
+        return;
+    }
+    
+    fetch('/api/template-builder/generate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ template: template })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Error generating combo boxes: ' + data.error, 'error');
+        } else {
+            comboBoxes = data.combo_boxes;
+            currentTemplate = template;
+            renderComboBoxes();
+            populateFirstComboBox();
+        }
+    })
+    .catch(error => {
+        console.error('Error generating combo boxes:', error);
+        showAlert('Error generating combo boxes', 'error');
+    });
+}
+
+function renderComboBoxes() {
+    const container = document.getElementById('combo-boxes-container');
+    
+    if (comboBoxes.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-arrow-up fa-2x mb-3"></i>
+                <p>Click "Generate Combo Boxes" to create dynamic selections</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    comboBoxes.forEach((comboBox, index) => {
+        const isFirst = index === 0;
+        const isLast = index === comboBoxes.length - 1;
+        
+        html += `
+            <div class="mb-3">
+                <label for="combo-${index}" class="form-label fw-bold">
+                    ${comboBox.tag} ${isFirst ? '(Start here)' : ''} ${isLast ? '(Final selection)' : ''}
+                </label>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-lg" 
+                           id="combo-${index}" 
+                           placeholder="Select or enter ${comboBox.tag.toLowerCase()}..."
+                           ${comboBox.enabled ? '' : 'disabled'}
+                           data-index="${index}"
+                           data-tag="${comboBox.tag}">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown" 
+                            ${comboBox.enabled ? '' : 'disabled'}>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu" id="dropdown-${index}">
+                        <li><a class="dropdown-item" href="#" data-value="">Choose ${comboBox.tag}...</a></li>
+                    </ul>
+                </div>
+                <div class="form-text">
+                    ${comboBox.enabled ? 'Ready for selection' : 'Waiting for previous selection'}
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // Add event listeners to combo boxes
+    comboBoxes.forEach((comboBox, index) => {
+        const input = document.getElementById(`combo-${index}`);
+        const dropdown = document.getElementById(`dropdown-${index}`);
+        
+        // Handle input changes
+        input.addEventListener('input', function() {
+            handleComboBoxChange(index, this.value, true);
+        });
+        
+        // Handle dropdown selections
+        dropdown.addEventListener('click', function(e) {
+            if (e.target.classList.contains('dropdown-item')) {
+                e.preventDefault();
+                const value = e.target.getAttribute('data-value');
+                input.value = value;
+                handleComboBoxChange(index, value, false);
+            }
+        });
+    });
+}
+
+function populateFirstComboBox() {
+    if (comboBoxes.length === 0) return;
+    
+    const firstComboBox = comboBoxes[0];
+    const dropdown = document.getElementById('dropdown-0');
+    
+    // Get root components for the first tag
+    const options = componentData.components?.[firstComboBox.tag] || [];
+    const rootOptions = options.filter(option => !option.parent);
+    
+    dropdown.innerHTML = '<li><a class="dropdown-item" href="#" data-value="">Choose ' + firstComboBox.tag + '...</a></li>';
+    
+    rootOptions.forEach(option => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.className = 'dropdown-item';
+        a.href = '#';
+        a.setAttribute('data-value', option.label);
+        a.textContent = option.label;
+        dropdown.appendChild(li);
+        li.appendChild(a);
+    });
+}
+
+function handleComboBoxChange(index, value, isCustom) {
+    comboBoxes[index].value = value;
+    comboBoxes[index].is_custom = isCustom;
+    
+    // Update cascading selections
+    updateCascadingSelections(index);
+    
+    // Generate final prompt
+    generateFinalPrompt();
+}
+
+function updateCascadingSelections(changedIndex) {
+    // Reset downstream combo boxes
+    for (let i = changedIndex + 1; i < comboBoxes.length; i++) {
+        comboBoxes[i].value = "";
+        comboBoxes[i].enabled = false;
+        comboBoxes[i].is_custom = false;
+        
+        const input = document.getElementById(`combo-${i}`);
+        const dropdown = document.getElementById(`dropdown-${i}`);
+        
+        if (input) {
+            input.value = "";
+            input.disabled = true;
+        }
+        
+        if (dropdown) {
+            dropdown.innerHTML = '<li><a class="dropdown-item" href="#" data-value="">Choose ' + comboBoxes[i].tag + '...</a></li>';
+        }
+    }
+    
+    // Enable next combo box if there is one
+    if (changedIndex + 1 < comboBoxes.length) {
+        comboBoxes[changedIndex + 1].enabled = true;
+        
+        const input = document.getElementById(`combo-${changedIndex + 1}`);
+        if (input) {
+            input.disabled = false;
+        }
+        
+        // Populate next combo box with options based on current selection
+        populateNextComboBox(changedIndex + 1, comboBoxes[changedIndex].value);
+    }
+}
+
+function populateNextComboBox(index, parentValue) {
+    if (index >= comboBoxes.length) return;
+    
+    const comboBox = comboBoxes[index];
+    const dropdown = document.getElementById(`dropdown-${index}`);
+    
+    // Get child components for this tag based on parent selection
+    const options = componentData.components?.[comboBox.tag] || [];
+    const childOptions = options.filter(option => option.parent === parentValue);
+    
+    dropdown.innerHTML = '<li><a class="dropdown-item" href="#" data-value="">Choose ' + comboBox.tag + '...</a></li>';
+    
+    childOptions.forEach(option => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.className = 'dropdown-item';
+        a.href = '#';
+        a.setAttribute('data-value', option.label);
+        a.textContent = option.label;
+        dropdown.appendChild(li);
+        li.appendChild(a);
+    });
+}
+
+function generateFinalPrompt() {
+    if (!currentTemplate || comboBoxes.length === 0) return;
+    
+    fetch('/api/template-builder/build', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            template: currentTemplate,
+            combo_boxes: comboBoxes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Error generating prompt: ' + data.error, 'error');
+        } else {
+            displayPrompt(data.prompt);
+        }
+    })
+    .catch(error => {
+        console.error('Error generating prompt:', error);
+        showAlert('Error generating prompt', 'error');
+    });
+}
+
+function displayPrompt(prompt) {
+    const preview = document.getElementById('prompt-preview');
+    if (prompt) {
+        const promptHtml = `
+            <div class="mb-3">
+                <h6 class="text-success mb-2"><i class="fas fa-robot me-1"></i>Generated Prompt:</h6>
+                <pre class="bg-light p-3 rounded border">${prompt}</pre>
+            </div>
+        `;
+        preview.innerHTML = promptHtml;
+        document.getElementById('copy-prompt').disabled = false;
+        document.getElementById('send-to-chat').disabled = false;
+        document.getElementById('save-template').disabled = false;
+    } else {
+        preview.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-magic fa-3x mb-3"></i>
+                <p>Your generated prompt will appear here...</p>
+            </div>
+        `;
+        document.getElementById('copy-prompt').disabled = true;
+        document.getElementById('send-to-chat').disabled = true;
+        document.getElementById('save-template').disabled = true;
+    }
+}
+
+function loadExample() {
+    document.getElementById('template-input').value = "As a [Role], I want to [What], so that I can [Why]";
+    generateComboBoxes();
+}
+
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const button = document.getElementById('toggle-edit-mode');
+    
+    if (isEditMode) {
+        button.innerHTML = '<i class="fas fa-save me-1"></i>Save Mode';
+        button.classList.remove('btn-outline-secondary');
+        button.classList.add('btn-warning');
+    } else {
+        button.innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode';
+        button.classList.remove('btn-warning');
+        button.classList.add('btn-outline-secondary');
+    }
+}
+
+function clearForm() {
+    document.getElementById('template-input').value = "";
+    comboBoxes = [];
+    currentTemplate = "";
+    renderComboBoxes();
+    
+    const preview = document.getElementById('prompt-preview');
+    preview.innerHTML = `
+        <div class="text-center text-muted">
+            <i class="fas fa-magic fa-3x mb-3"></i>
+            <p>Your generated prompt will appear here...</p>
+        </div>
+    `;
+    
+    document.getElementById('copy-prompt').disabled = true;
+    document.getElementById('send-to-chat').disabled = true;
+    document.getElementById('save-template').disabled = true;
+}
+
+function copyPrompt() {
+    const promptText = document.querySelector('#prompt-preview pre')?.textContent;
+    if (!promptText) return;
+    
+    navigator.clipboard.writeText(promptText).then(() => {
+        showAlert('Prompt copied to clipboard!', 'success');
+    }).catch(() => {
+        showAlert('Failed to copy prompt', 'error');
+    });
+}
+
+function sendToChat() {
+    const promptText = document.querySelector('#prompt-preview pre')?.textContent;
+    if (!promptText) return;
+    
+    sessionStorage.setItem('promptToInject', promptText);
+    window.location.href = '/chat?inject=' + encodeURIComponent(promptText);
+}
+
+function saveTemplate() {
+    const templateName = prompt('Enter a name for this template:');
+    if (templateName) {
+        const templates = JSON.parse(localStorage.getItem('promptTemplates') || '{}');
+        templates[templateName] = {
+            template: currentTemplate,
+            combo_boxes: comboBoxes
+        };
+        localStorage.setItem('promptTemplates', JSON.stringify(templates));
+        showAlert('Template saved successfully!', 'success');
+    }
+}
+
+function showAlert(message, type) {
+    // Create a Bootstrap alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 3000);
+}
+</script>
+{% endblock %}

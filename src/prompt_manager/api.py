@@ -13,6 +13,7 @@ from .business.key_loader import save_openai_api_key
 from .business.prompt_builder import PromptBuilder
 from .business.template_parser import TemplateParser
 from .business.component_manager import ComponentManager
+from .business.template_storage import TemplateStorage
 import uuid
 
 ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
@@ -37,6 +38,7 @@ class PromptManagerAPI:
         self.prompt_builder = PromptBuilder()
         self.template_parser = TemplateParser()
         self.component_manager = ComponentManager()
+        self.template_storage = TemplateStorage()
         
         # Initialize Flask app
         self.app = Flask(__name__)
@@ -332,6 +334,91 @@ class PromptManagerAPI:
                 
                 final_prompt = self.template_parser.generate_prompt_from_selections(template, combo_boxes)
                 return jsonify({'prompt': final_prompt}), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        # Template Storage Endpoints
+        @self.app.route('/api/templates', methods=['GET'])
+        def get_templates():
+            """Get all saved templates."""
+            try:
+                templates = self.template_storage.list_templates()
+                return jsonify(templates), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/templates/<template_id>', methods=['GET'])
+        def get_template(template_id: str):
+            """Get a specific template by ID."""
+            try:
+                template = self.template_storage.load_template(template_id)
+                if not template:
+                    return jsonify({'error': 'Template not found'}), 404
+                
+                return jsonify(template), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/templates', methods=['POST'])
+        def create_template():
+            """Create a new template."""
+            try:
+                data = request.get_json()
+                if not data:
+                    return jsonify({'error': 'No data provided'}), 400
+                
+                # Validate required fields
+                name = data.get('name', '').strip()
+                template = data.get('template', '').strip()
+                
+                if not name:
+                    return jsonify({'error': 'Name is required'}), 400
+                if not template:
+                    return jsonify({'error': 'Template is required'}), 400
+                
+                template_id = self.template_storage.save_template(data)
+                return jsonify({'id': template_id, 'message': 'Template saved successfully'}), 201
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/templates/<template_id>', methods=['PUT'])
+        def update_template(template_id: str):
+            """Update an existing template."""
+            try:
+                data = request.get_json()
+                if not data:
+                    return jsonify({'error': 'No data provided'}), 400
+                
+                success = self.template_storage.update_template(template_id, data)
+                if not success:
+                    return jsonify({'error': 'Template not found'}), 404
+                
+                return jsonify({'message': 'Template updated successfully'}), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/templates/<template_id>', methods=['DELETE'])
+        def delete_template(template_id: str):
+            """Delete a template."""
+            try:
+                success = self.template_storage.delete_template(template_id)
+                if not success:
+                    return jsonify({'error': 'Template not found'}), 404
+                
+                return jsonify({'message': 'Template deleted successfully'}), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/templates/search', methods=['GET'])
+        def search_templates():
+            """Search templates by query."""
+            try:
+                query = request.args.get('q', '').strip()
+                if not query:
+                    return jsonify([]), 200
+                
+                templates = self.template_storage.search_templates(query)
+                return jsonify(templates), 200
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
         

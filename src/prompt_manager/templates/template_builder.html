@@ -47,6 +47,29 @@
                 </div>
             </div>
             
+            <!-- Template Selection -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-folder me-2"></i>Saved Templates</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="template-select" class="form-label fw-bold">Load Template</label>
+                        <select class="form-select" id="template-select">
+                            <option value="">Choose a saved template...</option>
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-success" id="save-template-btn" disabled>
+                            <i class="fas fa-save me-1"></i>Save Template
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" id="delete-template-btn" disabled>
+                            <i class="fas fa-trash me-1"></i>Delete Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Combo Boxes Container -->
             <div class="card shadow-sm">
                 <div class="card-header bg-info text-white">
@@ -102,10 +125,13 @@ let currentTemplate = "";
 let comboBoxes = [];
 let isEditMode = false;
 let componentData = {};
+let currentTemplateId = null;
+let savedTemplates = [];
 
 // Load component data on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadComponentData();
+    loadSavedTemplates();
     setupEventListeners();
 });
 
@@ -119,6 +145,31 @@ function loadComponentData() {
             console.error('Error loading component data:', error);
             showAlert('Error loading component data', 'error');
         });
+}
+
+function loadSavedTemplates() {
+    fetch('/api/templates')
+        .then(response => response.json())
+        .then(data => {
+            savedTemplates = data;
+            populateTemplateSelect();
+        })
+        .catch(error => {
+            console.error('Error loading saved templates:', error);
+            showAlert('Error loading saved templates', 'error');
+        });
+}
+
+function populateTemplateSelect() {
+    const select = document.getElementById('template-select');
+    select.innerHTML = '<option value="">Choose a saved template...</option>';
+    
+    savedTemplates.forEach(template => {
+        const option = document.createElement('option');
+        option.value = template.id;
+        option.textContent = template.name;
+        select.appendChild(option);
+    });
 }
 
 function setupEventListeners() {
@@ -142,6 +193,15 @@ function setupEventListeners() {
     
     // Save template button
     document.getElementById('save-template').addEventListener('click', saveTemplate);
+    
+    // Template selection
+    document.getElementById('template-select').addEventListener('change', loadSelectedTemplate);
+    
+    // Save template button (in template section)
+    document.getElementById('save-template-btn').addEventListener('click', saveCurrentTemplate);
+    
+    // Delete template button
+    document.getElementById('delete-template-btn').addEventListener('click', deleteCurrentTemplate);
 }
 
 function generateComboBoxes() {
@@ -166,8 +226,10 @@ function generateComboBoxes() {
         } else {
             comboBoxes = data.combo_boxes;
             currentTemplate = template;
+            currentTemplateId = null; // Reset template ID for new template
             renderComboBoxes();
             populateFirstComboBox();
+            updateSaveButtons();
         }
     })
     .catch(error => {
@@ -211,6 +273,12 @@ function renderComboBoxes() {
                             ${comboBox.enabled ? '' : 'disabled'}>
                         <i class="fas fa-chevron-down"></i>
                     </button>
+                    <button class="btn btn-outline-success" type="button" 
+                            id="add-${index}" 
+                            ${comboBox.enabled ? '' : 'disabled'}
+                            title="Add new option">
+                        <i class="fas fa-plus"></i>
+                    </button>
                     <ul class="dropdown-menu" id="dropdown-${index}">
                         <li><a class="dropdown-item" href="#" data-value="">Choose ${comboBox.tag}...</a></li>
                     </ul>
@@ -228,10 +296,18 @@ function renderComboBoxes() {
     comboBoxes.forEach((comboBox, index) => {
         const input = document.getElementById(`combo-${index}`);
         const dropdown = document.getElementById(`dropdown-${index}`);
+        const addButton = document.getElementById(`add-${index}`);
         
         // Handle input changes
         input.addEventListener('input', function() {
             handleComboBoxChange(index, this.value, true);
+        });
+        
+        // Handle Enter key for editing
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleComboBoxEdit(index, this.value);
+            }
         });
         
         // Handle dropdown selections
@@ -243,7 +319,85 @@ function renderComboBoxes() {
                 handleComboBoxChange(index, value, false);
             }
         });
+        
+        // Handle add button
+        addButton.addEventListener('click', function() {
+            handleAddOption(index);
+        });
     });
+}
+
+function handleComboBoxEdit(index, value) {
+    const comboBox = comboBoxes[index];
+    const dropdown = document.getElementById(`dropdown-${index}`);
+    
+    if (value.trim() === '') {
+        // Remove empty option from dropdown
+        const selectedOption = dropdown.querySelector('.dropdown-item.selected');
+        if (selectedOption) {
+            selectedOption.remove();
+        }
+    } else {
+        // Add or update option in dropdown
+        const existingOption = dropdown.querySelector('.dropdown-item.selected');
+        if (existingOption) {
+            existingOption.textContent = value;
+            existingOption.setAttribute('data-value', value);
+        } else {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.className = 'dropdown-item selected';
+            a.href = '#';
+            a.setAttribute('data-value', value);
+            a.textContent = value;
+            li.appendChild(a);
+            dropdown.appendChild(li);
+        }
+    }
+    
+    // Update component data
+    updateComponentData(comboBox.tag, value);
+}
+
+function handleAddOption(index) {
+    const comboBox = comboBoxes[index];
+    const input = document.getElementById(`combo-${index}`);
+    const value = input.value.trim();
+    
+    if (value) {
+        const dropdown = document.getElementById(`dropdown-${index}`);
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.className = 'dropdown-item';
+        a.href = '#';
+        a.setAttribute('data-value', value);
+        a.textContent = value;
+        li.appendChild(a);
+        dropdown.appendChild(li);
+        
+        // Update component data
+        updateComponentData(comboBox.tag, value);
+        
+        input.value = '';
+        showAlert(`Added "${value}" to ${comboBox.tag} options`, 'success');
+    }
+}
+
+function updateComponentData(tag, value) {
+    // Add to component data if not already present
+    if (!componentData.components[tag]) {
+        componentData.components[tag] = [];
+    }
+    
+    // Check if value already exists
+    const exists = componentData.components[tag].some(comp => comp.label === value);
+    if (!exists) {
+        componentData.components[tag].push({
+            "label": value,
+            "parent": null, // Root component
+            "next_tag": null
+        });
+    }
 }
 
 function populateFirstComboBox() {
@@ -279,6 +433,9 @@ function handleComboBoxChange(index, value, isCustom) {
     
     // Generate final prompt
     generateFinalPrompt();
+    
+    // Update save buttons
+    updateSaveButtons();
 }
 
 function updateCascadingSelections(changedIndex) {
@@ -405,17 +562,173 @@ function toggleEditMode() {
         button.innerHTML = '<i class="fas fa-save me-1"></i>Save Mode';
         button.classList.remove('btn-outline-secondary');
         button.classList.add('btn-warning');
+        
+        // Enable editing for all combo boxes
+        comboBoxes.forEach((comboBox, index) => {
+            const input = document.getElementById(`combo-${index}`);
+            if (input) {
+                input.readOnly = false;
+            }
+        });
     } else {
         button.innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode';
         button.classList.remove('btn-warning');
         button.classList.add('btn-outline-secondary');
+        
+        // Disable editing for disabled combo boxes
+        comboBoxes.forEach((comboBox, index) => {
+            const input = document.getElementById(`combo-${index}`);
+            if (input && !comboBox.enabled) {
+                input.readOnly = true;
+            }
+        });
+        
+        // Auto-save when exiting edit mode
+        if (currentTemplateId) {
+            saveCurrentTemplate();
+        }
     }
+}
+
+function loadSelectedTemplate() {
+    const templateId = document.getElementById('template-select').value;
+    if (!templateId) return;
+    
+    fetch(`/api/templates/${templateId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showAlert('Error loading template: ' + data.error, 'error');
+            } else {
+                // Load template data
+                document.getElementById('template-input').value = data.template;
+                comboBoxes = data.combo_boxes || [];
+                currentTemplate = data.template;
+                currentTemplateId = templateId;
+                
+                renderComboBoxes();
+                populateComboBoxesFromTemplate();
+                generateFinalPrompt();
+                updateSaveButtons();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading template:', error);
+            showAlert('Error loading template', 'error');
+        });
+}
+
+function populateComboBoxesFromTemplate() {
+    comboBoxes.forEach((comboBox, index) => {
+        const input = document.getElementById(`combo-${index}`);
+        if (input) {
+            input.value = comboBox.value || '';
+            input.disabled = !comboBox.enabled;
+        }
+        
+        // Populate dropdown if enabled
+        if (comboBox.enabled) {
+            populateComboBoxOptions(index, comboBox.tag, comboBox.value);
+        }
+    });
+}
+
+function populateComboBoxOptions(index, tag, selectedValue) {
+    const dropdown = document.getElementById(`dropdown-${index}`);
+    const options = componentData.components?.[tag] || [];
+    
+    dropdown.innerHTML = '<li><a class="dropdown-item" href="#" data-value="">Choose ' + tag + '...</a></li>';
+    
+    options.forEach(option => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.className = 'dropdown-item';
+        a.href = '#';
+        a.setAttribute('data-value', option.label);
+        a.textContent = option.label;
+        if (option.label === selectedValue) {
+            a.classList.add('selected');
+        }
+        dropdown.appendChild(li);
+        li.appendChild(a);
+    });
+}
+
+function saveCurrentTemplate() {
+    if (!currentTemplate) return;
+    
+    const templateData = {
+        name: `Template ${Date.now()}`, // Default name
+        description: "Generated template",
+        template: currentTemplate,
+        combo_boxes: comboBoxes
+    };
+    
+    const url = currentTemplateId ? `/api/templates/${currentTemplateId}` : '/api/templates';
+    const method = currentTemplateId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(templateData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Error saving template: ' + data.error, 'error');
+        } else {
+            if (!currentTemplateId) {
+                currentTemplateId = data.id;
+            }
+            showAlert('Template saved successfully!', 'success');
+            loadSavedTemplates(); // Refresh template list
+        }
+    })
+    .catch(error => {
+        console.error('Error saving template:', error);
+        showAlert('Error saving template', 'error');
+    });
+}
+
+function deleteCurrentTemplate() {
+    if (!currentTemplateId) return;
+    
+    if (confirm('Are you sure you want to delete this template?')) {
+        fetch(`/api/templates/${currentTemplateId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showAlert('Error deleting template: ' + data.error, 'error');
+            } else {
+                showAlert('Template deleted successfully!', 'success');
+                currentTemplateId = null;
+                document.getElementById('template-select').value = '';
+                loadSavedTemplates(); // Refresh template list
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting template:', error);
+            showAlert('Error deleting template', 'error');
+        });
+    }
+}
+
+function updateSaveButtons() {
+    const hasTemplate = currentTemplate && comboBoxes.length > 0;
+    document.getElementById('save-template-btn').disabled = !hasTemplate;
+    document.getElementById('delete-template-btn').disabled = !currentTemplateId;
 }
 
 function clearForm() {
     document.getElementById('template-input').value = "";
+    document.getElementById('template-select').value = "";
     comboBoxes = [];
     currentTemplate = "";
+    currentTemplateId = null;
     renderComboBoxes();
     
     const preview = document.getElementById('prompt-preview');
@@ -429,6 +742,7 @@ function clearForm() {
     document.getElementById('copy-prompt').disabled = true;
     document.getElementById('send-to-chat').disabled = true;
     document.getElementById('save-template').disabled = true;
+    updateSaveButtons();
 }
 
 function copyPrompt() {
@@ -451,15 +765,37 @@ function sendToChat() {
 }
 
 function saveTemplate() {
+    if (!currentTemplate) return;
+    
     const templateName = prompt('Enter a name for this template:');
     if (templateName) {
-        const templates = JSON.parse(localStorage.getItem('promptTemplates') || '{}');
-        templates[templateName] = {
+        const templateData = {
+            name: templateName,
+            description: "User saved template",
             template: currentTemplate,
             combo_boxes: comboBoxes
         };
-        localStorage.setItem('promptTemplates', JSON.stringify(templates));
-        showAlert('Template saved successfully!', 'success');
+        
+        fetch('/api/templates', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(templateData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showAlert('Error saving template: ' + data.error, 'error');
+            } else {
+                showAlert('Template saved successfully!', 'success');
+                loadSavedTemplates(); // Refresh template list
+            }
+        })
+        .catch(error => {
+            console.error('Error saving template:', error);
+            showAlert('Error saving template', 'error');
+        });
     }
 }
 

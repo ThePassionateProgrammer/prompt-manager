@@ -155,6 +155,31 @@
       "created_date": "2025-08-06T20:30:00Z",
       "updated_date": "2025-08-08T09:54:30.956816",
       "id": "640e858a-46a8-4ed4-90b0-9dea4b14ab1d"
+    },
+    "617057ae-4f5e-4a17-8fc2-f37dce7fbe05": {
+      "name": "New Test Template",
+      "description": "Test description",
+      "template": "As a [Role], I want to [What], so that I can [Why]",
+      "combo_boxes": [
+        {
+          "tag": "Role",
+          "value": "Developer",
+          "enabled": true
+        },
+        {
+          "tag": "What",
+          "value": "Build Features",
+          "enabled": true
+        },
+        {
+          "tag": "Why",
+          "value": "Help Users",
+          "enabled": true
+        }
+      ],
+      "id": "617057ae-4f5e-4a17-8fc2-f37dce7fbe05",
+      "created_date": "2025-08-08T09:57:26.818075",
+      "updated_date": "2025-08-08T09:57:26.818084"
     }
   }
 }

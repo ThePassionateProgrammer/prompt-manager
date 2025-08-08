@@ -191,6 +191,14 @@
       "category": "template",
       "created_at": "2025-08-06T17:10:16.774740",
       "modified_at": "2025-08-06T17:21:05.931418"
+    },
+    "88fd215f-3e10-4856-9be4-0ca01f51b79e": {
+      "id": "88fd215f-3e10-4856-9be4-0ca01f51b79e",
+      "name": "Template: role → what → why",
+      "text": "As a Teacher, I want to Prepare lunch, so that I can Build better software.",
+      "category": "template",
+      "created_at": "2025-08-08T10:41:23.988413",
+      "modified_at": "2025-08-08T10:41:23.988413"
     }
   }
 }

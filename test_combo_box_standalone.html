@@ -255,8 +255,8 @@
                 // Focus events
                 this.input.addEventListener('focus', () => this.showDropdown());
                 this.input.addEventListener('blur', (e) => {
-                    // Delay to allow for option clicks
-                    setTimeout(() => this.hideDropdown(), 150);
+                    // Longer delay to allow for option clicks
+                    setTimeout(() => this.hideDropdown(), 200);
                 });
                 
                 // Key events
@@ -270,7 +270,11 @@
                 
                 // Option clicks
                 this.options.forEach((option, index) => {
-                    option.addEventListener('click', () => this.selectOption(index));
+                    option.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.selectOption(index);
+                    });
                     option.addEventListener('mouseenter', () => this.highlightOption(index));
                 });
                 
@@ -361,7 +365,7 @@
                     }
                     // Keep dropdown open and focus on input
                     this.showDropdown();
-                    this.input.focus();
+                    setTimeout(() => this.input.focus(), 10);
                     return;
                 }
                 
@@ -370,8 +374,9 @@
                 this.input.value = option.dataset.value;
                 this.updateSelection();
                 
-                // Keep dropdown open
+                // Keep dropdown open and focus on input
                 this.showDropdown();
+                setTimeout(() => this.input.focus(), 10);
             }
             
             highlightOption(index) {
@@ -409,7 +414,15 @@
             
             updateSelection() {
                 this.options.forEach(option => {
-                    option.classList.toggle('selected', option.dataset.value === this.selectedOption);
+                    const isSelected = option.dataset.value === this.selectedOption;
+                    option.classList.toggle('selected', isSelected);
+                    if (isSelected) {
+                        option.style.backgroundColor = '#e3f2fd';
+                        option.style.fontWeight = 'bold';
+                    } else {
+                        option.style.backgroundColor = '';
+                        option.style.fontWeight = '';
+                    }
                 });
             }
             
@@ -422,7 +435,11 @@
                 newOption.textContent = value;
                 
                 // Add event listeners
-                newOption.addEventListener('click', () => this.selectOption(this.options.indexOf(newOption)));
+                newOption.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.selectOption(this.options.indexOf(newOption));
+                });
                 newOption.addEventListener('mouseenter', () => this.highlightOption(this.options.indexOf(newOption)));
                 
                 addOption.parentNode.insertBefore(newOption, addOption.nextSibling);

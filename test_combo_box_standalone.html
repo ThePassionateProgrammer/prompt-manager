@@ -310,6 +310,7 @@
                 const entryText = this.input.value.trim();
                 
                 if (this.selectedOption) {
+                    // Item is selected - update or delete
                     if (entryText === '') {
                         // Remove selected option
                         this.removeOption(this.selectedOption);
@@ -317,17 +318,11 @@
                         // Replace selected option
                         this.replaceOption(this.selectedOption, entryText);
                     }
-                } else if (this.highlightedIndex >= 0) {
-                    const highlightedOption = this.options[this.highlightedIndex];
-                    if (highlightedOption.dataset.value === 'Add...') {
-                        // Add new option only if there's text
-                        if (entryText !== '') {
-                            this.addOption(entryText);
-                            this.input.value = '';
-                        }
-                    } else {
-                        // Select highlighted option
-                        this.selectOption(this.highlightedIndex);
+                } else {
+                    // No item selected - default to add behavior
+                    if (entryText !== '') {
+                        this.addOption(entryText);
+                        this.input.value = '';
                     }
                 }
                 
@@ -364,14 +359,19 @@
                         this.addOption(entryText);
                         this.input.value = '';
                     }
-                    // Keep dropdown open
+                    // Keep dropdown open and focus on input
                     this.showDropdown();
+                    this.input.focus();
                     return;
                 }
                 
+                // Select the option
                 this.selectedOption = option.dataset.value;
                 this.input.value = option.dataset.value;
                 this.updateSelection();
+                
+                // Keep dropdown open
+                this.showDropdown();
             }
             
             highlightOption(index) {
@@ -544,10 +544,9 @@
                 results.push('  ✗ Options not correctly initialized');
             }
             
-            // Test 2: Add new option
-            results.push('✓ Add new option test');
+            // Test 2: Add new option (no selection)
+            results.push('✓ Add new option test (no selection)');
             combo1.setEntryText('New Test Option');
-            combo1.selectOption(0); // Select "Add..."
             combo1.handleEnter();
             if (combo1.getOptions().includes('New Test Option')) {
                 results.push('  ✓ New option added successfully');
@@ -555,8 +554,8 @@
                 results.push('  ✗ Failed to add new option');
             }
             
-            // Test 3: Replace option
-            results.push('✓ Replace option test');
+            // Test 3: Select and replace option
+            results.push('✓ Select and replace option test');
             combo1.selectOption(1); // Select "Option 1"
             combo1.setEntryText('Replaced Option');
             combo1.handleEnter();
@@ -564,6 +563,17 @@
                 results.push('  ✓ Option replaced successfully');
             } else {
                 results.push('  ✗ Failed to replace option');
+            }
+            
+            // Test 4: Delete option
+            results.push('✓ Delete option test');
+            combo1.selectOption(1); // Select "Replaced Option"
+            combo1.setEntryText('');
+            combo1.handleEnter();
+            if (!combo1.getOptions().includes('Replaced Option')) {
+                results.push('  ✓ Option deleted successfully');
+            } else {
+                results.push('  ✗ Failed to delete option');
             }
             
             document.getElementById('testResults').textContent = results.join('\n');

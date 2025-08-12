@@ -320,9 +320,10 @@
                 } else if (this.highlightedIndex >= 0) {
                     const highlightedOption = this.options[this.highlightedIndex];
                     if (highlightedOption.dataset.value === 'Add...') {
-                        // Add new option
+                        // Add new option only if there's text
                         if (entryText !== '') {
                             this.addOption(entryText);
+                            this.input.value = '';
                         }
                     } else {
                         // Select highlighted option
@@ -330,7 +331,6 @@
                     }
                 }
                 
-                this.input.value = '';
                 // Keep dropdown open to show changes
                 this.showDropdown();
             }
@@ -358,7 +358,13 @@
                 
                 const option = this.options[index];
                 if (option.dataset.value === 'Add...') {
-                    // Don't select "Add..." option, but keep dropdown open
+                    // Handle Add... like a button
+                    const entryText = this.input.value.trim();
+                    if (entryText !== '') {
+                        this.addOption(entryText);
+                        this.input.value = '';
+                    }
+                    // Keep dropdown open
                     this.showDropdown();
                     return;
                 }
@@ -423,9 +429,6 @@
                 this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
                 this.selectedOption = value;
                 this.updateSelection();
-                
-                // Keep dropdown open to show the new option
-                this.showDropdown();
             }
             
             replaceOption(oldValue, newValue) {

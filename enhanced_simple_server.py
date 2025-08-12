@@ -1246,6 +1246,12 @@ def generate_template():
     except Exception as e:
         return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
 
+@app.route('/test-combo-box')
+def test_combo_box_page():
+    """Test page for custom combo box component."""
+    with open('test_combo_box_page.html', 'r') as f:
+        return f.read()
+
 @app.route('/test')
 def test_route():
     """Simple test route to verify route registration."""

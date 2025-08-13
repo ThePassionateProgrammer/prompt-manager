@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Combo Box Test - Standalone</title>
+    <title>Custom Combo Box Test - Standalone v1.2</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -172,6 +172,7 @@
 </head>
 <body>
     <h1>🎯 Custom Combo Box Test - Standalone</h1>
+    <p><strong>Version: 1.2</strong> - Fixed dropdown persistence, selection highlighting, and Add... behavior</p>
     
     <div class="instructions">
         <h3>📋 Test Instructions</h3>
@@ -252,17 +253,13 @@
             }
             
             setupEventListeners() {
-                // Focus events
+                // Focus events - always show dropdown
                 this.input.addEventListener('focus', () => this.showDropdown());
-                this.input.addEventListener('blur', (e) => {
-                    // Longer delay to allow for option clicks
-                    setTimeout(() => this.hideDropdown(), 200);
-                });
                 
                 // Key events
                 this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
                 
-                // Arrow click
+                // Arrow click - only way to close dropdown
                 this.arrow.addEventListener('click', (e) => {
                     e.stopPropagation();
                     this.toggleDropdown();
@@ -330,7 +327,7 @@
                     }
                 }
                 
-                // Keep dropdown open to show changes
+                // Always keep dropdown open
                 this.showDropdown();
             }
             
@@ -357,7 +354,7 @@
                 
                 const option = this.options[index];
                 if (option.dataset.value === 'Add...') {
-                    // Handle Add... like a button
+                    // Handle Add... like a button - always works
                     const entryText = this.input.value.trim();
                     if (entryText !== '') {
                         this.addOption(entryText);
@@ -417,10 +414,12 @@
                     const isSelected = option.dataset.value === this.selectedOption;
                     option.classList.toggle('selected', isSelected);
                     if (isSelected) {
-                        option.style.backgroundColor = '#e3f2fd';
+                        option.style.backgroundColor = '#555';
+                        option.style.color = 'white';
                         option.style.fontWeight = 'bold';
                     } else {
                         option.style.backgroundColor = '';
+                        option.style.color = '';
                         option.style.fontWeight = '';
                     }
                 });

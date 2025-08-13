@@ -374,6 +374,9 @@
                 // Keep dropdown open and focus on input
                 this.showDropdown();
                 setTimeout(() => this.input.focus(), 10);
+                
+                // Select all text in input field
+                this.input.select();
             }
             
             highlightOption(index) {
@@ -445,6 +448,10 @@
                 this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
                 this.selectedOption = value;
                 this.updateSelection();
+                
+                // Clear any previous highlighting
+                this.highlightedIndex = -1;
+                this.updateHighlight();
             }
             
             replaceOption(oldValue, newValue) {
@@ -454,6 +461,10 @@
                     option.textContent = newValue;
                     this.selectedOption = newValue;
                     this.updateSelection();
+                    
+                    // Clear any previous highlighting
+                    this.highlightedIndex = -1;
+                    this.updateHighlight();
                 }
             }
             
@@ -464,6 +475,10 @@
                     this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
                     this.selectedOption = null;
                     this.updateSelection();
+                    
+                    // Clear any previous highlighting
+                    this.highlightedIndex = -1;
+                    this.updateHighlight();
                 }
             }
             

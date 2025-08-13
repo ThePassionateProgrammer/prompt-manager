@@ -1259,6 +1259,7 @@ def test_route():
 
 if __name__ == '__main__':
     print("🚀 Starting Enhanced Simple Prompt Manager Web Server...")
+    print("📋 Version: 1.4 - Custom Combo Box Component Ready")
     print("=" * 60)
     
     # Setup port

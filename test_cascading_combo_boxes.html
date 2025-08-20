@@ -145,6 +145,7 @@
         <button class="test-button" onclick="runTest1()">Test 1: Basic Linkage</button>
         <button class="test-button" onclick="runTest2()">Test 2: Event-Driven Linkage</button>
         <button class="test-button" onclick="runTest3()">Test 3: Cascade Reset</button>
+        <button class="test-button" onclick="runAllTests()">Run All Tests</button>
         <button class="test-button" onclick="resetTest()">Reset</button>
         <div class="test-results" id="test-results">
             Click "Test 1" to run the first test...
@@ -326,6 +327,35 @@
             }, 100);
         }
 
+        // Run all tests sequentially
+        function runAllTests() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>🧪 Running All Tests...</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Run tests with delays
+            setTimeout(() => {
+                runTest1();
+                setTimeout(() => {
+                    resetTest();
+                    setTimeout(() => {
+                        runTest2();
+                        setTimeout(() => {
+                            resetTest();
+                            setTimeout(() => {
+                                runTest3();
+                                setTimeout(() => {
+                                    results.innerHTML += '<h3>🎯 All Tests Complete!</h3>';
+                                }, 500);
+                            }, 500);
+                        }, 500);
+                    }, 500);
+                }, 500);
+            }, 500);
+        }
+
         function populateWhatCombo(role) {
             const whatDropdown = document.getElementById('what-dropdown');
             const whatInput = document.getElementById('what-input');
@@ -390,7 +420,7 @@
         }
 
         // Set up event listeners for manual testing
-        document.addEventListener('DOMContentLoaded', function() {
+        function setupEventListeners() {
             const roleInput = document.getElementById('role-input');
             const whatInput = document.getElementById('what-input');
             
@@ -404,7 +434,10 @@
                 const role = document.getElementById('role-input').value;
                 populateWhyCombo(role, this.value);
             });
-        });
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', setupEventListeners);
     </script>
 </body>
 </html>

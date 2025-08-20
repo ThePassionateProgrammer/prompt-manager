@@ -289,6 +289,23 @@ class PromptManagerWeb:
             data = request.get_json()
             result = self._api_request('POST', '/template-builder/build', data)
             return jsonify(result)
+
+        @self.app.route('/api/cascading/what-options', methods=['POST'])
+        def get_what_options():
+            """Get what options for a specific role."""
+            data = request.get_json()
+            role = data.get('role', '')
+            options = self.get_what_options_for_role(role)
+            return jsonify({'options': options})
+
+        @self.app.route('/api/cascading/why-options', methods=['POST'])
+        def get_why_options():
+            """Get why options for a specific role and what combination."""
+            data = request.get_json()
+            role = data.get('role', '')
+            what = data.get('what', '')
+            options = self.get_why_options_for_role_and_what(role, what)
+            return jsonify({'options': options})
     
     def run(self, host: str = '0.0.0.0', port: int = 8000, debug: bool = False):
         """Run the web server."""

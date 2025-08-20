@@ -1,5 +1,88 @@
 {% extends 'base.html' %}
 {% block content %}
+<style>
+    /* Custom Cascading Combo Box Styles */
+    .cascading-combo-box {
+        position: relative;
+        display: inline-block;
+        margin: 0 10px;
+    }
+    
+    .cascading-combo-input {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 200px;
+        font-size: 14px;
+        background: white;
+    }
+    
+    .cascading-combo-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ccc;
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+        z-index: 1000;
+    }
+    
+    .cascading-combo-option {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .cascading-combo-option:hover {
+        background-color: #f0f0f0;
+    }
+    
+    .cascading-combo-option.selected {
+        background-color: #555;
+        color: white;
+    }
+    
+    .cascading-combo-arrow {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 5px solid #666;
+        cursor: pointer;
+    }
+    
+    .cascade-arrow {
+        font-size: 18px;
+        color: #666;
+        margin: 0 10px;
+    }
+    
+    .cascade-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .cascade-label {
+        font-weight: bold;
+        margin-right: 10px;
+        min-width: 80px;
+    }
+    
+    .disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+</style>
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-12">
@@ -70,16 +153,16 @@
                 </div>
             </div>
             
-            <!-- Combo Boxes Container -->
+            <!-- Cascading Combo Boxes Container -->
             <div class="card shadow-sm">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Dynamic Selections</h5>
+                    <h5 class="mb-0"><i class="fas fa-sitemap me-2"></i>Cascading Selections</h5>
                 </div>
                 <div class="card-body">
-                    <div id="combo-boxes-container">
+                    <div id="cascading-combo-boxes-container">
                         <div class="text-center text-muted">
                             <i class="fas fa-arrow-up fa-2x mb-3"></i>
-                            <p>Click "Generate Combo Boxes" to create dynamic selections</p>
+                            <p>Click "Generate Combo Boxes" to create cascading selections</p>
                         </div>
                     </div>
                 </div>
@@ -212,6 +295,7 @@ function generateComboBoxes() {
         return;
     }
     
+    // Use our new cascading combo box system
     fetch('/api/template-builder/generate', {
         method: 'POST',
         headers: {
@@ -227,8 +311,7 @@ function generateComboBoxes() {
             comboBoxes = data.combo_boxes;
             currentTemplate = template;
             currentTemplateId = null; // Reset template ID for new template
-            renderComboBoxes();
-            populateFirstComboBox();
+            renderCascadingComboBoxes();
             updateSaveButtons();
         }
     })
@@ -422,6 +505,183 @@ function populateFirstComboBox() {
         dropdown.appendChild(li);
         li.appendChild(a);
     });
+}
+
+// Cascading Combo Box Functions
+function renderCascadingComboBoxes() {
+    const container = document.getElementById('cascading-combo-boxes-container');
+    
+    if (comboBoxes.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-arrow-up fa-2x mb-3"></i>
+                <p>Click "Generate Combo Boxes" to create cascading selections</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Create cascading layout with arrows
+    let html = '<div class="cascade-row">';
+    comboBoxes.forEach((comboBox, index) => {
+        const isFirst = index === 0;
+        const isLast = index === comboBoxes.length - 1;
+        
+        html += `
+            <div class="cascade-label">${comboBox.tag}:</div>
+            <div class="cascading-combo-box" id="cascading-combo-${index}">
+                <input type="text" class="cascading-combo-input" 
+                       id="cascading-input-${index}" 
+                       placeholder="Select ${comboBox.tag.toLowerCase()}..."
+                       ${comboBox.enabled ? '' : 'disabled'}
+                       data-index="${index}"
+                       data-tag="${comboBox.tag}">
+                <div class="cascading-combo-arrow" id="cascading-arrow-${index}"></div>
+                <div class="cascading-combo-dropdown" id="cascading-dropdown-${index}">
+                    ${comboBox.options.map(option => 
+                        `<div class="cascading-combo-option" data-value="${option}">${option}</div>`
+                    ).join('')}
+                </div>
+            </div>
+        `;
+        
+        // Add arrow between combo boxes (except after the last one)
+        if (!isLast) {
+            html += '<span class="cascade-arrow">→</span>';
+        }
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+    
+    // Setup custom combo box functionality
+    comboBoxes.forEach((comboBox, index) => {
+        setupCascadingComboBox(index);
+    });
+}
+
+function setupCascadingComboBox(index) {
+    const combo = document.getElementById(`cascading-combo-${index}`);
+    const input = document.getElementById(`cascading-input-${index}`);
+    const dropdown = document.getElementById(`cascading-dropdown-${index}`);
+    const arrow = document.getElementById(`cascading-arrow-${index}`);
+    
+    if (!combo || !input || !dropdown || !arrow) return;
+    
+    // Show dropdown on focus
+    input.addEventListener('focus', () => {
+        if (!input.disabled) {
+            dropdown.style.display = 'block';
+        }
+    });
+    
+    // Hide dropdown on blur (with delay to allow clicks)
+    input.addEventListener('blur', () => {
+        setTimeout(() => {
+            dropdown.style.display = 'none';
+        }, 200);
+    });
+    
+    // Toggle dropdown on arrow click
+    arrow.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!input.disabled) {
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            if (dropdown.style.display === 'block') {
+                input.focus();
+            }
+        }
+    });
+    
+    // Handle option clicks
+    dropdown.addEventListener('click', (e) => {
+        if (e.target.classList.contains('cascading-combo-option')) {
+            e.preventDefault();
+            e.stopPropagation();
+            input.value = e.target.textContent;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    // Handle input changes for cascading
+    input.addEventListener('input', function() {
+        handleCascadingComboBoxChange(index, this.value);
+    });
+}
+
+function handleCascadingComboBoxChange(index, value) {
+    // Update the combo box data
+    if (comboBoxes[index]) {
+        comboBoxes[index].selected = value;
+    }
+    
+    // Handle cascading logic
+    if (index === 0 && value) { // Role selection
+        // Enable next combo box and populate options
+        if (comboBoxes[1]) {
+            comboBoxes[1].enabled = true;
+            populateWhatOptions(value);
+        }
+    } else if (index === 1 && value) { // What selection
+        // Enable next combo box and populate options
+        if (comboBoxes[2]) {
+            comboBoxes[2].enabled = true;
+            populateWhyOptions(comboBoxes[0].selected, value);
+        }
+    }
+    
+    // Update the UI
+    updateCascadingComboBoxes();
+    updatePromptPreview();
+}
+
+function populateWhatOptions(role) {
+    // Get what options for the selected role
+    fetch('/api/cascading/what-options', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ role: role })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.options && comboBoxes[1]) {
+            comboBoxes[1].options = data.options;
+            updateCascadingComboBoxes();
+        }
+    })
+    .catch(error => {
+        console.error('Error loading what options:', error);
+    });
+}
+
+function populateWhyOptions(role, what) {
+    // Get why options for the selected role and what
+    fetch('/api/cascading/why-options', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ role: role, what: what })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.options && comboBoxes[2]) {
+            comboBoxes[2].options = data.options;
+            updateCascadingComboBoxes();
+        }
+    })
+    .catch(error => {
+        console.error('Error loading why options:', error);
+    });
+}
+
+function updateCascadingComboBoxes() {
+    // Re-render the combo boxes with updated state
+    renderCascadingComboBoxes();
 }
 
 function handleComboBoxChange(index, value, isCustom) {

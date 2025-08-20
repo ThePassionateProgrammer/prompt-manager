@@ -145,6 +145,7 @@
         <button class="test-button" onclick="runTest1()">Test 1: Basic Linkage</button>
         <button class="test-button" onclick="runTest2()">Test 2: Event-Driven Linkage</button>
         <button class="test-button" onclick="runTest3()">Test 3: Cascade Reset</button>
+        <button class="test-button" onclick="runTest4()">Test 4: Debug Cascade</button>
         <button class="test-button" onclick="runAllTests()">Run All Tests</button>
         <button class="test-button" onclick="resetTest()">Reset</button>
         <div class="test-results" id="test-results">
@@ -356,9 +357,59 @@
             }, 500);
         }
 
+        // Test 4: Debug Cascade Reset - Step by Step
+        function runTest4() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 4: Debug Cascade Reset</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            results.innerHTML += '<p><strong>Step 1:</strong> Initial state</p>';
+            results.innerHTML += `<p>Role: "${roleInput.value}", What: "${whatInput.value}", Why: "${whyInput.value}"</p>`;
+            results.innerHTML += `<p>What disabled: ${whatInput.disabled}, Why disabled: ${whyInput.disabled}</p>`;
+            
+            // Step 2: Set Role to Manager
+            roleInput.value = "Manager";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                results.innerHTML += '<p><strong>Step 2:</strong> After setting Role to "Manager"</p>';
+                results.innerHTML += `<p>Role: "${roleInput.value}", What: "${whatInput.value}", Why: "${whyInput.value}"</p>`;
+                results.innerHTML += `<p>What disabled: ${whatInput.disabled}, Why disabled: ${whyInput.disabled}</p>`;
+                
+                // Step 3: Set What to Review Status
+                whatInput.value = "Review Status";
+                whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    results.innerHTML += '<p><strong>Step 3:</strong> After setting What to "Review Status"</p>';
+                    results.innerHTML += `<p>Role: "${roleInput.value}", What: "${whatInput.value}", Why: "${whyInput.value}"</p>`;
+                    results.innerHTML += `<p>What disabled: ${whatInput.disabled}, Why disabled: ${whyInput.disabled}</p>`;
+                    
+                    // Step 4: Change Role to Programmer
+                    roleInput.value = "Programmer";
+                    roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    setTimeout(() => {
+                        results.innerHTML += '<p><strong>Step 4:</strong> After changing Role to "Programmer"</p>';
+                        results.innerHTML += `<p>Role: "${roleInput.value}", What: "${whatInput.value}", Why: "${whyInput.value}"</p>`;
+                        results.innerHTML += `<p>What disabled: ${whatInput.disabled}, Why disabled: ${whyInput.disabled}</p>`;
+                        results.innerHTML += '<p><strong>🎯 Test 4 Complete!</strong></p>';
+                    }, 100);
+                }, 100);
+            }, 100);
+        }
+
         function populateWhatCombo(role) {
             const whatDropdown = document.getElementById('what-dropdown');
             const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            const whyDropdown = document.getElementById('why-dropdown');
             
             // Clear existing options
             whatDropdown.innerHTML = '';
@@ -380,6 +431,11 @@
                 whatInput.disabled = true;
                 whatInput.value = '';
             }
+            
+            // Cascade reset: Clear Why combo box when Role changes
+            whyInput.disabled = true;
+            whyInput.value = '';
+            whyDropdown.innerHTML = '';
         }
 
         function populateWhyCombo(role, what) {

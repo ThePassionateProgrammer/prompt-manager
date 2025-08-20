@@ -292,4 +292,117 @@ class PromptManagerWeb:
     
     def run(self, host: str = '0.0.0.0', port: int = 8000, debug: bool = False):
         """Run the web server."""
-        self.app.run(host=host, port=port, debug=debug) 
+        self.app.run(host=host, port=port, debug=debug)
+
+    # Cascading Combo Box Integration Methods
+    
+    def generate_template_combo_boxes(self, template: str) -> Dict[str, Any]:
+        """Generate cascading combo boxes for a template."""
+        try:
+            # Extract variables from template
+            import re
+            variables = re.findall(r'\[([^\]]+)\]', template)
+            
+            # Load cascading relationships
+            relationships = self.load_cascading_relationships()
+            
+            # Generate combo boxes with cascading logic
+            combo_boxes = []
+            for i, variable in enumerate(variables):
+                enabled = i == 0  # Only first combo box is enabled initially
+                options = []
+                
+                if i == 0 and relationships:  # Role level
+                    options = list(relationships.keys())
+                elif i == 1:  # What level - will be populated based on role selection
+                    options = []
+                elif i == 2:  # Why level - will be populated based on role and what selection
+                    options = []
+                
+                combo_boxes.append({
+                    'tag': variable,
+                    'enabled': enabled,
+                    'options': options,
+                    'index': i
+                })
+            
+            return {'combo_boxes': combo_boxes}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    def load_cascading_relationships(self) -> Dict[str, Any]:
+        """Load cascading relationships from configuration file."""
+        try:
+            # Default relationships if file doesn't exist
+            default_relationships = {
+                "Manager": {
+                    "Review Status": ["Evaluate Next Actions", "Review Performance"],
+                    "File Compliance Report": ["Keep higher-ups informed", "Meet our standards"]
+                },
+                "Programmer": {
+                    "Code Review": ["Keep Code Clean", "Propagate Good Practices"],
+                    "Test Plan": ["Ensure Quality", "Prevent Bugs"]
+                },
+                "Fitness Coach": {
+                    "Create Client Meal Plan": ["Improve Client Health", "Meet Nutritional Goals"],
+                    "Work Out": ["Build Strength", "Increase Endurance"]
+                }
+            }
+            
+            # Try to load from file, fall back to defaults
+            try:
+                with open('cascading_relationships.json', 'r') as f:
+                    return json.load(f)
+            except FileNotFoundError:
+                return default_relationships
+        except Exception as e:
+            return {}
+    
+    def get_what_options_for_role(self, role: str) -> list:
+        """Get what options for a specific role."""
+        try:
+            relationships = self.load_cascading_relationships()
+            if role in relationships:
+                return list(relationships[role].keys())
+            return []
+        except Exception as e:
+            return []
+    
+    def get_why_options_for_role_and_what(self, role: str, what: str) -> list:
+        """Get why options for a specific role and what combination."""
+        try:
+            relationships = self.load_cascading_relationships()
+            if role in relationships and what in relationships[role]:
+                return relationships[role][what]
+            return []
+        except Exception as e:
+            return []
+    
+    def save_cascading_state(self, state: Dict[str, Any]) -> bool:
+        """Save cascading state to file."""
+        try:
+            with open('cascading_state.json', 'w') as f:
+                json.dump(state, f, indent=2)
+            return True
+        except Exception as e:
+            return False
+    
+    def load_cascading_state(self) -> Dict[str, Any]:
+        """Load cascading state from file."""
+        try:
+            with open('cascading_state.json', 'r') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return {}
+        except Exception as e:
+            return {}
+    
+    def build_final_prompt(self, template: str, selections: Dict[str, str]) -> str:
+        """Build final prompt by replacing variables with selections."""
+        try:
+            final_prompt = template
+            for variable, value in selections.items():
+                final_prompt = final_prompt.replace(f'[{variable}]', value)
+            return final_prompt
+        except Exception as e:
+            return template 

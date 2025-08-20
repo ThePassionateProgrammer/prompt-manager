@@ -143,6 +143,8 @@
     <div class="test-container">
         <h2>🧪 Test Results</h2>
         <button class="test-button" onclick="runTest1()">Test 1: Basic Linkage</button>
+        <button class="test-button" onclick="runTest2()">Test 2: Event-Driven Linkage</button>
+        <button class="test-button" onclick="runTest3()">Test 3: Cascade Reset</button>
         <button class="test-button" onclick="resetTest()">Reset</button>
         <div class="test-results" id="test-results">
             Click "Test 1" to run the first test...
@@ -210,6 +212,118 @@
             }
             
             results.innerHTML += '<p><strong>🎯 Test 1 Complete!</strong></p>';
+        }
+
+        // Test 2: Event-Driven Linkage Behavior
+        function runTest2() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 2: Event-Driven Linkage</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 2.1: Trigger input event on Role and verify What populates
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whatDropdown = document.getElementById('what-dropdown');
+            
+            // Simulate user typing "Manager"
+            roleInput.value = "Manager";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            // Wait a moment for event processing
+            setTimeout(() => {
+                const isWhatEnabled = !whatInput.disabled;
+                const whatOptions = whatDropdown.children.length;
+                
+                results.innerHTML += `
+                    <p><strong>2.1 Event-Driven Role → What:</strong> 
+                    ${isWhatEnabled ? '✅' : '❌'} What combo box is ${isWhatEnabled ? 'enabled' : 'disabled'}</p>
+                    <p><strong>2.2 What Options Count:</strong> 
+                    ${whatOptions > 0 ? '✅' : '❌'} Found ${whatOptions} options for Manager</p>
+                `;
+                
+                // Test 2.3: Trigger input event on What and verify Why populates
+                if (whatOptions > 0) {
+                    whatInput.value = "Review Status";
+                    whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    setTimeout(() => {
+                        const whyInput = document.getElementById('why-input');
+                        const whyDropdown = document.getElementById('why-dropdown');
+                        const isWhyEnabled = !whyInput.disabled;
+                        const whyOptions = whyDropdown.children.length;
+                        
+                        results.innerHTML += `
+                            <p><strong>2.3 Event-Driven What → Why:</strong> 
+                            ${isWhyEnabled ? '✅' : '❌'} Why combo box is ${isWhyEnabled ? 'enabled' : 'disabled'}</p>
+                            <p><strong>2.4 Why Options Count:</strong> 
+                            ${whyOptions > 0 ? '✅' : '❌'} Found ${whyOptions} options for "Review Status"</p>
+                            <p><strong>🎯 Test 2 Complete!</strong></p>
+                        `;
+                    }, 100);
+                } else {
+                    results.innerHTML += '<p><strong>🎯 Test 2 Complete!</strong></p>';
+                }
+            }, 100);
+        }
+
+        // Test 3: Cascade Reset Behavior
+        function runTest3() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 3: Cascade Reset</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 3.1: Set up a complete chain (Role → What → Why)
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            // Build the chain
+            roleInput.value = "Manager";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                whatInput.value = "Review Status";
+                whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    whyInput.value = "Evaluate Next Actions";
+                    
+                    // Test 3.2: Change Role and verify cascade reset
+                    roleInput.value = "Programmer";
+                    roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    setTimeout(() => {
+                        const isWhatDisabled = whatInput.disabled;
+                        const isWhyDisabled = whyInput.disabled;
+                        const whatValue = whatInput.value;
+                        const whyValue = whyInput.value;
+                        
+                        results.innerHTML += `
+                            <p><strong>3.1 Cascade Reset on Role Change:</strong></p>
+                            <p>${isWhatDisabled ? '✅' : '❌'} What combo box is ${isWhatDisabled ? 'disabled' : 'enabled'}</p>
+                            <p>${isWhyDisabled ? '✅' : '❌'} Why combo box is ${isWhyDisabled ? 'disabled' : 'enabled'}</p>
+                            <p>${whatValue === '' ? '✅' : '❌'} What value is cleared: "${whatValue}"</p>
+                            <p>${whyValue === '' ? '✅' : '❌'} Why value is cleared: "${whyValue}"</p>
+                        `;
+                        
+                        // Test 3.3: Verify What combo box now has Programmer options
+                        const whatDropdown = document.getElementById('what-dropdown');
+                        const whatOptions = whatDropdown.children.length;
+                        const hasCodeReview = Array.from(whatDropdown.children).some(opt => opt.textContent === 'Code Review');
+                        
+                        results.innerHTML += `
+                            <p><strong>3.2 What Options Updated:</strong></p>
+                            <p>${whatOptions > 0 ? '✅' : '❌'} What has ${whatOptions} options for Programmer</p>
+                            <p>${hasCodeReview ? '✅' : '❌'} What includes "Code Review" option</p>
+                            <p><strong>🎯 Test 3 Complete!</strong></p>
+                        `;
+                    }, 100);
+                }, 100);
+            }, 100);
         }
 
         function populateWhatCombo(role) {

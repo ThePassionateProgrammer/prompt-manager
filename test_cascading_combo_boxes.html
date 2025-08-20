@@ -102,6 +102,64 @@
             opacity: 0.5;
             pointer-events: none;
         }
+        
+        /* Custom Combo Box Styles */
+        .custom-combo-box {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .custom-combo-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 150px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .custom-combo-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .custom-combo-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .custom-combo-option:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .custom-combo-option.selected {
+            background-color: #555;
+            color: white;
+        }
+        
+        .custom-combo-arrow {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #666;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -113,27 +171,30 @@
         
         <div class="combo-box-row">
             <label>Role:</label>
-            <div class="combo-box-container" id="role-combo">
-                <input type="text" class="combo-box-input" placeholder="Select role..." id="role-input">
-                <div class="combo-box-dropdown" id="role-dropdown">
-                    <div class="combo-box-option" data-value="Manager">Manager</div>
-                    <div class="combo-box-option" data-value="Programmer">Programmer</div>
-                    <div class="combo-box-option" data-value="Fitness Coach">Fitness Coach</div>
+            <div class="custom-combo-box" id="role-combo">
+                <input type="text" class="custom-combo-input" placeholder="Select role..." id="role-input">
+                <div class="custom-combo-arrow" id="role-arrow"></div>
+                <div class="custom-combo-dropdown" id="role-dropdown">
+                    <div class="custom-combo-option" data-value="Manager">Manager</div>
+                    <div class="custom-combo-option" data-value="Programmer">Programmer</div>
+                    <div class="custom-combo-option" data-value="Fitness Coach">Fitness Coach</div>
                 </div>
             </div>
             <span class="arrow">→</span>
             <label>What:</label>
-            <div class="combo-box-container" id="what-combo">
-                <input type="text" class="combo-box-input" placeholder="Select action..." id="what-input" disabled>
-                <div class="combo-box-dropdown" id="what-dropdown">
+            <div class="custom-combo-box" id="what-combo">
+                <input type="text" class="custom-combo-input" placeholder="Select action..." id="what-input" disabled>
+                <div class="custom-combo-arrow" id="what-arrow"></div>
+                <div class="custom-combo-dropdown" id="what-dropdown">
                     <!-- Will be populated dynamically -->
                 </div>
             </div>
             <span class="arrow">→</span>
             <label>Why:</label>
-            <div class="combo-box-container" id="why-combo">
-                <input type="text" class="combo-box-input" placeholder="Select reason..." id="why-input" disabled>
-                <div class="combo-box-dropdown" id="why-dropdown">
+            <div class="custom-combo-box" id="why-combo">
+                <input type="text" class="custom-combo-input" placeholder="Select reason..." id="why-input" disabled>
+                <div class="custom-combo-arrow" id="why-arrow"></div>
+                <div class="custom-combo-dropdown" id="why-dropdown">
                     <!-- Will be populated dynamically -->
                 </div>
             </div>
@@ -142,15 +203,14 @@
     
     <div class="test-container">
         <h2>🧪 Test Results</h2>
-        <button class="test-button" onclick="runTest1()">Test 1: Basic Linkage</button>
-        <button class="test-button" onclick="runTest2()">Test 2: Event-Driven Linkage</button>
-        <button class="test-button" onclick="runTest3()">Test 3: Cascade Reset</button>
-        <button class="test-button" onclick="runTest4()">Test 4: Debug Cascade</button>
-        <button class="test-button" onclick="runTest5()">Test 5: State Persistence</button>
-        <button class="test-button" onclick="runTest6()">Test 6: Visual Indicators</button>
-        <button class="test-button" onclick="runTest7()">Test 7: Data-Driven</button>
-        <button class="test-button" onclick="runTest8()">Test 8: Error Handling</button>
-        <button class="test-button" onclick="runTest9()">Test 9: Performance</button>
+        <button class="test-button" onclick="testRoleSelectionPopulatesWhatOptions()">Test: Role Selection Populates What Options</button>
+        <button class="test-button" onclick="testWhatSelectionPopulatesWhyOptions()">Test: What Selection Populates Why Options</button>
+        <button class="test-button" onclick="testChangingRoleClearsDownstreamSelections()">Test: Changing Role Clears Downstream Selections</button>
+        <button class="test-button" onclick="testStateRestorationWhenSwitchingRoles()">Test: State Restoration When Switching Roles</button>
+        <button class="test-button" onclick="testVisualRelationshipIndicators()">Test: Visual Relationship Indicators</button>
+        <button class="test-button" onclick="testDynamicRelationshipLoading()">Test: Dynamic Relationship Loading</button>
+        <button class="test-button" onclick="testErrorHandlingForInvalidSelections()">Test: Error Handling For Invalid Selections</button>
+        <button class="test-button" onclick="testPerformanceWithLargeDatasets()">Test: Performance With Large Datasets</button>
         <button class="test-button" onclick="runAllTests()">Run All Tests</button>
         <button class="test-button" onclick="resetTest()">Reset</button>
         <div class="test-results" id="test-results">
@@ -224,7 +284,7 @@
             
             Object.keys(relationships).forEach(role => {
                 const option = document.createElement('div');
-                option.className = 'combo-box-option';
+                option.className = 'custom-combo-option';
                 option.textContent = role;
                 option.dataset.value = role;
                 roleDropdown.appendChild(option);
@@ -244,10 +304,10 @@
             }
         }
 
-        // Test 1: Basic Linkage Behavior
-        function runTest1() {
+        // Test: Role Selection Populates What Options
+        function testRoleSelectionPopulatesWhatOptions() {
             const results = document.getElementById('test-results');
-            results.innerHTML = '<h3>Test 1: Basic Linkage</h3>';
+            results.innerHTML = '<h3>Test: Role Selection Populates What Options</h3>';
             
             // Test 1.1: When Role is selected, What combo box should populate
             const roleInput = document.getElementById('role-input');
@@ -290,10 +350,10 @@
             results.innerHTML += '<p><strong>🎯 Test 1 Complete!</strong></p>';
         }
 
-        // Test 2: Event-Driven Linkage Behavior
-        function runTest2() {
+        // Test: What Selection Populates Why Options
+        function testWhatSelectionPopulatesWhyOptions() {
             const results = document.getElementById('test-results');
-            results.innerHTML = '<h3>Test 2: Event-Driven Linkage</h3>';
+            results.innerHTML = '<h3>Test: What Selection Populates Why Options</h3>';
             
             // Reset first
             resetTest();
@@ -344,10 +404,10 @@
             }, 100);
         }
 
-        // Test 3: Cascade Reset Behavior
-        function runTest3() {
+        // Test: Changing Role Clears Downstream Selections
+        function testChangingRoleClearsDownstreamSelections() {
             const results = document.getElementById('test-results');
-            results.innerHTML = '<h3>Test 3: Cascade Reset</h3>';
+            results.innerHTML = '<h3>Test: Changing Role Clears Downstream Selections</h3>';
             
             // Reset first
             resetTest();
@@ -412,15 +472,15 @@
             
             // Run tests with delays
             setTimeout(() => {
-                runTest1();
+                testRoleSelectionPopulatesWhatOptions();
                 setTimeout(() => {
                     resetTest();
                     setTimeout(() => {
-                        runTest2();
+                        testWhatSelectionPopulatesWhyOptions();
                         setTimeout(() => {
                             resetTest();
                             setTimeout(() => {
-                                runTest3();
+                                testChangingRoleClearsDownstreamSelections();
                                 setTimeout(() => {
                                     results.innerHTML += '<h3>🎯 All Tests Complete!</h3>';
                                 }, 500);
@@ -431,8 +491,8 @@
             }, 500);
         }
 
-        // Test 4: Debug Cascade Reset - Step by Step
-        function runTest4() {
+        // Test: Debug Cascade Reset - Step by Step
+        function testDebugCascadeReset() {
             const results = document.getElementById('test-results');
             results.innerHTML = '<h3>Test 4: Debug Cascade Reset</h3>';
             
@@ -479,8 +539,8 @@
             }, 100);
         }
 
-        // Test 5: State Persistence - Remember and restore selections
-        function runTest5() {
+        // Test: State Restoration When Switching Roles
+        function testStateRestorationWhenSwitchingRoles() {
             const results = document.getElementById('test-results');
             results.innerHTML = '<h3>Test 5: State Persistence</h3>';
             
@@ -546,8 +606,8 @@
             }, 100);
         }
 
-        // Test 6: Visual Relationship Indicators
-        function runTest6() {
+        // Test: Visual Relationship Indicators
+        function testVisualRelationshipIndicators() {
             const results = document.getElementById('test-results');
             results.innerHTML = '<h3>Test 6: Visual Indicators</h3>';
             
@@ -588,8 +648,8 @@
             results.innerHTML += '<p><strong>🎯 Test 6 Complete!</strong></p>';
         }
 
-        // Test 7: Data-Driven Relationships - Load from external data
-        function runTest7() {
+        // Test: Dynamic Relationship Loading
+        function testDynamicRelationshipLoading() {
             const results = document.getElementById('test-results');
             results.innerHTML = '<h3>Test 7: Data-Driven Relationships</h3>';
             
@@ -647,8 +707,8 @@
             }, 100);
         }
 
-        // Test 8: Error Handling and Edge Cases
-        function runTest8() {
+        // Test: Error Handling For Invalid Selections
+        function testErrorHandlingForInvalidSelections() {
             const results = document.getElementById('test-results');
             results.innerHTML = '<h3>Test 8: Error Handling</h3>';
             
@@ -712,8 +772,8 @@
             }, 100);
         }
 
-        // Test 9: Performance and Scalability
-        function runTest9() {
+        // Test: Performance With Large Datasets
+        function testPerformanceWithLargeDatasets() {
             const results = document.getElementById('test-results');
             results.innerHTML = '<h3>Test 9: Performance</h3>';
             
@@ -779,7 +839,7 @@
                 // Add options
                 Object.keys(relationships[role]).forEach(what => {
                     const option = document.createElement('div');
-                    option.className = 'combo-box-option';
+                    option.className = 'custom-combo-option';
                     option.textContent = what;
                     option.dataset.value = what;
                     whatDropdown.appendChild(option);
@@ -813,7 +873,7 @@
                 // Add options
                 relationships[role][what].forEach(why => {
                     const option = document.createElement('div');
-                    option.className = 'combo-box-option';
+                    option.className = 'custom-combo-option';
                     option.textContent = why;
                     option.dataset.value = why;
                     whyDropdown.appendChild(option);
@@ -862,8 +922,66 @@
             });
         }
 
+        // Custom Combo Box functionality
+        function setupCustomComboBox(comboId) {
+            const combo = document.getElementById(comboId);
+            const input = combo.querySelector('input');
+            const dropdown = combo.querySelector('.custom-combo-dropdown');
+            const arrow = combo.querySelector('.custom-combo-arrow');
+            
+            // Show dropdown on focus
+            input.addEventListener('focus', () => {
+                if (!input.disabled) {
+                    dropdown.style.display = 'block';
+                }
+            });
+            
+            // Hide dropdown on blur (with delay to allow clicks)
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    dropdown.style.display = 'none';
+                }, 200);
+            });
+            
+            // Toggle dropdown on arrow click
+            arrow.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!input.disabled) {
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                    if (dropdown.style.display === 'block') {
+                        input.focus();
+                    }
+                }
+            });
+            
+            // Handle option clicks
+            dropdown.addEventListener('click', (e) => {
+                if (e.target.classList.contains('custom-combo-option')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    input.value = e.target.textContent;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    dropdown.style.display = 'none';
+                }
+            });
+            
+            // Handle keyboard navigation
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                }
+            });
+        }
+
         // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', setupEventListeners);
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            setupCustomComboBox('role-combo');
+            setupCustomComboBox('what-combo');
+            setupCustomComboBox('why-combo');
+        });
     </script>
 </body>
 </html>

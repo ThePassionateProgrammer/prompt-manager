@@ -55,7 +55,7 @@
   - Always keeps dropdown open after action
   - Clears input field after successful add
   - Maintains focus on input field
-  - Visual feedback for all actions That's it. We are typing.
+  - Visual feedback for all actions
 
 ### **5. Dynamic DOM Manipulation** (Lines 301-400)
 - **File**: `test_combo_box_standalone.html` - addOption(), removeOption(), replaceOption()

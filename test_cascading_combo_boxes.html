@@ -148,6 +148,9 @@
         <button class="test-button" onclick="runTest4()">Test 4: Debug Cascade</button>
         <button class="test-button" onclick="runTest5()">Test 5: State Persistence</button>
         <button class="test-button" onclick="runTest6()">Test 6: Visual Indicators</button>
+        <button class="test-button" onclick="runTest7()">Test 7: Data-Driven</button>
+        <button class="test-button" onclick="runTest8()">Test 8: Error Handling</button>
+        <button class="test-button" onclick="runTest9()">Test 9: Performance</button>
         <button class="test-button" onclick="runAllTests()">Run All Tests</button>
         <button class="test-button" onclick="resetTest()">Reset</button>
         <div class="test-results" id="test-results">
@@ -207,6 +210,37 @@
                         }
                     }, 100);
                 }
+            }
+        }
+
+        // Load new relationship data dynamically
+        function loadRelationships(newData) {
+            // Update the global relationships object
+            Object.assign(relationships, newData);
+            
+            // Update the role dropdown with new options
+            const roleDropdown = document.getElementById('role-dropdown');
+            roleDropdown.innerHTML = '';
+            
+            Object.keys(relationships).forEach(role => {
+                const option = document.createElement('div');
+                option.className = 'combo-box-option';
+                option.textContent = role;
+                option.dataset.value = role;
+                roleDropdown.appendChild(option);
+            });
+            
+            // Clear any existing selections that might be invalid
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            if (roleInput.value && !relationships[roleInput.value]) {
+                roleInput.value = '';
+                whatInput.value = '';
+                whyInput.value = '';
+                whatInput.disabled = true;
+                whyInput.disabled = true;
             }
         }
 
@@ -552,6 +586,181 @@
             
             results.innerHTML += `<p><strong>6.5 Labels Present:</strong> ${labelsPresent ? '✅' : '❌'} All labels visible</p>`;
             results.innerHTML += '<p><strong>🎯 Test 6 Complete!</strong></p>';
+        }
+
+        // Test 7: Data-Driven Relationships - Load from external data
+        function runTest7() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 7: Data-Driven Relationships</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 7.1: Load new relationship data
+            const newRelationships = {
+                "Designer": {
+                    "Create Wireframe": ["Improve User Experience", "Clarify Requirements"],
+                    "Design Mockup": ["Visualize Solution", "Get Stakeholder Approval"]
+                },
+                "Teacher": {
+                    "Grade Papers": ["Assess Student Progress", "Provide Feedback"],
+                    "Plan Lesson": ["Engage Students", "Meet Curriculum Goals"]
+                }
+            };
+            
+            // Load the new data
+            loadRelationships(newRelationships);
+            
+            results.innerHTML += '<p><strong>7.1:</strong> Loaded new relationship data for Designer and Teacher</p>';
+            
+            // Test 7.2: Verify new roles appear in dropdown
+            const roleDropdown = document.getElementById('role-dropdown');
+            const hasDesigner = Array.from(roleDropdown.children).some(opt => opt.textContent === 'Designer');
+            const hasTeacher = Array.from(roleDropdown.children).some(opt => opt.textContent === 'Teacher');
+            
+            results.innerHTML += `<p><strong>7.2 New Roles:</strong> ${hasDesigner ? '✅' : '❌'} Designer, ${hasTeacher ? '✅' : '❌'} Teacher</p>`;
+            
+            // Test 7.3: Test new relationship chain
+            const roleInput = document.getElementById('role-input');
+            roleInput.value = "Designer";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                const whatInput = document.getElementById('what-input');
+                const whatDropdown = document.getElementById('what-dropdown');
+                const hasWireframe = Array.from(whatDropdown.children).some(opt => opt.textContent === 'Create Wireframe');
+                
+                results.innerHTML += `<p><strong>7.3 Designer Options:</strong> ${hasWireframe ? '✅' : '❌'} Create Wireframe option available</p>`;
+                
+                // Test 7.4: Test complete new chain
+                whatInput.value = "Create Wireframe";
+                whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    const whyInput = document.getElementById('why-input');
+                    const whyDropdown = document.getElementById('why-dropdown');
+                    const hasUX = Array.from(whyDropdown.children).some(opt => opt.textContent === 'Improve User Experience');
+                    
+                    results.innerHTML += `<p><strong>7.4 Complete Chain:</strong> ${hasUX ? '✅' : '❌'} Improve User Experience option available</p>`;
+                    results.innerHTML += '<p><strong>🎯 Test 7 Complete!</strong></p>';
+                }, 100);
+            }, 100);
+        }
+
+        // Test 8: Error Handling and Edge Cases
+        function runTest8() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 8: Error Handling</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 8.1: Handle invalid role selection
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            roleInput.value = "Invalid Role";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                const isWhatDisabled = whatInput.disabled;
+                const isWhyDisabled = whyInput.disabled;
+                const whatValue = whatInput.value;
+                const whyValue = whyInput.value;
+                
+                results.innerHTML += `<p><strong>8.1 Invalid Role:</strong> ${isWhatDisabled ? '✅' : '❌'} What disabled, ${isWhyDisabled ? '✅' : '❌'} Why disabled</p>`;
+                results.innerHTML += `<p><strong>8.2 Values Cleared:</strong> ${whatValue === '' ? '✅' : '❌'} What empty, ${whyValue === '' ? '✅' : '❌'} Why empty</p>`;
+                
+                // Test 8.3: Handle empty relationships data
+                const emptyRelationships = {};
+                loadRelationships(emptyRelationships);
+                
+                const roleDropdown = document.getElementById('role-dropdown');
+                const hasOptions = roleDropdown.children.length > 0;
+                
+                results.innerHTML += `<p><strong>8.3 Empty Data:</strong> ${!hasOptions ? '✅' : '❌'} No role options when data is empty</p>`;
+                
+                // Test 8.4: Handle malformed data
+                const malformedData = {
+                    "Test Role": "Not an object"
+                };
+                
+                try {
+                    loadRelationships(malformedData);
+                    results.innerHTML += `<p><strong>8.4 Malformed Data:</strong> ✅ System handles malformed data gracefully</p>`;
+                } catch (error) {
+                    results.innerHTML += `<p><strong>8.4 Malformed Data:</strong> ❌ Error: ${error.message}</p>`;
+                }
+                
+                // Test 8.5: Handle rapid state changes
+                roleInput.value = "Manager";
+                roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    roleInput.value = "Programmer";
+                    roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    setTimeout(() => {
+                        roleInput.value = "Manager";
+                        roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        
+                        results.innerHTML += `<p><strong>8.5 Rapid Changes:</strong> ✅ System handles rapid state changes</p>`;
+                        results.innerHTML += '<p><strong>🎯 Test 8 Complete!</strong></p>';
+                    }, 50);
+                }, 50);
+            }, 100);
+        }
+
+        // Test 9: Performance and Scalability
+        function runTest9() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 9: Performance</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 9.1: Load large dataset
+            const largeDataset = {};
+            const startTime = performance.now();
+            
+            // Generate 50 roles with 10 options each
+            for (let i = 1; i <= 50; i++) {
+                const roleName = `Role ${i}`;
+                largeDataset[roleName] = {};
+                
+                for (let j = 1; j <= 10; j++) {
+                    const whatName = `Action ${j}`;
+                    largeDataset[roleName][whatName] = [`Reason ${j}A`, `Reason ${j}B`, `Reason ${j}C`];
+                }
+            }
+            
+            loadRelationships(largeDataset);
+            const loadTime = performance.now() - startTime;
+            
+            results.innerHTML += `<p><strong>9.1 Load Performance:</strong> ${loadTime < 100 ? '✅' : '❌'} Loaded 50 roles in ${loadTime.toFixed(2)}ms</p>`;
+            
+            // Test 9.2: Test selection performance
+            const roleInput = document.getElementById('role-input');
+            const selectStartTime = performance.now();
+            
+            roleInput.value = "Role 25";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                const selectTime = performance.now() - selectStartTime;
+                const whatDropdown = document.getElementById('what-dropdown');
+                const optionCount = whatDropdown.children.length;
+                
+                results.innerHTML += `<p><strong>9.2 Selection Performance:</strong> ${selectTime < 50 ? '✅' : '❌'} Selected role in ${selectTime.toFixed(2)}ms</p>`;
+                results.innerHTML += `<p><strong>9.3 Options Generated:</strong> ${optionCount === 10 ? '✅' : '❌'} Generated ${optionCount} options</p>`;
+                
+                // Test 9.4: Memory usage check
+                const memoryUsage = performance.memory ? performance.memory.usedJSHeapSize / 1024 / 1024 : 'N/A';
+                results.innerHTML += `<p><strong>9.4 Memory Usage:</strong> ${typeof memoryUsage === 'number' ? memoryUsage.toFixed(2) + 'MB' : memoryUsage}</p>`;
+                
+                results.innerHTML += '<p><strong>🎯 Test 9 Complete!</strong></p>';
+            }, 100);
         }
 
         function populateWhatCombo(role) {

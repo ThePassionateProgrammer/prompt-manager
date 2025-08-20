@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cascading Combo Boxes Test - Phase 1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .combo-box-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .combo-box-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .combo-box-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 150px;
+            font-size: 14px;
+        }
+        
+        .combo-box-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .combo-box-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .combo-box-option:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .combo-box-option.selected {
+            background-color: #555;
+            color: white;
+        }
+        
+        .arrow {
+            font-size: 18px;
+            color: #666;
+            margin: 0 10px;
+        }
+        
+        .test-results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .test-button:hover {
+            background: #0056b3;
+        }
+        
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Cascading Combo Boxes Test - Phase 1</h1>
+    <p><strong>Version: 1.0</strong> - Basic linkage behavior</p>
+    
+    <div class="test-container">
+        <h2>Template: "As a [Role], I want to [What], so that [Why]"</h2>
+        
+        <div class="combo-box-row">
+            <label>Role:</label>
+            <div class="combo-box-container" id="role-combo">
+                <input type="text" class="combo-box-input" placeholder="Select role..." id="role-input">
+                <div class="combo-box-dropdown" id="role-dropdown">
+                    <div class="combo-box-option" data-value="Manager">Manager</div>
+                    <div class="combo-box-option" data-value="Programmer">Programmer</div>
+                    <div class="combo-box-option" data-value="Fitness Coach">Fitness Coach</div>
+                </div>
+            </div>
+            <span class="arrow">→</span>
+            <label>What:</label>
+            <div class="combo-box-container" id="what-combo">
+                <input type="text" class="combo-box-input" placeholder="Select action..." id="what-input" disabled>
+                <div class="combo-box-dropdown" id="what-dropdown">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+            <span class="arrow">→</span>
+            <label>Why:</label>
+            <div class="combo-box-container" id="why-combo">
+                <input type="text" class="combo-box-input" placeholder="Select reason..." id="why-input" disabled>
+                <div class="combo-box-dropdown" id="why-dropdown">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🧪 Test Results</h2>
+        <button class="test-button" onclick="runTest1()">Test 1: Basic Linkage</button>
+        <button class="test-button" onclick="resetTest()">Reset</button>
+        <div class="test-results" id="test-results">
+            Click "Test 1" to run the first test...
+        </div>
+    </div>
+
+    <script>
+        // Test data structure
+        const relationships = {
+            "Manager": {
+                "Review Status": ["Evaluate Next Actions", "Review Performance"],
+                "File Compliance Report": ["Keep higher-ups informed", "Meet our standards"]
+            },
+            "Programmer": {
+                "Code Review": ["Keep Code Clean", "Propagate Good Practices"],
+                "Test Plan": ["Ensure Quality", "Prevent Bugs"]
+            },
+            "Fitness Coach": {
+                "Create Client Meal Plan": ["Improve Client Health", "Meet Nutritional Goals"],
+                "Work Out": ["Build Strength", "Increase Endurance"]
+            }
+        };
+
+        // Test 1: Basic Linkage Behavior
+        function runTest1() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 1: Basic Linkage</h3>';
+            
+            // Test 1.1: When Role is selected, What combo box should populate
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whatDropdown = document.getElementById('what-dropdown');
+            
+            // Simulate selecting "Manager"
+            roleInput.value = "Manager";
+            populateWhatCombo("Manager");
+            
+            // Check if What combo box is enabled and populated
+            const isWhatEnabled = !whatInput.disabled;
+            const whatOptions = whatDropdown.children.length;
+            
+            results.innerHTML += `
+                <p><strong>1.1 Role → What Linkage:</strong> 
+                ${isWhatEnabled ? '✅' : '❌'} What combo box is ${isWhatEnabled ? 'enabled' : 'disabled'}</p>
+                <p><strong>1.2 What Options:</strong> 
+                ${whatOptions > 0 ? '✅' : '❌'} Found ${whatOptions} options for Manager</p>
+            `;
+            
+            // Test 1.3: When What is selected, Why combo box should populate
+            if (whatOptions > 0) {
+                whatInput.value = "Review Status";
+                populateWhyCombo("Manager", "Review Status");
+                
+                const whyInput = document.getElementById('why-input');
+                const whyDropdown = document.getElementById('why-dropdown');
+                const isWhyEnabled = !whyInput.disabled;
+                const whyOptions = whyDropdown.children.length;
+                
+                results.innerHTML += `
+                    <p><strong>1.3 What → Why Linkage:</strong> 
+                    ${isWhyEnabled ? '✅' : '❌'} Why combo box is ${isWhyEnabled ? 'enabled' : 'disabled'}</p>
+                    <p><strong>1.4 Why Options:</strong> 
+                    ${whyOptions > 0 ? '✅' : '❌'} Found ${whyOptions} options for "Review Status"</p>
+                `;
+            }
+            
+            results.innerHTML += '<p><strong>🎯 Test 1 Complete!</strong></p>';
+        }
+
+        function populateWhatCombo(role) {
+            const whatDropdown = document.getElementById('what-dropdown');
+            const whatInput = document.getElementById('what-input');
+            
+            // Clear existing options
+            whatDropdown.innerHTML = '';
+            
+            if (role && relationships[role]) {
+                // Enable What combo box
+                whatInput.disabled = false;
+                
+                // Add options
+                Object.keys(relationships[role]).forEach(what => {
+                    const option = document.createElement('div');
+                    option.className = 'combo-box-option';
+                    option.textContent = what;
+                    option.dataset.value = what;
+                    whatDropdown.appendChild(option);
+                });
+            } else {
+                // Disable What combo box
+                whatInput.disabled = true;
+                whatInput.value = '';
+            }
+        }
+
+        function populateWhyCombo(role, what) {
+            const whyDropdown = document.getElementById('why-dropdown');
+            const whyInput = document.getElementById('why-input');
+            
+            // Clear existing options
+            whyDropdown.innerHTML = '';
+            
+            if (role && what && relationships[role] && relationships[role][what]) {
+                // Enable Why combo box
+                whyInput.disabled = false;
+                
+                // Add options
+                relationships[role][what].forEach(why => {
+                    const option = document.createElement('div');
+                    option.className = 'combo-box-option';
+                    option.textContent = why;
+                    option.dataset.value = why;
+                    whyDropdown.appendChild(option);
+                });
+            } else {
+                // Disable Why combo box
+                whyInput.disabled = true;
+                whyInput.value = '';
+            }
+        }
+
+        function resetTest() {
+            document.getElementById('role-input').value = '';
+            document.getElementById('what-input').value = '';
+            document.getElementById('why-input').value = '';
+            document.getElementById('what-input').disabled = true;
+            document.getElementById('why-input').disabled = true;
+            document.getElementById('what-dropdown').innerHTML = '';
+            document.getElementById('why-dropdown').innerHTML = '';
+            document.getElementById('test-results').innerHTML = 'Click "Test 1" to run the first test...';
+        }
+
+        // Set up event listeners for manual testing
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            
+            // Role selection triggers What population
+            roleInput.addEventListener('input', function() {
+                populateWhatCombo(this.value);
+            });
+            
+            // What selection triggers Why population
+            whatInput.addEventListener('input', function() {
+                const role = document.getElementById('role-input').value;
+                populateWhyCombo(role, this.value);
+            });
+        });
+    </script>
+</body>
+</html>

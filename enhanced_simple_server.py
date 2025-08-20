@@ -1252,6 +1252,12 @@ def test_combo_box_page():
     with open('test_combo_box_page.html', 'r') as f:
         return f.read()
 
+@app.route('/test-cascading-combo-boxes')
+def test_cascading_combo_boxes():
+    """Test page for cascading combo boxes."""
+    with open('test_cascading_combo_boxes.html', 'r') as f:
+        return f.read()
+
 @app.route('/test')
 def test_route():
     """Simple test route to verify route registration."""

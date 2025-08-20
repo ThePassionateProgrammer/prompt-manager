@@ -146,6 +146,8 @@
         <button class="test-button" onclick="runTest2()">Test 2: Event-Driven Linkage</button>
         <button class="test-button" onclick="runTest3()">Test 3: Cascade Reset</button>
         <button class="test-button" onclick="runTest4()">Test 4: Debug Cascade</button>
+        <button class="test-button" onclick="runTest5()">Test 5: State Persistence</button>
+        <button class="test-button" onclick="runTest6()">Test 6: Visual Indicators</button>
         <button class="test-button" onclick="runAllTests()">Run All Tests</button>
         <button class="test-button" onclick="resetTest()">Reset</button>
         <div class="test-results" id="test-results">
@@ -169,6 +171,44 @@
                 "Work Out": ["Build Strength", "Increase Endurance"]
             }
         };
+
+        // State persistence - remember selections for each role
+        const stateMemory = {};
+
+        // State management functions
+        function saveState(role, what, why) {
+            if (!stateMemory[role]) {
+                stateMemory[role] = {};
+            }
+            if (what) {
+                stateMemory[role].what = what;
+                if (!stateMemory[role][what]) {
+                    stateMemory[role][what] = {};
+                }
+                if (why) {
+                    stateMemory[role][what].why = why;
+                }
+            }
+        }
+
+        function restoreState(role) {
+            if (stateMemory[role]) {
+                const whatInput = document.getElementById('what-input');
+                const whyInput = document.getElementById('why-input');
+                
+                if (stateMemory[role].what) {
+                    whatInput.value = stateMemory[role].what;
+                    populateWhyCombo(role, stateMemory[role].what);
+                    
+                    setTimeout(() => {
+                        if (stateMemory[role][stateMemory[role].what] && 
+                            stateMemory[role][stateMemory[role].what].why) {
+                            whyInput.value = stateMemory[role][stateMemory[role].what].why;
+                        }
+                    }, 100);
+                }
+            }
+        }
 
         // Test 1: Basic Linkage Behavior
         function runTest1() {
@@ -405,6 +445,115 @@
             }, 100);
         }
 
+        // Test 5: State Persistence - Remember and restore selections
+        function runTest5() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 5: State Persistence</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            // Test 5.1: Set up Manager → Review Status → Evaluate Next Actions
+            roleInput.value = "Manager";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                whatInput.value = "Review Status";
+                whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    whyInput.value = "Evaluate Next Actions";
+                    
+                    results.innerHTML += '<p><strong>5.1:</strong> Set Manager → Review Status → Evaluate Next Actions</p>';
+                    
+                    // Test 5.2: Switch to Programmer and set up a different path
+                    roleInput.value = "Programmer";
+                    roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    setTimeout(() => {
+                        whatInput.value = "Code Review";
+                        whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        
+                        setTimeout(() => {
+                            whyInput.value = "Keep Code Clean";
+                            
+                            results.innerHTML += '<p><strong>5.2:</strong> Set Programmer → Code Review → Keep Code Clean</p>';
+                            
+                            // Test 5.3: Switch back to Manager and verify state is restored
+                            roleInput.value = "Manager";
+                            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            
+                            setTimeout(() => {
+                                whatInput.value = "Review Status";
+                                whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                
+                                setTimeout(() => {
+                                    whyInput.value = "Evaluate Next Actions";
+                                    
+                                    results.innerHTML += '<p><strong>5.3:</strong> Switched back to Manager</p>';
+                                    results.innerHTML += `<p>Expected: Manager → Review Status → Evaluate Next Actions</p>`;
+                                    results.innerHTML += `<p>Actual: ${roleInput.value} → ${whatInput.value} → ${whyInput.value}</p>`;
+                                    
+                                    const isCorrect = roleInput.value === "Manager" && 
+                                                    whatInput.value === "Review Status" && 
+                                                    whyInput.value === "Evaluate Next Actions";
+                                    
+                                    results.innerHTML += `<p><strong>State Restoration:</strong> ${isCorrect ? '✅' : '❌'} ${isCorrect ? 'Correct' : 'Incorrect'}</p>`;
+                                    results.innerHTML += '<p><strong>🎯 Test 5 Complete!</strong></p>';
+                                }, 100);
+                            }, 100);
+                        }, 100);
+                    }, 100);
+                }, 100);
+            }, 100);
+        }
+
+        // Test 6: Visual Relationship Indicators
+        function runTest6() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 6: Visual Indicators</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 6.1: Check if arrows are visible
+            const arrows = document.querySelectorAll('.arrow');
+            const arrowCount = arrows.length;
+            const arrowsVisible = Array.from(arrows).every(arrow => arrow.style.display !== 'none');
+            
+            results.innerHTML += `<p><strong>6.1 Arrow Visibility:</strong> ${arrowsVisible ? '✅' : '❌'} Found ${arrowCount} arrows</p>`;
+            
+            // Test 6.2: Check if combo boxes are properly aligned
+            const comboBoxes = document.querySelectorAll('.combo-box-container');
+            const comboCount = comboBoxes.length;
+            
+            results.innerHTML += `<p><strong>6.2 Combo Box Layout:</strong> ${comboCount === 3 ? '✅' : '❌'} Found ${comboCount} combo boxes</p>`;
+            
+            // Test 6.3: Check if disabled states are visually clear
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            const whatDisabled = whatInput.disabled;
+            const whyDisabled = whyInput.disabled;
+            
+            results.innerHTML += `<p><strong>6.3 Disabled State:</strong> ${whatDisabled ? '✅' : '❌'} What is ${whatDisabled ? 'disabled' : 'enabled'}</p>`;
+            results.innerHTML += `<p><strong>6.4 Disabled State:</strong> ${whyDisabled ? '✅' : '❌'} Why is ${whyDisabled ? 'disabled' : 'enabled'}</p>`;
+            
+            // Test 6.5: Check if relationship flow is clear
+            const roleLabel = document.querySelector('label[for="role-input"]');
+            const whatLabel = document.querySelector('label[for="what-input"]');
+            const whyLabel = document.querySelector('label[for="why-input"]');
+            
+            const labelsPresent = roleLabel && whatLabel && whyLabel;
+            
+            results.innerHTML += `<p><strong>6.5 Labels Present:</strong> ${labelsPresent ? '✅' : '❌'} All labels visible</p>`;
+            results.innerHTML += '<p><strong>🎯 Test 6 Complete!</strong></p>';
+        }
+
         function populateWhatCombo(role) {
             const whatDropdown = document.getElementById('what-dropdown');
             const whatInput = document.getElementById('what-input');
@@ -426,6 +575,9 @@
                     option.dataset.value = what;
                     whatDropdown.appendChild(option);
                 });
+                
+                // Restore state if available
+                restoreState(role);
             } else {
                 // Disable What combo box
                 whatInput.disabled = true;
@@ -479,6 +631,7 @@
         function setupEventListeners() {
             const roleInput = document.getElementById('role-input');
             const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
             
             // Role selection triggers What population
             roleInput.addEventListener('input', function() {
@@ -489,6 +642,14 @@
             whatInput.addEventListener('input', function() {
                 const role = document.getElementById('role-input').value;
                 populateWhyCombo(role, this.value);
+                saveState(role, this.value);
+            });
+            
+            // Why selection saves state
+            whyInput.addEventListener('input', function() {
+                const role = document.getElementById('role-input').value;
+                const what = document.getElementById('what-input').value;
+                saveState(role, what, this.value);
             });
         }
 

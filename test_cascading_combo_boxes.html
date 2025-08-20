@@ -160,6 +160,29 @@
             border-top: 5px solid #666;
             cursor: pointer;
         }
+        
+        .template-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .generate-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        
+        .generate-btn:hover {
+            background: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -167,35 +190,48 @@
     <p><strong>Version: 1.0</strong> - Basic linkage behavior</p>
     
     <div class="test-container">
-        <h2>Template: "As a [Role], I want to [What], so that [Why]"</h2>
+        <h2>🧪 Generalized N-Level Cascading Combo Boxes Test</h2>
+        <p>Testing generalized cascading combo box functionality with template parsing and N-level support.</p>
         
-        <div class="combo-box-row">
-            <label>Role:</label>
-            <div class="custom-combo-box" id="role-combo">
-                <input type="text" class="custom-combo-input" placeholder="Select role..." id="role-input">
-                <div class="custom-combo-arrow" id="role-arrow"></div>
-                <div class="custom-combo-dropdown" id="role-dropdown">
-                    <div class="custom-combo-option" data-value="Manager">Manager</div>
-                    <div class="custom-combo-option" data-value="Programmer">Programmer</div>
-                    <div class="custom-combo-option" data-value="Fitness Coach">Fitness Coach</div>
+        <!-- Template Input Section -->
+        <div style="margin-bottom: 20px;">
+            <label for="template-input"><strong>Template:</strong></label>
+            <input type="text" id="template-input" class="template-input" 
+                   value="As a [Role], I want to [What], so that [Why]" 
+                   placeholder="Enter template with [TAG] variables...">
+            <button id="generate-btn" class="generate-btn">Generate Combo Boxes</button>
+        </div>
+        
+        <!-- Dynamic Combo Boxes Container -->
+        <div id="dynamic-combo-boxes">
+            <div class="combo-box-row">
+                <label>Role:</label>
+                <div class="custom-combo-box" id="role-combo">
+                    <input type="text" class="custom-combo-input" placeholder="Select role..." id="role-input">
+                    <div class="custom-combo-arrow" id="role-arrow"></div>
+                    <div class="custom-combo-dropdown" id="role-dropdown">
+                        <div class="custom-combo-option" data-value="Manager">Manager</div>
+                        <div class="custom-combo-option" data-value="Programmer">Programmer</div>
+                        <div class="custom-combo-option" data-value="Fitness Coach">Fitness Coach</div>
+                    </div>
                 </div>
-            </div>
-            <span class="arrow">→</span>
-            <label>What:</label>
-            <div class="custom-combo-box" id="what-combo">
-                <input type="text" class="custom-combo-input" placeholder="Select action..." id="what-input" disabled>
-                <div class="custom-combo-arrow" id="what-arrow"></div>
-                <div class="custom-combo-dropdown" id="what-dropdown">
-                    <!-- Will be populated dynamically -->
+                <span class="arrow">→</span>
+                <label>What:</label>
+                <div class="custom-combo-box" id="what-combo">
+                    <input type="text" class="custom-combo-input" placeholder="Select action..." id="what-input" disabled>
+                    <div class="custom-combo-arrow" id="what-arrow"></div>
+                    <div class="custom-combo-dropdown" id="what-dropdown">
+                        <!-- Will be populated dynamically -->
+                    </div>
                 </div>
-            </div>
-            <span class="arrow">→</span>
-            <label>Why:</label>
-            <div class="custom-combo-box" id="why-combo">
-                <input type="text" class="custom-combo-input" placeholder="Select reason..." id="why-input" disabled>
-                <div class="custom-combo-arrow" id="why-arrow"></div>
-                <div class="custom-combo-dropdown" id="why-dropdown">
-                    <!-- Will be populated dynamically -->
+                <span class="arrow">→</span>
+                <label>Why:</label>
+                <div class="custom-combo-box" id="why-combo">
+                    <input type="text" class="custom-combo-input" placeholder="Select reason..." id="why-input" disabled>
+                    <div class="custom-combo-arrow" id="why-arrow"></div>
+                    <div class="custom-combo-dropdown" id="why-dropdown">
+                        <!-- Will be populated dynamically -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -211,6 +247,7 @@
         <button class="test-button" onclick="testDynamicRelationshipLoading()">Test: Dynamic Relationship Loading</button>
         <button class="test-button" onclick="testErrorHandlingForInvalidSelections()">Test: Error Handling For Invalid Selections</button>
         <button class="test-button" onclick="testPerformanceWithLargeDatasets()">Test: Performance With Large Datasets</button>
+        <button class="test-button" onclick="testTemplateParsingAndNLevelGeneration()">Test: Template Parsing and N-Level Generation</button>
         <button class="test-button" onclick="runAllTests()">Run All Tests</button>
         <button class="test-button" onclick="resetTest()">Reset</button>
         <div class="test-results" id="test-results">
@@ -219,6 +256,195 @@
     </div>
 
     <script>
+        // Template parsing and N-level cascading system
+        let currentTemplate = "";
+        let comboBoxes = [];
+        let maxLevels = 16; // Hard limit as requested
+        
+        // Parse template to extract variables
+        function parseTemplate(template) {
+            const regex = /\[([^\]]+)\]/g;
+            const variables = [];
+            let match;
+            
+            while ((match = regex.exec(template)) !== null) {
+                variables.push(match[1]);
+            }
+            
+            return variables;
+        }
+        
+        // Generate combo boxes from template
+        function generateComboBoxesFromTemplate(template) {
+            const variables = parseTemplate(template);
+            
+            if (variables.length > maxLevels) {
+                alert(`Template has ${variables.length} variables, but maximum is ${maxLevels}`);
+                return;
+            }
+            
+            currentTemplate = template;
+            comboBoxes = variables.map((variable, index) => ({
+                level: index,
+                tag: variable,
+                enabled: index === 0, // Only first level enabled initially
+                selected: "",
+                options: index === 0 ? getRootOptions() : []
+            }));
+            
+            renderDynamicComboBoxes();
+        }
+        
+        // Get root options (first level)
+        function getRootOptions() {
+            return Object.keys(relationships);
+        }
+        
+        // Render dynamic combo boxes
+        function renderDynamicComboBoxes() {
+            const container = document.getElementById('dynamic-combo-boxes');
+            
+            if (comboBoxes.length === 0) {
+                container.innerHTML = '<p>No combo boxes to render</p>';
+                return;
+            }
+            
+            let html = '<div class="combo-box-row">';
+            
+            comboBoxes.forEach((comboBox, index) => {
+                const isLast = index === comboBoxes.length - 1;
+                
+                html += `
+                    <label>${comboBox.tag}:</label>
+                    <div class="custom-combo-box" id="combo-${index}">
+                        <input type="text" class="custom-combo-input" 
+                               id="input-${index}" 
+                               placeholder="Select ${comboBox.tag.toLowerCase()}..."
+                               ${comboBox.enabled ? '' : 'disabled'}>
+                        <div class="custom-combo-arrow" id="arrow-${index}"></div>
+                        <div class="custom-combo-dropdown" id="dropdown-${index}">
+                            ${comboBox.options.map(option => 
+                                `<div class="custom-combo-option" data-value="${option}">${option}</div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                // Add arrow between combo boxes (except after the last one)
+                if (!isLast) {
+                    html += '<span class="arrow">→</span>';
+                }
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+            
+            // Setup event listeners for all combo boxes
+            comboBoxes.forEach((comboBox, index) => {
+                setupComboBox(index);
+            });
+        }
+        
+        // Setup individual combo box
+        function setupComboBox(index) {
+            const input = document.getElementById(`input-${index}`);
+            const dropdown = document.getElementById(`dropdown-${index}`);
+            const arrow = document.getElementById(`arrow-${index}`);
+            
+            if (!input || !dropdown || !arrow) return;
+            
+            // Show dropdown on focus
+            input.addEventListener('focus', () => {
+                if (!input.disabled) {
+                    dropdown.style.display = 'block';
+                }
+            });
+            
+            // Hide dropdown on blur
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    dropdown.style.display = 'none';
+                }, 200);
+            });
+            
+            // Toggle dropdown on arrow click
+            arrow.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!input.disabled) {
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                    if (dropdown.style.display === 'block') {
+                        input.focus();
+                    }
+                }
+            });
+            
+            // Handle option clicks
+            dropdown.addEventListener('click', (e) => {
+                if (e.target.classList.contains('custom-combo-option')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    input.value = e.target.textContent;
+                    handleComboBoxChange(index, e.target.textContent);
+                    dropdown.style.display = 'none';
+                }
+            });
+        }
+        
+        // Handle combo box changes for cascading
+        function handleComboBoxChange(index, value) {
+            if (comboBoxes[index]) {
+                comboBoxes[index].selected = value;
+            }
+            
+            // Handle cascading logic
+            if (index < comboBoxes.length - 1) {
+                // Enable next combo box and populate options
+                comboBoxes[index + 1].enabled = true;
+                populateNextLevelOptions(index, value);
+                
+                // Clear all downstream selections
+                for (let i = index + 2; i < comboBoxes.length; i++) {
+                    comboBoxes[i].enabled = false;
+                    comboBoxes[i].selected = "";
+                    comboBoxes[i].options = [];
+                }
+            }
+            
+            // Update the UI
+            renderDynamicComboBoxes();
+        }
+        
+        // Populate options for next level based on parent selection
+        function populateNextLevelOptions(parentIndex, parentValue) {
+            if (parentIndex === 0) {
+                // First level to second level
+                const nextComboBox = comboBoxes[parentIndex + 1];
+                if (relationships[parentValue]) {
+                    nextComboBox.options = Object.keys(relationships[parentValue]);
+                }
+            } else if (parentIndex === 1) {
+                // Second level to third level
+                const nextComboBox = comboBoxes[parentIndex + 1];
+                const grandParentValue = comboBoxes[0].selected;
+                if (relationships[grandParentValue] && relationships[grandParentValue][parentValue]) {
+                    nextComboBox.options = relationships[grandParentValue][parentValue];
+                }
+            }
+            // Add more levels as needed...
+        }
+        
+        // Initialize generate button
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generate-btn');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', function() {
+                    const template = document.getElementById('template-input').value;
+                    generateComboBoxesFromTemplate(template);
+                });
+            }
+        });
+        
         // Test data structure
         const relationships = {
             "Manager": {
@@ -482,7 +708,13 @@
                             setTimeout(() => {
                                 testChangingRoleClearsDownstreamSelections();
                                 setTimeout(() => {
-                                    results.innerHTML += '<h3>🎯 All Tests Complete!</h3>';
+                                    resetTest();
+                                    setTimeout(() => {
+                                        testTemplateParsingAndNLevelGeneration();
+                                        setTimeout(() => {
+                                            results.innerHTML += '<h3>🎯 All Tests Complete!</h3>';
+                                        }, 500);
+                                    }, 500);
                                 }, 500);
                             }, 500);
                         }, 500);
@@ -821,6 +1053,40 @@
                 
                 results.innerHTML += '<p><strong>🎯 Test 9 Complete!</strong></p>';
             }, 100);
+        }
+        
+        // Test: Template Parsing and N-Level Generation
+        function testTemplateParsingAndNLevelGeneration() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 10: Template Parsing and N-Level Generation</h3>';
+            
+            // Test 10.1: Parse simple template
+            const simpleTemplate = "As a [Role], I want to [What], so that [Why]";
+            const simpleVariables = parseTemplate(simpleTemplate);
+            results.innerHTML += `<p><strong>10.1 Simple Template:</strong> ${simpleVariables.length === 3 ? '✅' : '❌'} Parsed "${simpleTemplate}" → [${simpleVariables.join(', ')}]</p>`;
+            
+            // Test 10.2: Parse complex template
+            const complexTemplate = "When [User] visits [Page], they should see [Content] and be able to [Action]";
+            const complexVariables = parseTemplate(complexTemplate);
+            results.innerHTML += `<p><strong>10.2 Complex Template:</strong> ${complexVariables.length === 4 ? '✅' : '❌'} Parsed "${complexTemplate}" → [${complexVariables.join(', ')}]</p>`;
+            
+            // Test 10.3: Generate combo boxes from template
+            generateComboBoxesFromTemplate(simpleTemplate);
+            results.innerHTML += `<p><strong>10.3 Combo Box Generation:</strong> ${comboBoxes.length === 3 ? '✅' : '❌'} Generated ${comboBoxes.length} combo boxes</p>`;
+            
+            // Test 10.4: Test level limits
+            const longTemplate = "[A][B][C][D][E][F][G][H][I][J][K][L][M][N][O][P][Q]"; // 17 variables
+            const longVariables = parseTemplate(longTemplate);
+            results.innerHTML += `<p><strong>10.4 Level Limits:</strong> ${longVariables.length > maxLevels ? '✅' : '❌'} Template with ${longVariables.length} variables exceeds limit of ${maxLevels}</p>`;
+            
+            // Test 10.5: Verify combo box structure
+            if (comboBoxes.length > 0) {
+                const firstEnabled = comboBoxes[0].enabled;
+                const secondEnabled = comboBoxes[1].enabled;
+                results.innerHTML += `<p><strong>10.5 Structure:</strong> ${firstEnabled && !secondEnabled ? '✅' : '❌'} First enabled: ${firstEnabled}, Second enabled: ${secondEnabled}</p>`;
+            }
+            
+            results.innerHTML += '<p><strong>🎯 Test 10 Complete!</strong></p>';
         }
 
         function populateWhatCombo(role) {

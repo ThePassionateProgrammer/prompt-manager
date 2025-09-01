@@ -15,6 +15,7 @@ from .business.template_parser import TemplateParser
 from .business.component_manager import ComponentManager
 from .business.template_storage import TemplateStorage
 import uuid
+from .business.custom_combo_box_integration import CustomComboBoxIntegration
 
 ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
 
@@ -44,6 +45,9 @@ class PromptManagerAPI:
         self.app = Flask(__name__)
         self.app.json_encoder = UUIDEncoder
         CORS(self.app)
+        
+        # Initialize custom combo box integration
+        self.custom_combo_integration = CustomComboBoxIntegration()
         
         # Setup routes
         self._setup_routes()
@@ -419,6 +423,114 @@ class PromptManagerAPI:
                 
                 templates = self.template_storage.search_templates(query)
                 return jsonify(templates), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        # Custom Combo Box Integration Endpoints
+        @self.app.route('/api/custom-combo-box/create-template', methods=['POST'])
+        def create_template_with_custom_combo_boxes():
+            """Create a template with custom combo boxes."""
+            try:
+                data = request.get_json()
+                if not data or 'template' not in data:
+                    return jsonify({'error': 'Template is required'}), 400
+                
+                template = data['template']
+                result = self.custom_combo_integration.create_template_with_custom_combo_boxes(template)
+                
+                return jsonify(result), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/custom-combo-box/handle-change', methods=['POST'])
+        def handle_combo_box_change():
+            """Handle a combo box change and update cascading state."""
+            try:
+                data = request.get_json()
+                if not data or 'combo_box_id' not in data or 'new_value' not in data or 'combo_boxes' not in data:
+                    return jsonify({'error': 'combo_box_id, new_value, and combo_boxes are required'}), 400
+                
+                combo_box_id = data['combo_box_id']
+                new_value = data['new_value']
+                combo_boxes = data['combo_boxes']
+                
+                updated_combo_boxes = self.custom_combo_integration.handle_combo_box_change(
+                    combo_box_id, new_value, combo_boxes
+                )
+                
+                return jsonify({'combo_boxes': updated_combo_boxes}), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/custom-combo-box/generate-prompt', methods=['POST'])
+        def generate_final_prompt():
+            """Generate final prompt from template and combo box selections."""
+            try:
+                data = request.get_json()
+                if not data or 'template' not in data or 'combo_boxes' not in data:
+                    return jsonify({'error': 'template and combo_boxes are required'}), 400
+                
+                template = data['template']
+                combo_boxes = data['combo_boxes']
+                
+                final_prompt = self.custom_combo_integration.generate_final_prompt(template, combo_boxes)
+                
+                return jsonify({'final_prompt': final_prompt}), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/custom-combo-box/validate-template', methods=['POST'])
+        def validate_template():
+            """Validate a template."""
+            try:
+                data = request.get_json()
+                if not data or 'template' not in data:
+                    return jsonify({'error': 'template is required'}), 400
+                
+                template = data['template']
+                validation = self.custom_combo_integration.validate_template(template)
+                
+                return jsonify(validation), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/custom-combo-box/available-templates', methods=['GET'])
+        def get_available_templates():
+            """Get list of available templates."""
+            try:
+                templates = self.custom_combo_integration.get_available_templates()
+                return jsonify({'templates': templates}), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/custom-combo-box/export-config', methods=['POST'])
+        def export_template_config():
+            """Export template configuration."""
+            try:
+                data = request.get_json()
+                if not data or 'template' not in data or 'combo_boxes' not in data:
+                    return jsonify({'error': 'template and combo_boxes are required'}), 400
+                
+                template = data['template']
+                combo_boxes = data['combo_boxes']
+                
+                config = self.custom_combo_integration.export_template_config(template, combo_boxes)
+                
+                return jsonify(config), 200
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/custom-combo-box/import-config', methods=['POST'])
+        def import_template_config():
+            """Import template configuration."""
+            try:
+                data = request.get_json()
+                if not data:
+                    return jsonify({'error': 'config data is required'}), 400
+                
+                result = self.custom_combo_integration.import_template_config(data)
+                
+                return jsonify(result), 200
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
         

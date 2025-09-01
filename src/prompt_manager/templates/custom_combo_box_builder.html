@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Combo Box Builder - Prompt Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .custom-combo-box-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .template-input-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .combo-boxes-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .combo-box-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+        
+        .combo-box-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .combo-box-input {
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            width: 200px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .combo-box-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        
+        .combo-box-input:disabled {
+            background: #e9ecef;
+            cursor: not-allowed;
+        }
+        
+        .combo-box-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .combo-box-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        .combo-box-option:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .combo-box-option.selected {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .combo-box-arrow {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+        }
+        
+        .arrow {
+            font-size: 20px;
+            color: #007bff;
+            margin: 0 15px;
+        }
+        
+        .final-prompt-section {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .template-examples {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        
+        .template-example {
+            cursor: pointer;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            background: white;
+            border: 1px solid #dee2e6;
+        }
+        
+        .template-example:hover {
+            background: #e9ecef;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-enabled {
+            background: #28a745;
+        }
+        
+        .status-disabled {
+            background: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-magic me-2"></i>Prompt Manager
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Prompts</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/template-builder">Template Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/custom-combo-box-builder">Custom Combo Box Builder</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="custom-combo-box-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-puzzle-piece me-2"></i>Custom Combo Box Builder
+            </h1>
+            <div class="btn-group">
+                <button class="btn btn-outline-primary" onclick="loadAvailableTemplates()">
+                    <i class="fas fa-list me-1"></i>Load Templates
+                </button>
+                <button class="btn btn-outline-success" onclick="exportConfiguration()">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+                <button class="btn btn-outline-info" onclick="importConfiguration()">
+                    <i class="fas fa-upload me-1"></i>Import
+                </button>
+            </div>
+        </div>
+
+        <!-- Template Input Section -->
+        <div class="template-input-section">
+            <h4><i class="fas fa-edit me-2"></i>Template Input</h4>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label for="templateInput" class="form-label">Enter your template with variables in brackets:</label>
+                        <input type="text" class="form-control" id="templateInput" 
+                               placeholder="e.g., As a [Role], I want to [What], so that [Why]"
+                               value="As a [Role], I want to [What], so that [Why]">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary w-100 mt-4" onclick="generateComboBoxes()">
+                        <i class="fas fa-magic me-1"></i>Generate Combo Boxes
+                    </button>
+                </div>
+            </div>
+            
+            <div class="template-examples">
+                <h6><i class="fas fa-lightbulb me-1"></i>Template Examples:</h6>
+                <div class="template-example" onclick="loadTemplate('As a [Role], I want to [What], so that [Why]')">
+                    As a [Role], I want to [What], so that [Why]
+                </div>
+                <div class="template-example" onclick="loadTemplate('When [User] visits [Page], they should see [Content] and be able to [Action]')">
+                    When [User] visits [Page], they should see [Content] and be able to [Action]
+                </div>
+                <div class="template-example" onclick="loadTemplate('If [Condition] then [Action] else [Alternative]')">
+                    If [Condition] then [Action] else [Alternative]
+                </div>
+            </div>
+        </div>
+
+        <!-- Combo Boxes Section -->
+        <div class="combo-boxes-section" id="comboBoxesSection" style="display: none;">
+            <h4><i class="fas fa-list me-2"></i>Custom Combo Boxes</h4>
+            <div id="comboBoxesContainer">
+                <!-- Combo boxes will be generated here -->
+            </div>
+        </div>
+
+        <!-- Final Prompt Section -->
+        <div class="final-prompt-section" id="finalPromptSection" style="display: none;">
+            <h4><i class="fas fa-file-alt me-2"></i>Final Prompt</h4>
+            <div class="form-group">
+                <textarea class="form-control" id="finalPrompt" rows="4" readonly></textarea>
+            </div>
+            <div class="mt-3">
+                <button class="btn btn-success me-2" onclick="copyToClipboard()">
+                    <i class="fas fa-copy me-1"></i>Copy to Clipboard
+                </button>
+                <button class="btn btn-primary" onclick="saveAsPrompt()">
+                    <i class="fas fa-save me-1"></i>Save as Prompt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentComboBoxes = [];
+        let currentTemplate = '';
+
+        function loadTemplate(template) {
+            document.getElementById('templateInput').value = template;
+            generateComboBoxes();
+        }
+
+        async function generateComboBoxes() {
+            const template = document.getElementById('templateInput').value.trim();
+            if (!template) {
+                alert('Please enter a template');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/custom-combo-box/create-template', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ template: template })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    currentTemplate = template;
+                    currentComboBoxes = result.combo_boxes;
+                    renderComboBoxes();
+                    document.getElementById('comboBoxesSection').style.display = 'block';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error generating combo boxes');
+            }
+        }
+
+        function renderComboBoxes() {
+            const container = document.getElementById('comboBoxesContainer');
+            container.innerHTML = '';
+
+            currentComboBoxes.forEach((comboBox, index) => {
+                const comboBoxRow = document.createElement('div');
+                comboBoxRow.className = 'combo-box-row';
+                
+                const statusIndicator = document.createElement('span');
+                statusIndicator.className = `status-indicator ${comboBox.enabled ? 'status-enabled' : 'status-disabled'}`;
+                
+                const label = document.createElement('label');
+                label.className = 'form-label me-2';
+                label.textContent = comboBox.tag + ':';
+                
+                const comboBoxContainer = document.createElement('div');
+                comboBoxContainer.className = 'combo-box-container';
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'combo-box-input';
+                input.placeholder = `Select ${comboBox.tag}...`;
+                input.value = comboBox.value || '';
+                input.disabled = !comboBox.enabled;
+                input.dataset.index = index;
+                input.dataset.tag = comboBox.tag;
+                
+                const arrow = document.createElement('span');
+                arrow.className = 'combo-box-arrow';
+                arrow.innerHTML = '▼';
+                arrow.onclick = () => toggleDropdown(index);
+                
+                const dropdown = document.createElement('div');
+                dropdown.className = 'combo-box-dropdown';
+                dropdown.id = `dropdown-${index}`;
+                
+                // Add options based on real data
+                if (comboBox.options && comboBox.options.length > 0) {
+                    comboBox.options.forEach(option => {
+                        const optionElement = document.createElement('div');
+                        optionElement.className = 'combo-box-option';
+                        optionElement.textContent = option;
+                        optionElement.onclick = () => selectOption(index, option);
+                        dropdown.appendChild(optionElement);
+                    });
+                }
+                
+                // Add "Add..." option
+                const addOption = document.createElement('div');
+                addOption.className = 'combo-box-option';
+                addOption.textContent = 'Add...';
+                addOption.style.fontStyle = 'italic';
+                addOption.onclick = () => addCustomOption(index);
+                dropdown.appendChild(addOption);
+                
+                comboBoxContainer.appendChild(input);
+                comboBoxContainer.appendChild(arrow);
+                comboBoxContainer.appendChild(dropdown);
+                
+                comboBoxRow.appendChild(statusIndicator);
+                comboBoxRow.appendChild(label);
+                comboBoxRow.appendChild(comboBoxContainer);
+                
+                // Add arrow between combo boxes (except for the last one)
+                if (index < currentComboBoxes.length - 1) {
+                    const arrowElement = document.createElement('span');
+                    arrowElement.className = 'arrow';
+                    arrowElement.innerHTML = '→';
+                    comboBoxRow.appendChild(arrowElement);
+                }
+                
+                container.appendChild(comboBoxRow);
+            });
+        }
+
+        function toggleDropdown(index) {
+            const dropdown = document.getElementById(`dropdown-${index}`);
+            const isVisible = dropdown.style.display === 'block';
+            
+            // Close all dropdowns
+            document.querySelectorAll('.combo-box-dropdown').forEach(d => d.style.display = 'none');
+            
+            // Toggle current dropdown
+            dropdown.style.display = isVisible ? 'none' : 'block';
+        }
+
+        async function selectOption(index, option) {
+            currentComboBoxes[index].value = option;
+            
+            // Update the input field
+            const input = document.querySelector(`input[data-index="${index}"]`);
+            input.value = option;
+            
+            // Close dropdown
+            document.getElementById(`dropdown-${index}`).style.display = 'none';
+            
+            // Handle cascading update
+            await handleComboBoxChange(index, option);
+            
+            // Update final prompt
+            updateFinalPrompt();
+        }
+
+        async function handleComboBoxChange(index, value) {
+            try {
+                const response = await fetch('/api/custom-combo-box/handle-change', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        combo_box_id: currentComboBoxes[index].tag,
+                        new_value: value,
+                        combo_boxes: currentComboBoxes
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    currentComboBoxes = result.combo_boxes;
+                    renderComboBoxes();
+                } else {
+                    console.error('Error updating combo boxes:', result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function addCustomOption(index) {
+            const input = document.querySelector(`input[data-index="${index}"]`);
+            const customValue = prompt(`Enter custom ${currentComboBoxes[index].tag}:`);
+            
+            if (customValue && customValue.trim()) {
+                selectOption(index, customValue.trim());
+            }
+        }
+
+        async function updateFinalPrompt() {
+            try {
+                const response = await fetch('/api/custom-combo-box/generate-prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        template: currentTemplate,
+                        combo_boxes: currentComboBoxes
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('finalPrompt').value = result.final_prompt;
+                    document.getElementById('finalPromptSection').style.display = 'block';
+                } else {
+                    console.error('Error generating final prompt:', result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadAvailableTemplates() {
+            try {
+                const response = await fetch('/api/custom-combo-box/available-templates');
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const template = result.templates[0]; // Load first template
+                    loadTemplate(template);
+                } else {
+                    console.error('Error loading templates:', result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function copyToClipboard() {
+            const finalPrompt = document.getElementById('finalPrompt');
+            finalPrompt.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
+        }
+
+        async function saveAsPrompt() {
+            const finalPrompt = document.getElementById('finalPrompt').value;
+            if (!finalPrompt.trim()) {
+                alert('No prompt to save');
+                return;
+            }
+
+            const promptName = prompt('Enter a name for this prompt:');
+            if (!promptName) return;
+
+            try {
+                const response = await fetch('/api/prompts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: promptName,
+                        text: finalPrompt,
+                        category: 'Generated'
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Prompt saved successfully!');
+                } else {
+                    alert('Error saving prompt: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error saving prompt');
+            }
+        }
+
+        async function exportConfiguration() {
+            const config = {
+                template: currentTemplate,
+                combo_boxes: currentComboBoxes
+            };
+            
+            const dataStr = JSON.stringify(config, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'custom-combo-box-config.json';
+            link.click();
+        }
+
+        function importConfiguration() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const config = JSON.parse(e.target.result);
+                        currentTemplate = config.template;
+                        currentComboBoxes = config.combo_boxes;
+                        
+                        document.getElementById('templateInput').value = currentTemplate;
+                        renderComboBoxes();
+                        document.getElementById('comboBoxesSection').style.display = 'block';
+                        updateFinalPrompt();
+                    } catch (error) {
+                        alert('Error importing configuration: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // Initialize with default template
+        document.addEventListener('DOMContentLoaded', function() {
+            generateComboBoxes();
+        });
+    </script>
+</body>
+</html>

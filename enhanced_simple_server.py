@@ -13,6 +13,7 @@ import subprocess
 import sys
 import os
 from datetime import datetime
+from src.prompt_manager.business.custom_combo_box_integration import CustomComboBoxIntegration
 
 def check_port_available(port):
     """Check if a port is available."""
@@ -127,6 +128,9 @@ from test_template_builder import TemplateBuilder, PromptTemplate
 
 template_builder = TemplateBuilder()
 
+# Initialize custom combo box integration
+custom_combo_integration = CustomComboBoxIntegration()
+
 # Predefined categories for better organization
 PREDEFINED_CATEGORIES = [
     "general",
@@ -196,6 +200,9 @@ HTML_TEMPLATE = """
                     <div class="d-flex gap-2">
                         <a href="/template-builder" class="btn btn-outline-primary">
                             <i class="fas fa-magic me-1"></i>Template Builder
+                        </a>
+                        <a href="/custom-combo-box-builder" class="btn btn-outline-warning">
+                            <i class="fas fa-puzzle-piece me-1"></i>Custom Combo Box Builder
                         </a>
                         <a href="/export" class="btn btn-outline-success">
                             <i class="fas fa-download me-1"></i>Export
@@ -1180,7 +1187,7 @@ def update_options():
         return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
 
 @app.route('/template/generate-final', methods=['POST'])
-def generate_final_prompt():
+def generate_template_final_prompt():
     """Generate final prompt by replacing variables with user selections."""
     try:
         data = request.get_json()
@@ -1219,32 +1226,163 @@ def generate_template():
     try:
         data = request.get_json()
         template_text = data.get('template', '')
+        edit_mode = data.get('edit_mode', False)  # Check if edit mode is enabled
         
         # Extract variables
         import re
         variables = re.findall(r'\[([^\]]+)\]', template_text)
         
-        # Generate dropdowns (reuse the logic from generate_dropdowns)
-        default_options = {
-            'role': ['Programmer', 'Chef', 'Soccer Coach', 'Teacher', 'Designer'],
-            'what': ['Write code', 'Shop for food', 'Create tests', 'Prepare lunch', 'Plan dinner party', 'Refactor'],
-            'why': ['Build better software', 'Cook delicious meals', 'Improve code quality', 'Feed my family', 'Host friends'],
-            'action': ['Write code', 'Create tests', 'Refactor', 'Shop for food', 'Prepare lunch'],
-            'context': ['Web development', 'Mobile app', 'Backend API', 'Kitchen', 'Restaurant']
-        }
-        
-        dropdowns = {}
-        for var in variables:
-            dropdowns[var] = {
-                'options': default_options.get(var, [f'Option 1 for {var}', f'Option 2 for {var}'])
+        if edit_mode:
+            # Use custom combo box integration for edit mode
+            custom_result = custom_combo_integration.create_template_with_custom_combo_boxes(template_text)
+            
+            # Adapt to regular format for compatibility
+            dropdowns = {}
+            for combo_box in custom_result["combo_boxes"]:
+                tag = combo_box["tag"]
+                dropdowns[tag] = {
+                    "options": combo_box["options"] if combo_box["options"] else [f"Option 1 for {tag}", f"Option 2 for {tag}"],
+                    "enabled": combo_box["enabled"],
+                    "value": combo_box["value"],
+                    "is_custom": True
+                }
+        else:
+            # Use regular template builder logic for non-edit mode
+            default_options = {
+                'role': ['Programmer', 'Chef', 'Soccer Coach', 'Teacher', 'Designer'],
+                'what': ['Write code', 'Shop for food', 'Create tests', 'Prepare lunch', 'Plan dinner party', 'Refactor'],
+                'why': ['Build better software', 'Cook delicious meals', 'Improve code quality', 'Feed my family', 'Host friends'],
+                'action': ['Write code', 'Create tests', 'Refactor', 'Shop for food', 'Prepare lunch'],
+                'context': ['Web development', 'Mobile app', 'Backend API', 'Kitchen', 'Restaurant']
             }
+            
+            dropdowns = {}
+            for var in variables:
+                dropdowns[var] = {
+                    'options': default_options.get(var.lower(), [f'Option 1 for {var}', f'Option 2 for {var}'])
+                }
         
         return json.dumps({
             'dropdowns': dropdowns,
-            'template': template_text
+            'template': template_text,
+            'edit_mode': edit_mode
         }), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/custom-combo-box-builder')
+def custom_combo_box_builder():
+    """Serve the custom combo box builder interface."""
+    with open('src/prompt_manager/templates/custom_combo_box_builder.html', 'r') as f:
+        return f.read()
+
+# Custom Combo Box Integration API Endpoints
+@app.route('/api/custom-combo-box/create-template', methods=['POST'])
+def create_template_with_custom_combo_boxes():
+    """Create a template with custom combo boxes."""
+    try:
+        data = request.get_json()
+        if not data or 'template' not in data:
+            return json.dumps({'error': 'Template is required'}), 400, {'Content-Type': 'application/json'}
+        
+        template = data['template']
+        result = custom_combo_integration.create_template_with_custom_combo_boxes(template)
+        
+        return json.dumps(result), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/api/custom-combo-box/handle-change', methods=['POST'])
+def handle_custom_combo_box_change():
+    """Handle a combo box change and update cascading state."""
+    try:
+        data = request.get_json()
+        if not data or 'combo_box_id' not in data or 'new_value' not in data or 'combo_boxes' not in data:
+            return json.dumps({'error': 'combo_box_id, new_value, and combo_boxes are required'}), 400, {'Content-Type': 'application/json'}
+        
+        combo_box_id = data['combo_box_id']
+        new_value = data['new_value']
+        combo_boxes = data['combo_boxes']
+        
+        updated_combo_boxes = custom_combo_integration.handle_combo_box_change(
+            combo_box_id, new_value, combo_boxes
+        )
+        
+        return json.dumps({'combo_boxes': updated_combo_boxes}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/api/custom-combo-box/generate-prompt', methods=['POST'])
+def generate_custom_combo_box_prompt():
+    """Generate final prompt from template and combo box selections."""
+    try:
+        data = request.get_json()
+        if not data or 'template' not in data or 'combo_boxes' not in data:
+            return json.dumps({'error': 'template and combo_boxes are required'}), 400, {'Content-Type': 'application/json'}
+        
+        template = data['template']
+        combo_boxes = data['combo_boxes']
+        
+        final_prompt = custom_combo_integration.generate_final_prompt(template, combo_boxes)
+        
+        return json.dumps({'final_prompt': final_prompt}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/api/custom-combo-box/validate-template', methods=['POST'])
+def validate_custom_combo_box_template():
+    """Validate a template."""
+    try:
+        data = request.get_json()
+        if not data or 'template' not in data:
+            return json.dumps({'error': 'template is required'}), 400, {'Content-Type': 'application/json'}
+        
+        template = data['template']
+        validation = custom_combo_integration.validate_template(template)
+        
+        return json.dumps(validation), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/api/custom-combo-box/available-templates', methods=['GET'])
+def get_available_templates():
+    """Get list of available templates."""
+    try:
+        templates = custom_combo_integration.get_available_templates()
+        return json.dumps({'templates': templates}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/api/custom-combo-box/export-config', methods=['POST'])
+def export_template_config():
+    """Export template configuration."""
+    try:
+        data = request.get_json()
+        if not data or 'template' not in data or 'combo_boxes' not in data:
+            return json.dumps({'error': 'template and combo_boxes are required'}), 400, {'Content-Type': 'application/json'}
+        
+        template = data['template']
+        combo_boxes = data['combo_boxes']
+        
+        config = custom_combo_integration.export_template_config(template, combo_boxes)
+        
+        return json.dumps(config), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@app.route('/api/custom-combo-box/import-config', methods=['POST'])
+def import_template_config():
+    """Import template configuration."""
+    try:
+        data = request.get_json()
+        if not data:
+            return json.dumps({'error': 'config data is required'}), 400, {'Content-Type': 'application/json'}
+        
+        result = custom_combo_integration.import_template_config(data)
+        
+        return json.dumps(result), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
 
 @app.route('/test-combo-box')
 def test_combo_box_page():

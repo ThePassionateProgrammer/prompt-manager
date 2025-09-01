@@ -180,6 +180,84 @@
       "id": "617057ae-4f5e-4a17-8fc2-f37dce7fbe05",
       "created_date": "2025-08-08T09:57:26.818075",
       "updated_date": "2025-08-08T09:57:26.818084"
+    },
+    "02cae0d0-0755-43e9-9de4-19ec1cac225e": {
+      "name": "User Story Template",
+      "description": "Standard user story format",
+      "template": "As a [Role], I want to [What], so that I can [Why]",
+      "combo_boxes": [
+        {
+          "tag": "Role",
+          "value": "Programmer",
+          "enabled": true
+        },
+        {
+          "tag": "What",
+          "value": "Writing Code",
+          "enabled": true
+        },
+        {
+          "tag": "Why",
+          "value": "Implement a Feature",
+          "enabled": true
+        }
+      ],
+      "created_date": "2025-08-06T20:30:00Z",
+      "id": "02cae0d0-0755-43e9-9de4-19ec1cac225e",
+      "updated_date": "2025-09-01T11:45:46.245634"
+    },
+    "6d26f78a-b479-4280-9d45-2a61e7c5364a": {
+      "name": "Test Template",
+      "description": "Test description",
+      "template": "As a [Role], I want to [What]",
+      "combo_boxes": [
+        {
+          "tag": "Role",
+          "value": "Developer",
+          "enabled": true
+        },
+        {
+          "tag": "What",
+          "value": "Build Features",
+          "enabled": true
+        }
+      ],
+      "created_date": "2025-08-06T20:30:00Z",
+      "id": "6d26f78a-b479-4280-9d45-2a61e7c5364a",
+      "updated_date": "2025-09-01T11:45:46.248037"
+    },
+    "606db6be-e2c4-474d-a06f-5d13c1f0f10f": {
+      "name": "Template 1",
+      "description": "First template",
+      "template": "As a [Role], I want to [What]",
+      "combo_boxes": [],
+      "created_date": "2025-08-06T20:30:00Z",
+      "id": "606db6be-e2c4-474d-a06f-5d13c1f0f10f",
+      "updated_date": "2025-09-01T11:45:46.249598"
+    },
+    "b7221eb6-0224-49ef-b6af-41396098cc50": {
+      "name": "Template 2",
+      "description": "Second template",
+      "template": "Given [Context], when [Action], then [Result]",
+      "combo_boxes": [],
+      "created_date": "2025-08-06T20:30:00Z",
+      "id": "b7221eb6-0224-49ef-b6af-41396098cc50",
+      "updated_date": "2025-09-01T11:45:46.250322"
+    },
+    "2cb44ea5-05a3-417b-a29e-59d64fb713ad": {
+      "name": "Updated Template",
+      "description": "Updated description",
+      "template": "As a [Role], I want to [What], so that I can [Why]",
+      "combo_boxes": [
+        {
+          "tag": "Role",
+          "value": "Developer",
+          "enabled": true
+        }
+      ],
+      "created_date": "2025-08-06T20:30:00Z",
+      "updated_date": "2025-09-01T11:45:46.252558",
+      "id": "2cb44ea5-05a3-417b-a29e-59d64fb713ad"
     }
   }
 }

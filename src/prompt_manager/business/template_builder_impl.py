@@ -46,6 +46,21 @@ class TemplateBuilderImpl(TemplateBuilderInterface):
     
     def __init__(self):
         self.parser = TemplateParser()
+        # Real relationship data from our custom combo box system
+        self.relationships_data = {
+            "Manager": {
+                "Review Status": ["Evaluate Next Actions", "Review Performance"],
+                "File Compliance Report": ["Keep Higher-ups Informed", "Meet Standards"]
+            },
+            "Programmer": {
+                "Code Review": ["Keep Code Clean", "Propagate Good Practices"],
+                "Test Plan": ["Ensure Quality", "Prevent Bugs"]
+            },
+            "Fitness Coach": {
+                "Create Client Meal Plan": ["Improve Health", "Achieve Goals"],
+                "Work Out": ["Build Strength", "Increase Endurance"]
+            }
+        }
     
     def parse_template(self, template: str) -> List[str]:
         """Parse a template string and extract variable names."""
@@ -58,7 +73,25 @@ class TemplateBuilderImpl(TemplateBuilderInterface):
     def update_cascading_state(self, components: List[Dict[str, Any]], 
                              changed_index: int) -> List[Dict[str, Any]]:
         """Update cascading state when a component changes."""
-        return self.parser.update_cascading_selections(components, changed_index)
+        # First, do the basic cascading update
+        updated_components = self.parser.update_cascading_selections(components, changed_index)
+        
+        # Then, populate options based on real relationship data
+        if changed_index == 0 and len(updated_components) > 1:
+            # First component changed, populate second component options
+            role_value = updated_components[0].get("value", "")
+            if role_value in self.relationships_data:
+                updated_components[1]["options"] = list(self.relationships_data[role_value].keys())
+        
+        elif changed_index == 1 and len(updated_components) > 2:
+            # Second component changed, populate third component options
+            role_value = updated_components[0].get("value", "")
+            what_value = updated_components[1].get("value", "")
+            if (role_value in self.relationships_data and 
+                what_value in self.relationships_data[role_value]):
+                updated_components[2]["options"] = self.relationships_data[role_value][what_value]
+        
+        return updated_components
     
     def generate_final_prompt(self, template: str, 
                             components: List[Dict[str, Any]]) -> str:

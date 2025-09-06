@@ -9,6 +9,9 @@
                     <p class="text-muted mb-0">Create dynamic prompts with cascading selections</p>
                 </div>
                 <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-warning" id="edit-mode-toggle">
+                        <i class="fas fa-edit me-1"></i>Edit Mode: OFF
+                    </button>
                     <button type="button" class="btn btn-outline-primary" id="clear-form">
                         <i class="fas fa-eraser me-1"></i>Reset
                     </button>
@@ -170,13 +173,14 @@ function populateTemplateSelect() {
 }
 
 function setupEventListeners() {
+    // Edit mode toggle button
+    document.getElementById('edit-mode-toggle').addEventListener('click', toggleEditMode);
+    
     // Generate combo boxes button
     document.getElementById('generate-combo-boxes').addEventListener('click', generateComboBoxes);
     
     // Load example button
     document.getElementById('load-example').addEventListener('click', loadExample);
-    
-
     
     // Clear form button
     document.getElementById('clear-form').addEventListener('click', clearForm);
@@ -200,6 +204,34 @@ function setupEventListeners() {
     document.getElementById('delete-template-btn').addEventListener('click', deleteCurrentTemplate);
 }
 
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    updateEditModeButton();
+    
+    // If we have combo boxes, regenerate them with the new mode
+    if (currentTemplate && comboBoxes.length > 0) {
+        generateComboBoxes();
+    }
+    
+    showAlert(`Edit mode is now ${isEditMode ? 'ON' : 'OFF'}`, 'info');
+}
+
+function updateEditModeButton() {
+    const button = document.getElementById('edit-mode-toggle');
+    const icon = button.querySelector('i');
+    const text = button.querySelector('span') || button.childNodes[2];
+    
+    if (isEditMode) {
+        button.className = 'btn btn-warning';
+        icon.className = 'fas fa-edit me-1';
+        button.innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode: ON';
+    } else {
+        button.className = 'btn btn-outline-warning';
+        icon.className = 'fas fa-edit me-1';
+        button.innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode: OFF';
+    }
+}
+
 function generateComboBoxes() {
     const template = document.getElementById('template-input').value.trim();
     
@@ -208,19 +240,36 @@ function generateComboBoxes() {
         return;
     }
     
-    fetch('/api/template-builder/generate', {
+    fetch('/template/generate', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ template: template })
+        body: JSON.stringify({ 
+            template: template,
+            edit_mode: isEditMode
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.error) {
             showAlert('Error generating combo boxes: ' + data.error, 'error');
         } else {
-            comboBoxes = data.combo_boxes;
+            // Convert dropdowns format to combo_boxes format for compatibility
+            comboBoxes = [];
+            let index = 0;
+            for (const [variable, config] of Object.entries(data.dropdowns)) {
+                comboBoxes.push({
+                    tag: variable,
+                    index: index,
+                    enabled: config.enabled !== undefined ? config.enabled : (index === 0),
+                    value: config.value || '',
+                    options: config.options || [],
+                    is_custom: config.is_custom || false
+                });
+                index++;
+            }
+            
             currentTemplate = template;
             currentTemplateId = null; // Reset template ID for new template
             renderComboBoxes();
@@ -252,8 +301,12 @@ function renderComboBoxes() {
         const isFirst = index === 0;
         const isLast = index === comboBoxes.length - 1;
         
+        const isCustom = comboBox.is_custom || false;
+        const customClass = isCustom ? 'border-warning bg-light' : '';
+        const customText = isCustom ? '<small class="text-muted"><i class="fas fa-magic me-1"></i>Custom combo box with linkages</small>' : '';
+        
         html += `
-            <div class="mb-3">
+            <div class="mb-3 ${customClass}" style="padding: 10px; border-radius: 5px;">
                 <label for="combo-${index}" class="form-label fw-bold">
                     ${comboBox.tag} ${isFirst ? '(Start here)' : ''} ${isLast ? '(Final selection)' : ''}
                 </label>
@@ -282,6 +335,7 @@ function renderComboBoxes() {
                 <div class="form-text">
                     ${comboBox.enabled ? 'Ready for selection' : 'Waiting for previous selection'}
                 </div>
+                ${customText}
             </div>
         `;
     });

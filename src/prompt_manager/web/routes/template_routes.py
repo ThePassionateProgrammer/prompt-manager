@@ -4,7 +4,7 @@ Template Routes
 Handle all template-related HTTP endpoints.
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from src.prompt_manager.web.services.template_service import TemplateService
 import json
 
@@ -16,8 +16,7 @@ template_service = TemplateService()
 @template_bp.route('/template-builder')
 def template_builder():
     """Serve the template builder interface."""
-    with open('src/prompt_manager/templates/template_builder.html', 'r') as f:
-        return f.read()
+    return render_template('template_builder.html')
 
 
 @template_bp.route('/template/parse', methods=['POST'])

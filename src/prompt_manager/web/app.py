@@ -13,7 +13,11 @@ from src.prompt_manager.web.services.port_service import PortService
 
 def create_app():
     """Create and configure the Flask application."""
-    app = Flask(__name__)
+    import os
+    
+    # Set template directory
+    template_dir = os.path.join(os.path.dirname(__file__), '..', 'templates')
+    app = Flask(__name__, template_folder=template_dir)
     
     # Register blueprints
     app.register_blueprint(prompt_bp)

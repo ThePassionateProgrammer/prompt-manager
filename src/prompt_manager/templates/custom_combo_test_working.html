@@ -148,6 +148,29 @@
             background-color: #1e7e34;
         }
         
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        .button:hover {
+            background-color: #0056b3;
+        }
+        
+        .button.secondary {
+            background-color: #6c757d;
+        }
+        
+        .button.secondary:hover {
+            background-color: #545b62;
+        }
+        
         .instructions {
             background-color: #e7f3ff;
             padding: 15px;
@@ -244,65 +267,6 @@
         // Global mode state - start in Display mode
         let isEditMode = false;
         
-        // State Pattern Implementation
-        class EditModeState {
-            constructor(comboBox) {
-                this.comboBox = comboBox;
-            }
-            
-            getFirstOptionText() {
-                return 'Add...';
-            }
-            
-            getPlaceholderText() {
-                return 'Type to add...';
-            }
-            
-            handleEnter(entryText) {
-                if (this.comboBox.selectedOption) {
-                    // Item is selected - update or delete
-                    if (entryText === '') {
-                        // Remove selected option
-                        this.comboBox.removeOption(this.comboBox.selectedOption);
-                    } else {
-                        // Replace selected option
-                        this.comboBox.replaceOption(this.comboBox.selectedOption, entryText);
-                    }
-                } else {
-                    // No item selected - default to add behavior
-                    if (entryText !== '') {
-                        this.comboBox.addOption(entryText);
-                        this.comboBox.input.value = '';
-                    }
-                }
-                
-                // Always keep dropdown open
-                this.comboBox.showDropdown();
-            }
-        }
-        
-        class DisplayModeState {
-            constructor(comboBox) {
-                this.comboBox = comboBox;
-            }
-            
-            getFirstOptionText() {
-                return 'Select item...';
-            }
-            
-            getPlaceholderText() {
-                return 'Select item...';
-            }
-            
-            handleEnter(entryText) {
-                // In Display mode, only allow selection
-                if (this.comboBox.selectedOption && this.comboBox.selectedOption !== 'Select item...') {
-                    this.comboBox.input.value = this.comboBox.selectedOption;
-                }
-                this.comboBox.showDropdown();
-            }
-        }
-        
         // Mode toggle functionality
         function toggleMode() {
             isEditMode = !isEditMode;
@@ -326,28 +290,10 @@
         }
         
         function updateAllComboBoxes() {
-            // Update all combo boxes to reflect the new mode using State Pattern
-            if (window.combo1) {
-                if (isEditMode) {
-                    window.combo1.setState(new EditModeState(window.combo1));
-                } else {
-                    window.combo1.setState(new DisplayModeState(window.combo1));
-                }
-            }
-            if (window.combo2) {
-                if (isEditMode) {
-                    window.combo2.setState(new EditModeState(window.combo2));
-                } else {
-                    window.combo2.setState(new DisplayModeState(window.combo2));
-                }
-            }
-            if (window.combo3) {
-                if (isEditMode) {
-                    window.combo3.setState(new EditModeState(window.combo3));
-                } else {
-                    window.combo3.setState(new DisplayModeState(window.combo3));
-                }
-            }
+            // Update all combo boxes to reflect the new mode
+            if (combo1) combo1.updateMode();
+            if (combo2) combo2.updateMode();
+            if (combo3) combo3.updateMode();
         }
         
         class CustomComboBox {
@@ -362,16 +308,8 @@
                 this.highlightedIndex = -1;
                 this.isDropdownVisible = false;
                 
-                // Initialize with Display mode state
-                this.setState(new DisplayModeState(this));
-                
                 this.setupEventListeners();
                 this.updateOptions();
-            }
-            
-            setState(newState) {
-                this.currentState = newState;
-                this.updateMode();
             }
             
             setupEventListeners() {
@@ -431,7 +369,37 @@
             
             handleEnter() {
                 const entryText = this.input.value.trim();
-                this.currentState.handleEnter(entryText);
+                
+                // In Display mode, disable add/edit/delete functionality
+                if (!isEditMode) {
+                    // In Display mode, only allow selection
+                    if (this.selectedOption && this.selectedOption !== 'Select item...') {
+                        this.input.value = this.selectedOption;
+                    }
+                    this.showDropdown();
+                    return;
+                }
+                
+                // Edit mode functionality (original behavior)
+                if (this.selectedOption) {
+                    // Item is selected - update or delete
+                    if (entryText === '') {
+                        // Remove selected option
+                        this.removeOption(this.selectedOption);
+                    } else {
+                        // Replace selected option
+                        this.replaceOption(this.selectedOption, entryText);
+                    }
+                } else {
+                    // No item selected - default to add behavior
+                    if (entryText !== '') {
+                        this.addOption(entryText);
+                        this.input.value = '';
+                    }
+                }
+                
+                // Always keep dropdown open
+                this.showDropdown();
             }
             
             navigateDown() {
@@ -590,11 +558,17 @@
             }
             
             updateMode() {
-                // Update the first option and placeholder based on current state
+                // Update the first option and placeholder based on mode
                 if (this.options.length > 0) {
-                    this.options[0].textContent = this.currentState.getFirstOptionText();
-                    this.options[0].dataset.value = this.currentState.getFirstOptionText();
-                    this.input.placeholder = this.currentState.getPlaceholderText();
+                    if (isEditMode) {
+                        this.options[0].textContent = 'Add...';
+                        this.options[0].dataset.value = 'Add...';
+                        this.input.placeholder = 'Type to add...';
+                    } else {
+                        this.options[0].textContent = 'Select item...';
+                        this.options[0].dataset.value = 'Select item...';
+                        this.input.placeholder = 'Select item...';
+                    }
                 }
             }
             
@@ -628,9 +602,9 @@
         let combo1, combo2, combo3;
         
         document.addEventListener('DOMContentLoaded', () => {
-            window.combo1 = new CustomComboBox('combo1');
-            window.combo2 = new CustomComboBox('combo2');
-            window.combo3 = new CustomComboBox('combo3');
+            combo1 = new CustomComboBox('combo1');
+            combo2 = new CustomComboBox('combo2');
+            combo3 = new CustomComboBox('combo3');
             
             // Set up mode toggle button
             document.getElementById('mode-toggle').addEventListener('click', toggleMode);
@@ -753,6 +727,22 @@
             
             document.getElementById('testResults').textContent = results.join('\n');
         }
+        
+        // Initialize combo boxes
+        let combo1, combo2, combo3;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            combo1 = new CustomComboBox('combo1');
+            combo2 = new CustomComboBox('combo2');
+            combo3 = new CustomComboBox('combo3');
+            
+            // Set up mode toggle button
+            document.getElementById('mode-toggle').addEventListener('click', toggleMode);
+            
+            // Initialize in Display mode
+            updateModeButton();
+            updateAllComboBoxes();
+        });
     </script>
 </body>
 </html>

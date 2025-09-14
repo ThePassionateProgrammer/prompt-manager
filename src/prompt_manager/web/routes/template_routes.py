@@ -19,6 +19,12 @@ def template_builder():
     return render_template('template_builder.html')
 
 
+@template_bp.route('/custom-combo-test')
+def custom_combo_test():
+    """Serve the custom combo box test page."""
+    return render_template('custom_combo_test.html')
+
+
 @template_bp.route('/template/parse', methods=['POST'])
 def parse_template():
     """Parse a template and extract variables."""

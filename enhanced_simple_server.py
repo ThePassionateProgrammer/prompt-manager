@@ -5,7 +5,7 @@ Enhanced Simple Web Server for Prompt Manager
 A working web interface that directly uses the PromptManager with improvements.
 """
 
-from flask import Flask, render_template_string, request, redirect, url_for, flash
+from flask import Flask, render_template_string, render_template, request, redirect, url_for, flash
 from src.prompt_manager.prompt_manager import PromptManager
 import json
 import socket
@@ -117,7 +117,7 @@ def setup_port():
         else:
             print("❌ Invalid choice. Please enter 1, 2, or 3.")
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='src/prompt_manager/templates')
 app.secret_key = 'your-secret-key-here'  # Required for flash messages
 
 # Initialize the prompt manager
@@ -1396,10 +1396,28 @@ def test_cascading_combo_boxes():
     with open('test_cascading_combo_boxes.html', 'r') as f:
         return f.read()
 
+@app.route('/custom-combo-test')
+def custom_combo_test():
+    """Serve the custom combo box test page."""
+    with open('src/prompt_manager/templates/custom_combo_test_standalone.html', 'r') as f:
+        return f.read()
+
+@app.route('/working-combo')
+def working_combo():
+    """Serve the working custom combo box test page."""
+    with open('test_combo_box_standalone.html', 'r') as f:
+        return f.read()
+
 @app.route('/test')
 def test_route():
     """Simple test route to verify route registration."""
     return "Test route working!"
+
+@app.route('/combo-standalone')
+def combo_standalone():
+    """Serve the standalone custom combo box test page."""
+    with open('test_combo_box_standalone.html', 'r') as f:
+        return f.read()
 
 if __name__ == '__main__':
     print("🚀 Starting Enhanced Simple Prompt Manager Web Server...")

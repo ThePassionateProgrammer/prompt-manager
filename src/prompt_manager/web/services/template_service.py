@@ -33,7 +33,8 @@ class TemplateService:
         dropdowns = {}
         for var in variables:
             dropdowns[var] = {
-                'options': self.default_options.get(var.lower(), [f'Option 1 for {var}', f'Option 2 for {var}'])
+                'options': self.default_options.get(var.lower(), [f'Option 1 for {var}', f'Option 2 for {var}']),
+                'placeholder': f'Select or enter {var}...'
             }
         
         return dropdowns
@@ -46,11 +47,19 @@ class TemplateService:
         dropdowns = {}
         for combo_box in custom_result["combo_boxes"]:
             tag = combo_box["tag"]
+            
+            # For custom combo boxes, always start with "Add item..." as first option
+            # Then add default options if none exist
+            default_options = [f"Option 1 for {tag}", f"Option 2 for {tag}"]
+            options = combo_box["options"] if combo_box["options"] else default_options
+            options_with_add = ["Add item..."] + options
+            
             dropdowns[tag] = {
-                "options": combo_box["options"] if combo_box["options"] else [f"Option 1 for {tag}", f"Option 2 for {tag}"],
+                "options": options_with_add,
                 "enabled": combo_box["enabled"],
                 "value": combo_box["value"],
-                "is_custom": True
+                "is_custom": True,
+                "placeholder": "Type anything."
             }
         
         return dropdowns

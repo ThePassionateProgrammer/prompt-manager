@@ -97,6 +97,7 @@ class TestWorkingComponent:
         assert "this.dropdown" in combo_class
         assert "this.arrow" in combo_class
         assert "this.options" in combo_class
+        assert "this.selectedIndex" in combo_class
         assert "this.selectedOption" in combo_class
         assert "this.currentState" in combo_class
     

@@ -24,7 +24,7 @@ class EditModeState {
     }
     
     handleEnter(entryText) {
-        if (this.comboBox.selectedOption) {
+        if (this.comboBox.selectedIndex >= 0) {
             // Item is selected - update or delete
             if (entryText === '') {
                 // Remove selected option
@@ -61,7 +61,7 @@ class DisplayModeState {
     
     handleEnter(entryText) {
         // In Display mode, only allow selection
-        if (this.comboBox.selectedOption && this.comboBox.selectedOption !== 'Select item...') {
+        if (this.comboBox.selectedIndex >= 0 && this.comboBox.selectedOption !== 'Select item...') {
             this.comboBox.input.value = this.comboBox.selectedOption;
         }
         this.comboBox.showDropdown();
@@ -76,6 +76,7 @@ class CustomComboBox {
         this.arrow = this.container.querySelector('.combo-box-arrow');
         this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
         
+        this.selectedIndex = -1;
         this.selectedOption = null;
         this.highlightedIndex = -1;
         this.isDropdownVisible = false;
@@ -179,7 +180,7 @@ class CustomComboBox {
             const entryText = this.input.value.trim();
             if (entryText !== '') {
                 this.addOption(entryText);
-                this.input.value = '';
+                this.input.value = ''; // Clear input field to prevent duplicate adds
             }
             // Keep dropdown open and focus on input
             this.showDropdown();
@@ -188,6 +189,7 @@ class CustomComboBox {
         }
         
         // Select the option
+        this.selectedIndex = index;
         this.selectedOption = option.dataset.value;
         this.input.value = option.dataset.value;
         this.updateSelection();
@@ -234,8 +236,8 @@ class CustomComboBox {
     }
     
     updateSelection() {
-        this.options.forEach(option => {
-            const isSelected = option.dataset.value === this.selectedOption;
+        this.options.forEach((option, index) => {
+            const isSelected = index === this.selectedIndex;
             option.classList.toggle('selected', isSelected);
             if (isSelected) {
                 option.style.backgroundColor = '#555';
@@ -267,6 +269,9 @@ class CustomComboBox {
         
         firstOption.parentNode.insertBefore(newOption, firstOption.nextSibling);
         this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+        
+        // Select the newly added option (it's at index 1)
+        this.selectedIndex = 1;
         this.selectedOption = value;
         this.updateSelection();
         
@@ -276,8 +281,9 @@ class CustomComboBox {
     }
     
     replaceOption(oldValue, newValue) {
-        const option = this.options.find(opt => opt.dataset.value === oldValue);
-        if (option) {
+        // Find the option by current selected index instead of value
+        if (this.selectedIndex >= 0 && this.selectedIndex < this.options.length) {
+            const option = this.options[this.selectedIndex];
             option.dataset.value = newValue;
             option.textContent = newValue;
             this.selectedOption = newValue;
@@ -290,16 +296,22 @@ class CustomComboBox {
     }
     
     removeOption(value) {
-        const option = this.options.find(opt => opt.dataset.value === value);
-        if (option && option.dataset.value !== 'Add...' && option.dataset.value !== 'Select item...') {
-            option.remove();
-            this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
-            this.selectedOption = null;
-            this.updateSelection();
-            
-            // Clear any previous highlighting
-            this.highlightedIndex = -1;
-            this.updateHighlight();
+        // Remove the currently selected option by index
+        if (this.selectedIndex >= 0 && this.selectedIndex < this.options.length) {
+            const option = this.options[this.selectedIndex];
+            if (option.dataset.value !== 'Add...' && option.dataset.value !== 'Select item...') {
+                option.remove();
+                this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+                
+                // Clear selection
+                this.selectedIndex = -1;
+                this.selectedOption = null;
+                this.updateSelection();
+                
+                // Clear any previous highlighting
+                this.highlightedIndex = -1;
+                this.updateHighlight();
+            }
         }
     }
     

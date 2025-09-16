@@ -1092,8 +1092,8 @@ def build_prompt():
 
 @app.route('/template-builder')
 def template_builder_page():
-    """Template builder page with the new UI design."""
-    return render_template_string(TEMPLATE_BUILDER_HTML)
+    """Template builder page with CustomComboBox integration."""
+    return render_template('template_builder.html')
 
 # Template Builder API Routes
 @app.route('/template/parse', methods=['POST'])

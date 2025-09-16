@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">🎯 Template Builder</h2>
+                    <p class="text-muted mb-0">Create dynamic prompts with custom combo boxes</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-warning" id="edit-mode-toggle">
+                        <i class="fas fa-edit me-1"></i>Edit Mode: OFF
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="clear-form">
+                        <i class="fas fa-eraser me-1"></i>Reset
+                    </button>
+                    <button type="button" class="btn btn-success" id="send-to-chat" disabled>
+                        <i class="fas fa-rocket me-1"></i>Launch to Chat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Left Panel: Template Input -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-code me-2"></i>Template Definition</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="template-input" class="form-label fw-bold">📝 Template</label>
+                        <textarea class="form-control form-control-lg" id="template-input" rows="4" 
+                                  placeholder="Enter your template with tags in brackets, e.g.: As a [Role], I want to [What], so that I can [Why]">As a [Role], I want to [What], so that I can [Why]</textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" id="generate-combo-boxes">
+                            <i class="fas fa-magic me-1"></i>Generate Combo Boxes
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="load-example">
+                            <i class="fas fa-lightbulb me-1"></i>Load Example
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel: Combo Boxes -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Custom Combo Boxes</h5>
+                </div>
+                <div class="card-body">
+                    <div id="combo-boxes-container">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-arrow-up fa-2x mb-3"></i>
+                            <p>Click "Generate Combo Boxes" to create dynamic selections</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-6">
+                                <button class="btn btn-outline-primary w-100" id="copy-prompt" disabled>
+                                    <i class="fas fa-copy me-1"></i>Copy
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-outline-secondary w-100" id="save-template" disabled>
+                                    <i class="fas fa-save me-1"></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Custom Combo Box Component -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/custom-combo-box.css') }}">
+<script src="{{ url_for('static', filename='js/custom-combo-box-working.js') }}"></script>
+<script src="{{ url_for('static', filename='js/template-storage.js') }}"></script>
+
+<script>
+// Template Builder State
+let currentTemplate = "";
+let customComboBoxes = [];
+let isEditMode = false;
+let templateManager = new TemplateDataManager();
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    // Edit mode toggle
+    document.getElementById('edit-mode-toggle').addEventListener('click', toggleEditMode);
+    
+    // Generate combo boxes
+    document.getElementById('generate-combo-boxes').addEventListener('click', generateCustomComboBoxes);
+    
+    // Load example
+    document.getElementById('load-example').addEventListener('click', loadExample);
+    
+    // Clear form
+    document.getElementById('clear-form').addEventListener('click', clearForm);
+    
+    // Copy and save buttons
+    document.getElementById('copy-prompt').addEventListener('click', copyPrompt);
+    document.getElementById('save-template').addEventListener('click', saveTemplate);
+}
+
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    updateEditModeButton();
+    
+    // Update all custom combo boxes to new mode
+    customComboBoxes.forEach(comboBox => {
+        comboBox.setMode(isEditMode ? 'edit' : 'display');
+    });
+    
+    showAlert(`Edit mode is now ${isEditMode ? 'ON' : 'OFF'}`, 'info');
+}
+
+function updateEditModeButton() {
+    const button = document.getElementById('edit-mode-toggle');
+    if (isEditMode) {
+        button.innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode: ON';
+        button.classList.remove('btn-outline-warning');
+        button.classList.add('btn-warning');
+    } else {
+        button.innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode: OFF';
+        button.classList.remove('btn-warning');
+        button.classList.add('btn-outline-warning');
+    }
+}
+
+function generateCustomComboBoxes() {
+    const template = document.getElementById('template-input').value.trim();
+    
+    if (!template) {
+        showAlert('Please enter a template', 'error');
+        return;
+    }
+    
+    // Initialize template data
+    const templateData = templateManager.initializeTemplate(template);
+    const tags = templateManager.extractTags(template);
+    
+    // Clear existing combo boxes
+    customComboBoxes = [];
+    
+    // Create custom combo boxes
+    const container = document.getElementById('combo-boxes-container');
+    container.innerHTML = '';
+    
+    tags.forEach((tag, index) => {
+        // Create combo box container
+        const comboBoxHtml = `
+            <div class="mb-3">
+                <label for="combo-${index}" class="form-label fw-bold">
+                    ${tag} ${index === 0 ? '(Start here)' : ''} ${index === tags.length - 1 ? '(Final selection)' : ''}
+                </label>
+                <div class="combo-box-container" id="combo-${index}">
+                    <input type="text" class="combo-box-input" placeholder="Select item..." id="input-${index}">
+                    <div class="combo-box-arrow" id="arrow-${index}"></div>
+                    <div class="combo-box-dropdown" id="dropdown-${index}">
+                        <div class="combo-box-option" data-value="Select item...">Select item...</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', comboBoxHtml);
+        
+        // Create CustomComboBox instance
+        const comboBox = new CustomComboBox(`combo-${index}`);
+        
+        // Set up event handlers
+        comboBox.onSelectionChange = (value, containerId) => {
+            handleSelectionChange(value, containerId, index);
+        };
+        
+        comboBox.onOptionsChange = (options, containerId) => {
+            handleOptionsChange(options, containerId, index);
+        };
+        
+        customComboBoxes.push(comboBox);
+    });
+    
+    // Set up hierarchical linkages
+    setupHierarchicalLinkages();
+    
+    currentTemplate = template;
+    updateSaveButtons();
+}
+
+function setupHierarchicalLinkages() {
+    // Set up linkages between combo boxes
+    // This will be implemented based on the template structure
+    // For now, we'll set up basic linkages for common patterns
+    
+    if (customComboBoxes.length >= 2) {
+        // Example: Role -> Action linkage
+        const roleActionLinkages = {
+            'Developer': ['Fix bugs', 'Write tests', 'Deploy code'],
+            'Designer': ['Create mockups', 'User research', 'Prototype'],
+            'Manager': ['Plan sprints', 'Review work', 'Team meetings']
+        };
+        
+        // Set initial options for first combo box
+        customComboBoxes[0].setOptions(['Developer', 'Designer', 'Manager']);
+        
+        // Update linkages in template manager
+        Object.entries(roleActionLinkages).forEach(([role, actions]) => {
+            templateManager.updateLinkages(1, role, actions);
+        });
+    }
+}
+
+function handleSelectionChange(value, containerId, index) {
+    console.log(`Selection changed to ${value} in ${containerId}`);
+    
+    // Handle hierarchical linkages
+    if (index === 0 && value) {
+        // First combo box selected, update second combo box options
+        const linkedOptions = templateManager.getLinkedOptions(1, value);
+        if (customComboBoxes[1]) {
+            customComboBoxes[1].setOptions(linkedOptions);
+        }
+    }
+    
+    // Update generated prompt
+    updateGeneratedPrompt();
+}
+
+function handleOptionsChange(options, containerId, index) {
+    console.log(`Options changed for ${containerId}:`, options);
+    
+    // Update template data
+    templateManager.updateComboBoxOptions(index, options);
+}
+
+function updateGeneratedPrompt() {
+    // Generate prompt from current selections
+    let prompt = currentTemplate;
+    
+    customComboBoxes.forEach((comboBox, index) => {
+        const value = comboBox.getSelectedValue();
+        if (value) {
+            const tag = templateManager.getCurrentTemplate().comboBoxes[index].tag;
+            prompt = prompt.replace(`[${tag}]`, value);
+        }
+    });
+    
+    // Update UI with generated prompt
+    console.log('Generated prompt:', prompt);
+}
+
+function loadExample() {
+    document.getElementById('template-input').value = "As a [Role], I want to [What], so that I can [Why]";
+    generateCustomComboBoxes();
+}
+
+function clearForm() {
+    document.getElementById('template-input').value = '';
+    document.getElementById('combo-boxes-container').innerHTML = `
+        <div class="text-center text-muted">
+            <i class="fas fa-arrow-up fa-2x mb-3"></i>
+            <p>Click "Generate Combo Boxes" to create dynamic selections</p>
+        </div>
+    `;
+    customComboBoxes = [];
+    currentTemplate = '';
+    updateSaveButtons();
+}
+
+function copyPrompt() {
+    // Implementation for copying generated prompt
+    console.log('Copy prompt functionality');
+}
+
+function saveTemplate() {
+    // Save template with custom combo box data
+    templateManager.saveCurrentTemplate();
+    showAlert('Template saved successfully!', 'success');
+}
+
+function updateSaveButtons() {
+    const hasContent = currentTemplate && customComboBoxes.length > 0;
+    document.getElementById('copy-prompt').disabled = !hasContent;
+    document.getElementById('save-template').disabled = !hasContent;
+    document.getElementById('send-to-chat').disabled = !hasContent;
+}
+
+function showAlert(message, type) {
+    // Simple alert implementation
+    const alertClass = type === 'error' ? 'alert-danger' : 
+                     type === 'success' ? 'alert-success' : 'alert-info';
+    
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Insert alert at top of page
+    const container = document.querySelector('.container-fluid');
+    container.insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        const alert = container.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 3000);
+}
+</script>
+
+{% endblock %}

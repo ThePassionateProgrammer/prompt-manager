@@ -529,10 +529,10 @@ TEMPLATE_BUILDER_HTML = """
                 <div class="row">
                     <div class="col-12">
                         <h4 class="mb-3"><i class="fas fa-list me-2"></i>Template Variables</h4>
-                        <div id="dropdownsArea">
+                        <div id="combo-boxes-container">
                             <div class="text-center text-muted py-5">
                                 <i class="fas fa-arrow-down fa-2x mb-3"></i>
-                                <p>Enter a template below and click "Generate" to create dropdowns</p>
+                                <p>Enter a template below and click "Generate" to create combo boxes</p>
                             </div>
                         </div>
                         <div id="finalPromptArea" class="final-prompt" style="display: none;">
@@ -572,179 +572,153 @@ TEMPLATE_BUILDER_HTML = """
         </div>
     </div>
 
+    <!-- Include Custom Combo Box Component -->
+    <link rel="stylesheet" href="/static/css/custom-combo-box.css">
+    <script src="/static/js/custom-combo-box-working.js"></script>
+    <script src="/static/js/template-storage.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let editMode = false;
-        let currentTemplate = '';
-        let currentSelections = {};
-        let dropdownsData = {};
+        // Template Builder State - Old Layout with CustomComboBox
+        let currentTemplate = "";
+        let customComboBoxes = [];
+        let isEditMode = false;
+        let templateManager = new TemplateDataManager();
 
-        // Edit Mode Toggle
-        document.getElementById('editModeBtn').addEventListener('click', function() {
-            editMode = !editMode;
-            this.classList.toggle('btn-outline-light');
-            this.classList.toggle('btn-warning');
-            
-            if (editMode) {
-                this.innerHTML = '<i class="fas fa-check me-1"></i>Edit Mode Active';
-                document.getElementById('dropdownsArea').classList.add('edit-mode-active');
-            } else {
-                this.innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode';
-                document.getElementById('dropdownsArea').classList.remove('edit-mode-active');
-            }
-            
-            // Toggle edit mode on server
-            fetch('/template/edit-mode', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ enabled: editMode })
-            });
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
         });
 
-        // Generate Button
-        document.getElementById('generateBtn').addEventListener('click', function() {
-            const templateText = document.getElementById('templateInput').value.trim();
-            if (!templateText) {
-                alert('Please enter a template text');
-                return;
-            }
+        function setupEventListeners() {
+            // Edit mode toggle
+            document.getElementById('editModeBtn').addEventListener('click', toggleEditMode);
             
-            currentTemplate = templateText;
-            
-            fetch('/template/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ template: templateText })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert('Error: ' + data.error);
-                } else {
-                    dropdownsData = data.dropdowns;
-                    createDropdowns(data.dropdowns);
-                }
-            })
-            .catch(error => {
-                alert('Error: ' + error);
-            });
-        });
+            // Generate combo boxes
+            document.getElementById('generateBtn').addEventListener('click', generateCustomComboBoxes);
+        }
 
-        function createDropdowns(dropdowns) {
-            const dropdownsArea = document.getElementById('dropdownsArea');
-            dropdownsArea.innerHTML = '';
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            updateEditModeButton();
             
-            const variables = Object.keys(dropdowns);
-            
-            variables.forEach((variable, index) => {
-                const dropdownContainer = document.createElement('div');
-                dropdownContainer.className = 'dropdown-container';
-                dropdownContainer.innerHTML = `
-                    <div class="dropdown-label">${variable.charAt(0).toUpperCase() + variable.slice(1)}</div>
-                    <select id="dropdown_${variable}" class="form-select" data-variable="${variable}">
-                        <option value="">Select ${variable}...</option>
-                        ${dropdowns[variable].options.map(option => 
-                            `<option value="${option}">${option}</option>`
-                        ).join('')}
-                    </select>
-                `;
-                
-                dropdownsArea.appendChild(dropdownContainer);
-                
-                // Add change listener for context-aware updates
-                const dropdown = document.getElementById(`dropdown_${variable}`);
-                dropdown.addEventListener('change', function() {
-                    const selectedValue = this.value;
-                    const variableName = this.dataset.variable;
-                    
-                    if (selectedValue) {
-                        currentSelections[variableName] = selectedValue;
-                        
-                        // Update subsequent dropdowns based on this selection
-                        updateSubsequentDropdowns(variableName, selectedValue, index);
-                    }
-                    
-                    // Generate final prompt
-                    generateFinalPrompt();
-                });
+            // Update all custom combo boxes to new mode
+            customComboBoxes.forEach(comboBox => {
+                comboBox.setMode(isEditMode ? 'edit' : 'display');
             });
         }
 
-        function updateSubsequentDropdowns(changedVariable, selectedValue, changedIndex) {
-            const variables = Object.keys(dropdownsData);
+        function updateEditModeButton() {
+            const button = document.getElementById('editModeBtn');
+            if (isEditMode) {
+                button.innerHTML = '<i class="fas fa-check me-1"></i>Edit Mode Active';
+                button.classList.remove('btn-outline-light');
+                button.classList.add('btn-warning');
+                document.getElementById('combo-boxes-container').classList.add('edit-mode-active');
+            } else {
+                button.innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode';
+                button.classList.remove('btn-warning');
+                button.classList.add('btn-outline-light');
+                document.getElementById('combo-boxes-container').classList.remove('edit-mode-active');
+            }
+        }
+
+        function generateCustomComboBoxes() {
+            const template = document.getElementById('templateInput').value.trim();
             
-            // Update dropdowns to the right of the changed one
-            for (let i = changedIndex + 1; i < variables.length; i++) {
-                const variableName = variables[i];
-                const dropdown = document.getElementById(`dropdown_${variableName}`);
+            if (!template) {
+                alert('Please enter a template');
+                return;
+            }
+            
+            // Initialize template data
+            const templateData = templateManager.initializeTemplate(template);
+            const tags = templateManager.extractTags(template);
+            
+            // Clear existing combo boxes
+            customComboBoxes = [];
+            
+            // Create custom combo boxes
+            const container = document.getElementById('combo-boxes-container');
+            container.innerHTML = '';
+            
+            tags.forEach((tag, index) => {
+                // Create combo box container
+                const comboBoxContainer = document.createElement('div');
+                comboBoxContainer.className = 'mb-4';
+                comboBoxContainer.innerHTML = `
+                    <div class="dropdown-label mb-2">${tag.charAt(0).toUpperCase() + tag.slice(1)}</div>
+                    <div id="combo-box-${tag}" class="custom-combo-box"></div>
+                `;
                 
-                // Get context from previous selections
-                const context = {};
-                for (let j = 0; j < i; j++) {
-                    const prevVariable = variables[j];
-                    const prevDropdown = document.getElementById(`dropdown_${prevVariable}`);
-                    if (prevDropdown.value) {
-                        context[prevVariable] = prevDropdown.value;
-                    }
+                container.appendChild(comboBoxContainer);
+                
+                // Create CustomComboBox instance
+                const comboBoxElement = document.getElementById(`combo-box-${tag}`);
+                const comboBox = new CustomComboBox(comboBoxElement, tag, isEditMode);
+                
+                // Load existing options from template data
+                const existingOptions = templateManager.getOptionsForTag(tag);
+                if (existingOptions.length > 0) {
+                    existingOptions.forEach(option => {
+                        comboBox.addOption(option);
+                    });
                 }
                 
-                // Update options for this dropdown
-                fetch('/template/update-options', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        variable: variableName,
-                        context: context
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.options) {
-                        // Update dropdown options
-                        dropdown.innerHTML = `<option value="">Select ${variableName}...</option>` +
-                            data.options.map(option => `<option value="${option}">${option}</option>`).join('');
-                        
-                        // Clear the selection since options changed
-                        dropdown.value = '';
-                        delete currentSelections[variableName];
-                        
-                        // Clear subsequent dropdowns
-                        for (let k = i + 1; k < variables.length; k++) {
-                            const nextVariable = variables[k];
-                            const nextDropdown = document.getElementById(`dropdown_${nextVariable}`);
-                            nextDropdown.value = '';
-                            delete currentSelections[nextVariable];
-                        }
-                        
-                        generateFinalPrompt();
-                    }
-                })
-                .catch(error => console.error('Error updating options:', error));
-            }
+                // Set up hierarchical linkages
+                if (index > 0) {
+                    const prevTag = tags[index - 1];
+                    const prevComboBox = customComboBoxes[customComboBoxes.length - 1];
+                    setupLinkage(prevComboBox, comboBox, prevTag, tag);
+                }
+                
+                customComboBoxes.push(comboBox);
+            });
+            
+            // Generate final prompt when combo boxes change
+            setupPromptGeneration();
+        }
+
+        function setupLinkage(parentComboBox, childComboBox, parentTag, childTag) {
+            parentComboBox.onSelectionChange = function(selectedValue) {
+                if (selectedValue && selectedValue !== 'Add item...' && selectedValue !== 'Select item...') {
+                    // Update child combo box options based on parent selection
+                    const contextualOptions = templateManager.getContextualOptions(childTag, { [parentTag]: selectedValue });
+                    childComboBox.clearOptions();
+                    contextualOptions.forEach(option => {
+                        childComboBox.addOption(option);
+                    });
+                }
+            };
+        }
+
+        function setupPromptGeneration() {
+            customComboBoxes.forEach(comboBox => {
+                comboBox.onSelectionChange = function(selectedValue) {
+                    generateFinalPrompt();
+                };
+            });
         }
 
         function generateFinalPrompt() {
-            if (Object.keys(currentSelections).length === 0) {
-                document.getElementById('finalPromptArea').style.display = 'none';
-                return;
-            }
+            const selections = {};
+            let hasSelections = false;
             
-            fetch('/template/generate-final', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    template: currentTemplate,
-                    selections: currentSelections
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.final_prompt) {
-                    document.getElementById('finalPromptText').textContent = data.final_prompt;
-                    document.getElementById('finalPromptArea').style.display = 'block';
+            customComboBoxes.forEach(comboBox => {
+                const selectedValue = comboBox.getSelectedValue();
+                if (selectedValue && selectedValue !== 'Add item...' && selectedValue !== 'Select item...') {
+                    selections[comboBox.tag] = selectedValue;
+                    hasSelections = true;
                 }
-            })
-            .catch(error => console.error('Error generating final prompt:', error));
+            });
+            
+            if (hasSelections && currentTemplate) {
+                const finalPrompt = templateManager.generatePrompt(currentTemplate, selections);
+                document.getElementById('finalPromptText').textContent = finalPrompt;
+                document.getElementById('finalPromptArea').style.display = 'block';
+            } else {
+                document.getElementById('finalPromptArea').style.display = 'none';
+            }
         }
 
         // Save Prompt Button
@@ -756,9 +730,9 @@ TEMPLATE_BUILDER_HTML = """
             }
             
             // Create a name for the prompt
-            const promptName = `Template: ${Object.keys(currentSelections).join(' → ')}`;
+            const promptName = `Template: ${Object.keys(customComboBoxes.map(cb => cb.tag)).join(' → ')}`;
             
-            // Save to prompts (you can implement this as needed)
+            // Save to prompts
             fetch('/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1094,8 +1068,8 @@ def build_prompt():
 
 @app.route('/template-builder')
 def template_builder_page():
-    """Template builder page with CustomComboBox integration."""
-    return render_template('template_builder.html')
+    """Template builder page with old layout and CustomComboBox integration."""
+    return render_template_string(TEMPLATE_BUILDER_HTML)
 
 # Template Builder API Routes
 @app.route('/template/parse', methods=['POST'])

@@ -513,12 +513,44 @@ TEMPLATE_BUILDER_HTML = """
             <div class="d-flex justify-content-between align-items-center">
                 <h1 class="h3 mb-0"><i class="fas fa-puzzle-piece me-2"></i>Template Builder</h1>
                 <div>
+                    <button id="testModeBtn" class="btn btn-outline-light me-2">
+                        <i class="fas fa-vial me-1"></i>Test Mode
+                    </button>
                     <button id="editModeBtn" class="btn btn-outline-light me-2">
                         <i class="fas fa-edit me-1"></i>Edit Mode
                     </button>
                     <a href="/" class="btn btn-outline-light">
                         <i class="fas fa-arrow-left me-1"></i>Back to Prompts
                     </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Panel (Hidden by default) -->
+        <div id="testPanel" class="bg-warning text-dark p-3" style="display: none;">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <h5 class="mb-3"><i class="fas fa-vial me-2"></i>Test Panel</h5>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button id="addSampleDataBtn" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-plus me-1"></i>Add Sample Data
+                            </button>
+                            <button id="resetComboBoxesBtn" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-undo me-1"></i>Reset
+                            </button>
+                            <button id="runTestsBtn" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-play me-1"></i>Run Tests
+                            </button>
+                            <button id="testLinkagesBtn" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-link me-1"></i>Test Linkages
+                            </button>
+                        </div>
+                        <div id="testResults" class="mt-3" style="display: none;">
+                            <h6>Test Results:</h6>
+                            <div id="testOutput" class="bg-light p-2 rounded"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -594,8 +626,17 @@ TEMPLATE_BUILDER_HTML = """
             // Edit mode toggle
             document.getElementById('editModeBtn').addEventListener('click', toggleEditMode);
             
+            // Test mode toggle
+            document.getElementById('testModeBtn').addEventListener('click', toggleTestMode);
+            
             // Generate combo boxes
             document.getElementById('generateBtn').addEventListener('click', generateCustomComboBoxes);
+            
+            // Test panel buttons
+            document.getElementById('addSampleDataBtn').addEventListener('click', addSampleData);
+            document.getElementById('resetComboBoxesBtn').addEventListener('click', resetComboBoxes);
+            document.getElementById('runTestsBtn').addEventListener('click', runBasicTests);
+            document.getElementById('testLinkagesBtn').addEventListener('click', testLinkages);
         }
 
         function toggleEditMode() {
@@ -624,9 +665,7 @@ TEMPLATE_BUILDER_HTML = """
         }
 
         function generateCustomComboBoxes() {
-            console.log('generateCustomComboBoxes called');
             const template = document.getElementById('templateInput').value.trim();
-            console.log('Template:', template);
             
             if (!template) {
                 alert('Please enter a template');
@@ -635,12 +674,8 @@ TEMPLATE_BUILDER_HTML = """
             
             try {
                 // Initialize template data
-                console.log('Initializing template data...');
                 const templateData = templateManager.initializeTemplate(template);
-                console.log('Template data:', templateData);
-                
                 const tags = templateManager.extractTags(template);
-                console.log('Tags:', tags);
                 
                 // Clear existing combo boxes
                 customComboBoxes = [];
@@ -678,8 +713,6 @@ TEMPLATE_BUILDER_HTML = """
                     customComboBoxes.push(comboBox);
                 });
                 
-                console.log('Created', customComboBoxes.length, 'combo boxes');
-                
             } catch (error) {
                 console.error('Error in generateCustomComboBoxes:', error);
                 alert('Error: ' + error.message);
@@ -687,7 +720,115 @@ TEMPLATE_BUILDER_HTML = """
             }
         }
 
-        // Simplified version - just basic combo box functionality for now
+        // Test Panel Functions
+        function toggleTestMode() {
+            const testPanel = document.getElementById('testPanel');
+            const testModeBtn = document.getElementById('testModeBtn');
+            
+            if (testPanel.style.display === 'none') {
+                testPanel.style.display = 'block';
+                testModeBtn.innerHTML = '<i class="fas fa-vial me-1"></i>Test Mode: ON';
+                testModeBtn.classList.remove('btn-outline-light');
+                testModeBtn.classList.add('btn-warning');
+            } else {
+                testPanel.style.display = 'none';
+                testModeBtn.innerHTML = '<i class="fas fa-vial me-1"></i>Test Mode';
+                testModeBtn.classList.remove('btn-warning');
+                testModeBtn.classList.add('btn-outline-light');
+            }
+        }
+
+        function addSampleData() {
+            if (customComboBoxes.length === 0) {
+                alert('Please generate combo boxes first');
+                return;
+            }
+            
+            // Add sample data to each combo box
+            const sampleData = {
+                'Role': ['Developer', 'Designer', 'Manager', 'Tester'],
+                'What': ['Fix bugs', 'Add features', 'Improve performance', 'Refactor code'],
+                'Why': ['Save time', 'Improve quality', 'Reduce errors', 'Enhance user experience'],
+                '1': ['Option 1A', 'Option 1B', 'Option 1C'],
+                '2': ['Option 2A', 'Option 2B', 'Option 2C'],
+                '3': ['Option 3A', 'Option 3B', 'Option 3C']
+            };
+            
+            customComboBoxes.forEach(comboBox => {
+                const tag = comboBox.tag;
+                const options = sampleData[tag] || ['Sample Option 1', 'Sample Option 2', 'Sample Option 3'];
+                options.forEach(option => {
+                    comboBox.addOption(option);
+                });
+            });
+            
+            showTestResult('Sample data added to all combo boxes');
+        }
+
+        function resetComboBoxes() {
+            customComboBoxes.forEach(comboBox => {
+                // Clear all options except the first one (Add item... or Select item...)
+                const options = comboBox.dropdown.querySelectorAll('.combo-box-option');
+                for (let i = options.length - 1; i > 0; i--) {
+                    options[i].remove();
+                }
+                comboBox.selectedIndex = -1;
+                comboBox.selectedOption = null;
+                comboBox.input.value = '';
+            });
+            
+            showTestResult('All combo boxes reset');
+        }
+
+        function runBasicTests() {
+            const results = [];
+            
+            // Test 1: Check if combo boxes exist
+            if (customComboBoxes.length > 0) {
+                results.push('✓ Combo boxes created successfully');
+            } else {
+                results.push('✗ No combo boxes found');
+            }
+            
+            // Test 2: Check Edit/Display mode switching
+            const originalMode = isEditMode;
+            toggleEditMode();
+            const newMode = isEditMode;
+            toggleEditMode(); // Switch back
+            
+            if (originalMode !== newMode) {
+                results.push('✓ Edit/Display mode switching works');
+            } else {
+                results.push('✗ Edit/Display mode switching failed');
+            }
+            
+            // Test 3: Check if combo boxes have required elements
+            let allHaveElements = true;
+            customComboBoxes.forEach(comboBox => {
+                if (!comboBox.input || !comboBox.dropdown || !comboBox.arrow) {
+                    allHaveElements = false;
+                }
+            });
+            
+            if (allHaveElements) {
+                results.push('✓ All combo boxes have required elements');
+            } else {
+                results.push('✗ Some combo boxes missing required elements');
+            }
+            
+            showTestResult(results.join('<br>'));
+        }
+
+        function testLinkages() {
+            showTestResult('Linkage testing not implemented yet - this will be our next feature!');
+        }
+
+        function showTestResult(message) {
+            const testResults = document.getElementById('testResults');
+            const testOutput = document.getElementById('testOutput');
+            testOutput.innerHTML = message;
+            testResults.style.display = 'block';
+        }
 
         // Save Prompt Button
         document.getElementById('savePromptBtn').addEventListener('click', function() {

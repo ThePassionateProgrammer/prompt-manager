@@ -654,8 +654,13 @@ TEMPLATE_BUILDER_HTML = """
                 container.appendChild(comboBoxContainer);
                 
                 // Create CustomComboBox instance
-                const comboBoxElement = document.getElementById(`combo-box-${tag}`);
-                const comboBox = new CustomComboBox(comboBoxElement, tag, isEditMode);
+                const comboBox = new CustomComboBox(`combo-box-${tag}`);
+                
+                // Set the tag name for this combo box
+                comboBox.tag = tag;
+                
+                // Set the initial mode
+                comboBox.setMode(isEditMode ? 'edit' : 'display');
                 
                 // Load existing options from template data
                 const existingOptions = templateManager.getOptionsForTag(tag);

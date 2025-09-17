@@ -655,7 +655,13 @@ TEMPLATE_BUILDER_HTML = """
                     comboBoxContainer.className = 'mb-4';
                     comboBoxContainer.innerHTML = `
                         <div class="dropdown-label mb-2">${tag.charAt(0).toUpperCase() + tag.slice(1)}</div>
-                        <div id="combo-box-${tag}" class="custom-combo-box"></div>
+                        <div id="combo-box-${tag}" class="combo-box-container">
+                            <input type="text" class="combo-box-input" placeholder="Type to add...">
+                            <div class="combo-box-arrow"></div>
+                            <div class="combo-box-dropdown">
+                                <div class="combo-box-option" data-value="Add item...">Add item...</div>
+                            </div>
+                        </div>
                     `;
                     
                     container.appendChild(comboBoxContainer);
@@ -669,26 +675,10 @@ TEMPLATE_BUILDER_HTML = """
                     // Set the initial mode
                     comboBox.setMode(isEditMode ? 'edit' : 'display');
                     
-                    // Load existing options from template data
-                    const existingOptions = templateManager.getOptionsForTag(tag);
-                    if (existingOptions.length > 0) {
-                        existingOptions.forEach(option => {
-                            comboBox.addOption(option);
-                        });
-                    }
-                    
-                    // Set up hierarchical linkages
-                    if (index > 0) {
-                        const prevTag = tags[index - 1];
-                        const prevComboBox = customComboBoxes[customComboBoxes.length - 1];
-                        setupLinkage(prevComboBox, comboBox, prevTag, tag);
-                    }
-                    
                     customComboBoxes.push(comboBox);
                 });
                 
-                // Generate final prompt when combo boxes change
-                setupPromptGeneration();
+                console.log('Created', customComboBoxes.length, 'combo boxes');
                 
             } catch (error) {
                 console.error('Error in generateCustomComboBoxes:', error);
@@ -697,47 +687,7 @@ TEMPLATE_BUILDER_HTML = """
             }
         }
 
-        function setupLinkage(parentComboBox, childComboBox, parentTag, childTag) {
-            parentComboBox.onSelectionChange = function(selectedValue) {
-                if (selectedValue && selectedValue !== 'Add item...' && selectedValue !== 'Select item...') {
-                    // Update child combo box options based on parent selection
-                    const contextualOptions = templateManager.getContextualOptions(childTag, { [parentTag]: selectedValue });
-                    childComboBox.clearOptions();
-                    contextualOptions.forEach(option => {
-                        childComboBox.addOption(option);
-                    });
-                }
-            };
-        }
-
-        function setupPromptGeneration() {
-            customComboBoxes.forEach(comboBox => {
-                comboBox.onSelectionChange = function(selectedValue) {
-                    generateFinalPrompt();
-                };
-            });
-        }
-
-        function generateFinalPrompt() {
-            const selections = {};
-            let hasSelections = false;
-            
-            customComboBoxes.forEach(comboBox => {
-                const selectedValue = comboBox.getSelectedValue();
-                if (selectedValue && selectedValue !== 'Add item...' && selectedValue !== 'Select item...') {
-                    selections[comboBox.tag] = selectedValue;
-                    hasSelections = true;
-                }
-            });
-            
-            if (hasSelections && currentTemplate) {
-                const finalPrompt = templateManager.generatePrompt(currentTemplate, selections);
-                document.getElementById('finalPromptText').textContent = finalPrompt;
-                document.getElementById('finalPromptArea').style.display = 'block';
-            } else {
-                document.getElementById('finalPromptArea').style.display = 'none';
-            }
-        }
+        // Simplified version - just basic combo box functionality for now
 
         // Save Prompt Button
         document.getElementById('savePromptBtn').addEventListener('click', function() {

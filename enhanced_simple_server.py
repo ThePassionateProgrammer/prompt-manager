@@ -820,7 +820,64 @@ TEMPLATE_BUILDER_HTML = """
         }
 
         function testLinkages() {
-            showTestResult('Linkage testing not implemented yet - this will be our next feature!');
+            const results = [];
+            
+            // Test 1: Check if we have at least 2 combo boxes for linkage testing
+            if (customComboBoxes.length < 2) {
+                results.push('✗ Need at least 2 combo boxes for linkage testing');
+                showTestResult(results.join('<br>'));
+                return;
+            }
+            
+            // Test 2: Verify linkage data structure exists
+            if (!window.linkageData) {
+                results.push('✗ Linkage data structure not found');
+                results.push('🔧 Need to create linkageData object');
+            } else {
+                results.push('✓ Linkage data structure exists');
+            }
+            
+            // Test 3: Check if combo boxes have linkage setup
+            let linkageSetupCount = 0;
+            customComboBoxes.forEach((comboBox, index) => {
+                if (comboBox.onSelectionChange && typeof comboBox.onSelectionChange === 'function') {
+                    linkageSetupCount++;
+                }
+            });
+            
+            if (linkageSetupCount > 0) {
+                results.push(`✓ ${linkageSetupCount} combo boxes have linkage setup`);
+            } else {
+                results.push('✗ No combo boxes have linkage setup');
+                results.push('🔧 Need to implement onSelectionChange handlers');
+            }
+            
+            // Test 4: Test actual linkage behavior (this will fail initially)
+            try {
+                const firstComboBox = customComboBoxes[0];
+                const secondComboBox = customComboBoxes[1];
+                
+                // Simulate selecting an item in the first combo box
+                const testSelection = 'Developer';
+                firstComboBox.selectOption(1); // Select first real option (index 1, after "Add item...")
+                
+                // Check if second combo box options changed
+                const secondOptions = secondComboBox.dropdown.querySelectorAll('.combo-box-option');
+                const secondOptionTexts = Array.from(secondOptions).map(option => option.textContent);
+                
+                if (secondOptionTexts.length > 1) {
+                    results.push('✓ Second combo box has options');
+                    results.push(`📋 Second combo box options: ${secondOptionTexts.slice(1).join(', ')}`);
+                } else {
+                    results.push('✗ Second combo box has no options after selection');
+                    results.push('🔧 Linkage not working - options should update based on selection');
+                }
+                
+            } catch (error) {
+                results.push(`✗ Error testing linkage: ${error.message}`);
+            }
+            
+            showTestResult(results.join('<br>'));
         }
 
         function showTestResult(message) {

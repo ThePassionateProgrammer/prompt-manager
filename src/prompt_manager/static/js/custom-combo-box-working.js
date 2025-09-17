@@ -194,6 +194,11 @@ class CustomComboBox {
         this.input.value = option.dataset.value;
         this.updateSelection();
         
+        // Trigger selection change callback
+        if (this.onSelectionChange && typeof this.onSelectionChange === 'function') {
+            this.onSelectionChange(this.selectedOption);
+        }
+        
         // Keep dropdown open and focus on input
         this.showDropdown();
         setTimeout(() => this.input.focus(), 10);
@@ -274,6 +279,11 @@ class CustomComboBox {
         this.selectedIndex = 1;
         this.selectedOption = value;
         this.updateSelection();
+        
+        // Trigger selection change callback
+        if (this.onSelectionChange && typeof this.onSelectionChange === 'function') {
+            this.onSelectionChange(this.selectedOption);
+        }
         
         // Clear any previous highlighting
         this.highlightedIndex = -1;

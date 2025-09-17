@@ -624,64 +624,77 @@ TEMPLATE_BUILDER_HTML = """
         }
 
         function generateCustomComboBoxes() {
+            console.log('generateCustomComboBoxes called');
             const template = document.getElementById('templateInput').value.trim();
+            console.log('Template:', template);
             
             if (!template) {
                 alert('Please enter a template');
                 return;
             }
             
-            // Initialize template data
-            const templateData = templateManager.initializeTemplate(template);
-            const tags = templateManager.extractTags(template);
-            
-            // Clear existing combo boxes
-            customComboBoxes = [];
-            
-            // Create custom combo boxes
-            const container = document.getElementById('combo-boxes-container');
-            container.innerHTML = '';
-            
-            tags.forEach((tag, index) => {
-                // Create combo box container
-                const comboBoxContainer = document.createElement('div');
-                comboBoxContainer.className = 'mb-4';
-                comboBoxContainer.innerHTML = `
-                    <div class="dropdown-label mb-2">${tag.charAt(0).toUpperCase() + tag.slice(1)}</div>
-                    <div id="combo-box-${tag}" class="custom-combo-box"></div>
-                `;
+            try {
+                // Initialize template data
+                console.log('Initializing template data...');
+                const templateData = templateManager.initializeTemplate(template);
+                console.log('Template data:', templateData);
                 
-                container.appendChild(comboBoxContainer);
+                const tags = templateManager.extractTags(template);
+                console.log('Tags:', tags);
                 
-                // Create CustomComboBox instance
-                const comboBox = new CustomComboBox(`combo-box-${tag}`);
+                // Clear existing combo boxes
+                customComboBoxes = [];
                 
-                // Set the tag name for this combo box
-                comboBox.tag = tag;
+                // Create custom combo boxes
+                const container = document.getElementById('combo-boxes-container');
+                container.innerHTML = '';
                 
-                // Set the initial mode
-                comboBox.setMode(isEditMode ? 'edit' : 'display');
+                tags.forEach((tag, index) => {
+                    // Create combo box container
+                    const comboBoxContainer = document.createElement('div');
+                    comboBoxContainer.className = 'mb-4';
+                    comboBoxContainer.innerHTML = `
+                        <div class="dropdown-label mb-2">${tag.charAt(0).toUpperCase() + tag.slice(1)}</div>
+                        <div id="combo-box-${tag}" class="custom-combo-box"></div>
+                    `;
+                    
+                    container.appendChild(comboBoxContainer);
+                    
+                    // Create CustomComboBox instance
+                    const comboBox = new CustomComboBox(`combo-box-${tag}`);
+                    
+                    // Set the tag name for this combo box
+                    comboBox.tag = tag;
+                    
+                    // Set the initial mode
+                    comboBox.setMode(isEditMode ? 'edit' : 'display');
+                    
+                    // Load existing options from template data
+                    const existingOptions = templateManager.getOptionsForTag(tag);
+                    if (existingOptions.length > 0) {
+                        existingOptions.forEach(option => {
+                            comboBox.addOption(option);
+                        });
+                    }
+                    
+                    // Set up hierarchical linkages
+                    if (index > 0) {
+                        const prevTag = tags[index - 1];
+                        const prevComboBox = customComboBoxes[customComboBoxes.length - 1];
+                        setupLinkage(prevComboBox, comboBox, prevTag, tag);
+                    }
+                    
+                    customComboBoxes.push(comboBox);
+                });
                 
-                // Load existing options from template data
-                const existingOptions = templateManager.getOptionsForTag(tag);
-                if (existingOptions.length > 0) {
-                    existingOptions.forEach(option => {
-                        comboBox.addOption(option);
-                    });
-                }
+                // Generate final prompt when combo boxes change
+                setupPromptGeneration();
                 
-                // Set up hierarchical linkages
-                if (index > 0) {
-                    const prevTag = tags[index - 1];
-                    const prevComboBox = customComboBoxes[customComboBoxes.length - 1];
-                    setupLinkage(prevComboBox, comboBox, prevTag, tag);
-                }
-                
-                customComboBoxes.push(comboBox);
-            });
-            
-            // Generate final prompt when combo boxes change
-            setupPromptGeneration();
+            } catch (error) {
+                console.error('Error in generateCustomComboBoxes:', error);
+                alert('Error: ' + error.message);
+                return;
+            }
         }
 
         function setupLinkage(parentComboBox, childComboBox, parentTag, childTag) {

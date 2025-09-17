@@ -117,7 +117,9 @@ def setup_port():
         else:
             print("❌ Invalid choice. Please enter 1, 2, or 3.")
 
-app = Flask(__name__, template_folder='src/prompt_manager/templates')
+app = Flask(__name__, 
+           template_folder='src/prompt_manager/templates',
+           static_folder='src/prompt_manager/static')
 app.secret_key = 'your-secret-key-here'  # Required for flash messages
 
 # Initialize the prompt manager

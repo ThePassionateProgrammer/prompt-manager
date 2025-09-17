@@ -616,6 +616,23 @@ TEMPLATE_BUILDER_HTML = """
         let customComboBoxes = [];
         let isEditMode = false;
         let templateManager = new TemplateDataManager();
+        
+        // Linkage Data Structure
+        window.linkageData = {
+            // Example: Role -> What linkages
+            'Developer': {
+                'What': ['Fix bugs', 'Add features', 'Improve performance', 'Refactor code']
+            },
+            'Designer': {
+                'What': ['Create mockups', 'Design interfaces', 'Improve UX', 'Create prototypes']
+            },
+            'Manager': {
+                'What': ['Plan sprints', 'Review progress', 'Coordinate teams', 'Set priorities']
+            },
+            'Tester': {
+                'What': ['Test features', 'Report bugs', 'Verify fixes', 'Create test cases']
+            }
+        };
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -713,10 +730,66 @@ TEMPLATE_BUILDER_HTML = """
                     customComboBoxes.push(comboBox);
                 });
                 
+                // Set up linkages between combo boxes
+                setupLinkages();
+                
             } catch (error) {
                 console.error('Error in generateCustomComboBoxes:', error);
                 alert('Error: ' + error.message);
                 return;
+            }
+        }
+
+        function setupLinkages() {
+            // Set up parent-child linkages between combo boxes
+            for (let i = 0; i < customComboBoxes.length - 1; i++) {
+                const parentComboBox = customComboBoxes[i];
+                const childComboBox = customComboBoxes[i + 1];
+                
+                // Add selection change handler to parent
+                parentComboBox.onSelectionChange = function(selectedValue) {
+                    if (selectedValue && selectedValue !== 'Add item...' && selectedValue !== 'Select item...') {
+                        // Clear child combo box options (keep first option)
+                        const childOptions = childComboBox.dropdown.querySelectorAll('.combo-box-option');
+                        for (let j = childOptions.length - 1; j > 0; j--) {
+                            childOptions[j].remove();
+                        }
+                        
+                        // Add new options based on linkage data
+                        const parentTag = parentComboBox.tag;
+                        const childTag = childComboBox.tag;
+                        
+                        if (window.linkageData[selectedValue] && window.linkageData[selectedValue][childTag]) {
+                            const linkedOptions = window.linkageData[selectedValue][childTag];
+                            linkedOptions.forEach(option => {
+                                childComboBox.addOption(option);
+                            });
+                        } else {
+                            // Fallback: add some default options
+                            const defaultOptions = [`${childTag} Option 1`, `${childTag} Option 2`, `${childTag} Option 3`];
+                            defaultOptions.forEach(option => {
+                                childComboBox.addOption(option);
+                            });
+                        }
+                        
+                        // Clear child's selection and input
+                        childComboBox.selectedIndex = -1;
+                        childComboBox.selectedOption = null;
+                        childComboBox.input.value = '';
+                        
+                        // Clear subsequent combo boxes
+                        for (let k = i + 2; k < customComboBoxes.length; k++) {
+                            const subsequentComboBox = customComboBoxes[k];
+                            const subsequentOptions = subsequentComboBox.dropdown.querySelectorAll('.combo-box-option');
+                            for (let l = subsequentOptions.length - 1; l > 0; l--) {
+                                subsequentOptions[l].remove();
+                            }
+                            subsequentComboBox.selectedIndex = -1;
+                            subsequentComboBox.selectedOption = null;
+                            subsequentComboBox.input.value = '';
+                        }
+                    }
+                };
             }
         }
 

@@ -29,9 +29,13 @@ class EditModeState {
             if (entryText === '') {
                 // Remove selected option
                 this.comboBox.removeOption(this.comboBox.selectedOption);
+                // Keep dropdown open after deletion
+                this.comboBox.showDropdown();
             } else {
                 // Replace selected option
                 this.comboBox.replaceOption(this.comboBox.selectedOption, entryText);
+                // Close dropdown after replacement
+                this.comboBox.hideDropdown();
             }
         } else {
             // No item selected - default to add behavior
@@ -40,11 +44,13 @@ class EditModeState {
                 this.comboBox.addOption(entryText, false, false);
                 // Clear input field
                 this.comboBox.input.value = '';
+                // Keep dropdown open after adding
+                this.comboBox.showDropdown();
+            } else {
+                // No text entered - close dropdown
+                this.comboBox.hideDropdown();
             }
         }
-        
-        // Always keep dropdown open
-        this.comboBox.showDropdown();
     }
 }
 
@@ -65,8 +71,12 @@ class DisplayModeState {
         // In Display mode, only allow selection
         if (this.comboBox.selectedIndex >= 0 && this.comboBox.selectedOption !== 'Select item...') {
             this.comboBox.input.value = this.comboBox.selectedOption;
+            // Close dropdown after selection in Display mode
+            this.comboBox.hideDropdown();
+        } else {
+            // No valid selection - keep dropdown open
+            this.comboBox.showDropdown();
         }
-        this.comboBox.showDropdown();
     }
 }
 
@@ -131,7 +141,6 @@ class CustomComboBox {
         // Option clicks
         this.options.forEach((option, index) => {
             option.addEventListener('click', (e) => {
-                console.log('Option clicked:', option.textContent, 'index:', index);
                 e.preventDefault();
                 e.stopPropagation();
                 this.selectOption(index);
@@ -172,6 +181,13 @@ class CustomComboBox {
     }
     
     handleEnter() {
+        // If there's a highlighted option, select it
+        if (this.highlightedIndex >= 0 && this.highlightedIndex < this.options.length) {
+            this.selectOption(this.highlightedIndex);
+            return;
+        }
+        
+        // Otherwise, use state-specific Enter handling
         const entryText = this.input.value.trim();
         this.currentState.handleEnter(entryText);
     }
@@ -197,7 +213,6 @@ class CustomComboBox {
     selectOption(index) {
         if (index < 0 || index >= this.options.length) return;
         
-        console.log('selectOption called with index:', index);
         const option = this.options[index];
         if (option.dataset.value === 'Add...') {
             // Handle Add... like a button - always works
@@ -221,22 +236,15 @@ class CustomComboBox {
         
         // Trigger selection change callback (even if same option selected)
         if (this.onSelectionChange && typeof this.onSelectionChange === 'function') {
-            console.log('=== SELECTOPTION CALLBACK TRIGGER ===');
-            console.log('Triggering onSelectionChange with:', this.selectedOption, '(previous:', previousSelection, ')');
-            console.log('Callback function:', this.onSelectionChange);
             try {
                 this.onSelectionChange(this.selectedOption);
-                console.log('=== CALLBACK CALLED SUCCESSFULLY ===');
             } catch (error) {
-                console.error('=== CALLBACK ERROR ===', error);
+                console.error('Callback error:', error);
             }
-        } else {
-            console.log('No callback or callback not a function:', this.onSelectionChange);
         }
         
-        // Keep dropdown open and focus on input
-        this.showDropdown();
-        setTimeout(() => this.input.focus(), 10);
+        // Close dropdown after selection
+        this.hideDropdown();
         
         // Select all text in input field
         this.input.select();

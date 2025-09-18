@@ -285,6 +285,11 @@ class CustomComboBox {
             this.onSelectionChange(this.selectedOption);
         }
         
+        // Trigger option added callback (only in addOption, not selectOption)
+        if (this.onOptionAdded && typeof this.onOptionAdded === 'function') {
+            this.onOptionAdded(this.selectedOption);
+        }
+        
         // Clear any previous highlighting
         this.highlightedIndex = -1;
         this.updateHighlight();

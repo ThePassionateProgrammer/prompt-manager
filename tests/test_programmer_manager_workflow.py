@@ -119,10 +119,11 @@ class TestProgrammerManagerWorkflow:
         
         print("Step 3: Switch back to Programmer (should restore Write Code -> Deliver)")
         
-        # Select "Programmer" again
+        # Select "Programmer" again (make sure we get the exact match)
         role_options = self.driver.find_elements(By.CSS_SELECTOR, ".combo-box-option")
         for option in role_options:
-            if option.text == "Programmer":
+            if option.text == "Programmer":  # This should match exactly "Programmer", not "ProgrammerManager"
+                print(f"Clicking on option: '{option.text}'")
                 option.click()
                 break
         time.sleep(1)

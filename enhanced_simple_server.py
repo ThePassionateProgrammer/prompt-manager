@@ -614,6 +614,7 @@ TEMPLATE_BUILDER_HTML = """
         // Template Builder State - Old Layout with CustomComboBox
         let currentTemplate = "";
         let customComboBoxes = [];
+        window.customComboBoxes = customComboBoxes;  // Make globally accessible
         let isEditMode = false;
         let templateManager = new TemplateDataManager();
         
@@ -685,6 +686,7 @@ TEMPLATE_BUILDER_HTML = """
                 
                 // Clear existing combo boxes
                 customComboBoxes = [];
+                window.customComboBoxes = customComboBoxes;  // Update global reference
                 
                 // Create custom combo boxes
                 const container = document.getElementById('combo-boxes-container');
@@ -707,8 +709,10 @@ TEMPLATE_BUILDER_HTML = """
                     
                     container.appendChild(comboBoxContainer);
                     
-                    // Create CustomComboBox instance
+                    // Create CustomComboBox instance (after HTML is in DOM)
+                    console.log('Creating CustomComboBox for tag:', tag);
                     const comboBox = new CustomComboBox(`combo-box-${tag}`);
+                    console.log('CustomComboBox created:', comboBox);
                     
                     // Set the tag name for this combo box
                     comboBox.tag = tag;

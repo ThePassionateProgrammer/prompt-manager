@@ -70,11 +70,21 @@ class DisplayModeState {
 
 class CustomComboBox {
     constructor(containerId) {
+        console.log('CustomComboBox constructor called with:', containerId);
         this.container = document.getElementById(containerId);
+        console.log('Container found:', this.container);
+        
         this.input = this.container.querySelector('.combo-box-input');
         this.dropdown = this.container.querySelector('.combo-box-dropdown');
         this.arrow = this.container.querySelector('.combo-box-arrow');
         this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+        
+        console.log('Elements found:', {
+            input: this.input,
+            dropdown: this.dropdown,
+            arrow: this.arrow,
+            options: this.options
+        });
         
         this.selectedIndex = -1;
         this.selectedOption = null;

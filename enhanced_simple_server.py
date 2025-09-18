@@ -740,50 +740,58 @@ TEMPLATE_BUILDER_HTML = """
                 const childComboBox = customComboBoxes[i + 1];
                 
                 // Add selection change handler to parent
-                parentComboBox.onSelectionChange = function(selectedValue) {
-                    if (selectedValue && selectedValue !== 'Add item...' && selectedValue !== 'Select item...') {
-                        // Track the current selection for this parent
-                        window.currentSelections[parentComboBox.tag] = selectedValue;
+                parentComboBox.onSelectionChange = (function(parentTag, childTag, parentCombo, childCombo) {
+                    return function(selectedValue) {
+                        console.log('onSelectionChange called for', parentTag, 'with value:', selectedValue);
+                        if (selectedValue && selectedValue !== 'Add item...' && selectedValue !== 'Select item...') {
+                            // Track the current selection for this parent
+                            window.currentSelections[parentTag] = selectedValue;
                         
-                        // Clear child combo box options (keep first option)
-                        const childOptions = childComboBox.dropdown.querySelectorAll('.combo-box-option');
-                        for (let j = childOptions.length - 1; j > 0; j--) {
-                            childOptions[j].remove();
-                        }
-                        
-                        // Add new options based on dynamic linkage data
-                        const parentTag = parentComboBox.tag;
-                        const childTag = childComboBox.tag;
-                        
-                        if (window.linkageData[selectedValue] && window.linkageData[selectedValue][childTag]) {
-                            // Use existing linkage data - restore previously created linkages
-                            const linkedOptions = window.linkageData[selectedValue][childTag];
-                            linkedOptions.forEach(option => {
-                                childComboBox.addOption(option, true); // Skip callback to avoid interference
-                            });
-                        } else {
-                            // No linkage data exists yet - child combo box starts empty (except first option)
-                            // User will add options to create linkages
-                        }
-                        
-                        // Clear child's selection and input
-                        childComboBox.selectedIndex = -1;
-                        childComboBox.selectedOption = null;
-                        childComboBox.input.value = '';
-                        
-                        // Clear subsequent combo boxes
-                        for (let k = i + 2; k < customComboBoxes.length; k++) {
-                            const subsequentComboBox = customComboBoxes[k];
-                            const subsequentOptions = subsequentComboBox.dropdown.querySelectorAll('.combo-box-option');
-                            for (let l = subsequentOptions.length - 1; l > 0; l--) {
-                                subsequentOptions[l].remove();
+                            // Clear child combo box options (keep first option)
+                            const childOptions = childCombo.dropdown.querySelectorAll('.combo-box-option');
+                            for (let j = childOptions.length - 1; j > 0; j--) {
+                                childOptions[j].remove();
                             }
-                            subsequentComboBox.selectedIndex = -1;
-                            subsequentComboBox.selectedOption = null;
-                            subsequentComboBox.input.value = '';
+                            
+                            // Add new options based on dynamic linkage data
+                        
+                        console.log('Restoring linkages for:', selectedValue, '->', childTag);
+                        console.log('Linkage data:', window.linkageData);
+                        console.log('Looking for:', window.linkageData[selectedValue]);
+                        
+                            if (window.linkageData[selectedValue] && window.linkageData[selectedValue][childTag]) {
+                                // Use existing linkage data - restore previously created linkages
+                                const linkedOptions = window.linkageData[selectedValue][childTag];
+                                console.log('Found linked options:', linkedOptions);
+                                linkedOptions.forEach(option => {
+                                    console.log('Restoring option:', option);
+                                    childCombo.addOption(option, true); // Skip callback to avoid interference
+                                });
+                            } else {
+                                // No linkage data exists yet - child combo box starts empty (except first option)
+                                // User will add options to create linkages
+                                console.log('No linkage data found for:', selectedValue, '->', childTag);
+                            }
+                            
+                            // Clear child's selection and input
+                            childCombo.selectedIndex = -1;
+                            childCombo.selectedOption = null;
+                            childCombo.input.value = '';
+                            
+                            // Clear subsequent combo boxes
+                            for (let k = i + 2; k < customComboBoxes.length; k++) {
+                                const subsequentComboBox = customComboBoxes[k];
+                                const subsequentOptions = subsequentComboBox.dropdown.querySelectorAll('.combo-box-option');
+                                for (let l = subsequentOptions.length - 1; l > 0; l--) {
+                                    subsequentOptions[l].remove();
+                                }
+                                subsequentComboBox.selectedIndex = -1;
+                                subsequentComboBox.selectedOption = null;
+                                subsequentComboBox.input.value = '';
+                            }
                         }
-                    }
-                };
+                    };
+                })(parentComboBox.tag, childComboBox.tag, parentComboBox, childComboBox);
                 
                 // Add option creation handler to child (for dynamic linkage creation)
                 childComboBox.onOptionAdded = function(newOption) {

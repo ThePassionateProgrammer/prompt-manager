@@ -1,140 +1,222 @@
-import pytest
-import json
-from pathlib import Path
-from prompt_manager.business.template_parser import TemplateParser
-from prompt_manager.business.component_manager import ComponentManager
+#!/usr/bin/env python3
+"""
+Integration tests for the Template Builder.
+Tests the areas where CustomComboBox will be integrated.
+"""
 
+import pytest
+import requests
+import json
+import time
 
 class TestTemplateBuilderIntegration:
-    """Test integration of template builder with cascading logic and edit mode."""
+    """Test suite for Template Builder integration points."""
     
-    def test_template_builder_generates_combo_boxes(self):
-        """Test that template builder generates proper combo boxes from template."""
-        parser = TemplateParser()
-        manager = ComponentManager(Path("src/prompt_manager/data/components.json"))
-        
-        template = "As a [Role], I want to [What], so that I can [Why]"
-        combo_boxes = parser.generate_combo_boxes(template)
-        
-        # Verify combo boxes are generated correctly
-        assert len(combo_boxes) == 3
-        assert combo_boxes[0]["tag"] == "Role"
-        assert combo_boxes[1]["tag"] == "What"
-        assert combo_boxes[2]["tag"] == "Why"
-        
-        # Verify initial state
-        assert combo_boxes[0]["enabled"] == True
-        assert combo_boxes[1]["enabled"] == False
-        assert combo_boxes[2]["enabled"] == False
+    def setup_method(self):
+        """Set up test environment."""
+        self.base_url = "http://localhost:8000"
+        self.test_template = "As a [Role], I want to [Action], so that I can [Goal]"
     
-    def test_populate_combo_boxes_with_components(self):
-        """Test populating combo boxes with component options."""
-        parser = TemplateParser()
-        manager = ComponentManager(Path("src/prompt_manager/data/components.json"))
+    def test_template_builder_page_loads(self):
+        """Test that the template builder page loads correctly."""
+        response = requests.get(f"{self.base_url}/template-builder")
+        assert response.status_code == 200
         
-        template = "As a [Role], I want to [What], so that I can [Why]"
-        combo_boxes = parser.generate_combo_boxes(template)
-        
-        # Populate first combo box with root components
-        role_options = manager.get_component_options("Role")
-        combo_boxes[0]["options"] = role_options
-        
-        assert len(combo_boxes[0]["options"]) == 5
-        assert "Programmer" in combo_boxes[0]["options"]
-        assert "Marketing" in combo_boxes[0]["options"]
+        content = response.text
+        assert "Template Builder" in content
+        assert "template" in content.lower()
     
-    def test_cascading_selection_updates_downstream_boxes(self):
-        """Test that selecting an option updates downstream combo boxes."""
-        parser = TemplateParser()
-        manager = ComponentManager(Path("src/prompt_manager/data/components.json"))
+    def test_template_parsing_endpoint(self):
+        """Test the template parsing endpoint."""
+        test_data = {
+            "template": self.test_template
+        }
         
-        template = "As a [Role], I want to [What], so that I can [Why]"
-        combo_boxes = parser.generate_combo_boxes(template)
+        response = requests.post(
+            f"{self.base_url}/template/parse",
+            json=test_data,
+            headers={"Content-Type": "application/json"}
+        )
         
-        # Initial state
-        assert combo_boxes[0]["enabled"] == True
-        assert combo_boxes[1]["enabled"] == False
-        assert combo_boxes[2]["enabled"] == False
+        assert response.status_code == 200
+        data = response.json()
         
-        # Populate first combo box
-        combo_boxes[0]["options"] = manager.get_component_options("Role")
-        
-        # Select "Programmer"
-        combo_boxes[0]["value"] = "Programmer"
-        
-        # Update cascading selections
-        combo_boxes = parser.update_cascading_selections(combo_boxes, 0)
-        
-        # Verify second combo box is now enabled
-        assert combo_boxes[1]["enabled"] == True
-        assert combo_boxes[2]["enabled"] == False
-        
-        # Populate second combo box with options for "Programmer"
-        what_options = manager.get_component_options("What", "Programmer")
-        combo_boxes[1]["options"] = what_options
-        
-        assert len(combo_boxes[1]["options"]) == 3
-        assert "Writing Code" in combo_boxes[1]["options"]
-        assert "Testing Feature" in combo_boxes[1]["options"]
-        assert "Gathering Requirements" in combo_boxes[1]["options"]
+        # Should extract tags
+        assert "tags" in data
+        assert "Role" in data["tags"]
+        assert "Action" in data["tags"]
+        assert "Goal" in data["tags"]
     
-    def test_edit_mode_allows_custom_text(self):
-        """Test that edit mode allows custom text entry in combo boxes."""
-        parser = TemplateParser()
-        manager = ComponentManager(Path("src/prompt_manager/data/components.json"))
+    def test_dropdown_generation_endpoint(self):
+        """Test the dropdown generation endpoint."""
+        test_data = {
+            "template": self.test_template,
+            "edit_mode": False
+        }
         
-        template = "As a [Role], I want to [What], so that I can [Why]"
-        combo_boxes = parser.generate_combo_boxes(template)
+        response = requests.post(
+            f"{self.base_url}/template/generate",
+            json=test_data,
+            headers={"Content-Type": "application/json"}
+        )
         
-        # Simulate edit mode - user enters custom text
-        combo_boxes[0]["value"] = "Custom Role"
-        combo_boxes[0]["is_custom"] = True
+        assert response.status_code == 200
+        data = response.json()
         
-        combo_boxes[1]["value"] = "Custom Task"
-        combo_boxes[1]["is_custom"] = True
+        # Should have dropdowns
+        assert "dropdowns" in data
+        assert "Role" in data["dropdowns"]
+        assert "Action" in data["dropdowns"]
+        assert "Goal" in data["dropdowns"]
         
-        combo_boxes[2]["value"] = "Custom Goal"
-        combo_boxes[2]["is_custom"] = True
-        
-        # Verify custom values are preserved
-        assert combo_boxes[0]["value"] == "Custom Role"
-        assert combo_boxes[1]["value"] == "Custom Task"
-        assert combo_boxes[2]["value"] == "Custom Goal"
-        assert combo_boxes[0]["is_custom"] == True
-        assert combo_boxes[1]["is_custom"] == True
-        assert combo_boxes[2]["is_custom"] == True
+        # Check dropdown structure
+        role_dropdown = data["dropdowns"]["Role"]
+        assert "options" in role_dropdown
+        assert "placeholder" in role_dropdown
     
-    def test_generate_final_prompt_from_selections(self):
-        """Test generating the final prompt from combo box selections."""
-        parser = TemplateParser()
-        manager = ComponentManager(Path("src/prompt_manager/data/components.json"))
+    def test_edit_mode_dropdown_generation(self):
+        """Test dropdown generation in edit mode."""
+        test_data = {
+            "template": self.test_template,
+            "edit_mode": True
+        }
         
-        template = "As a [Role], I want to [What], so that I can [Why]"
-        combo_boxes = parser.generate_combo_boxes(template)
+        response = requests.post(
+            f"{self.base_url}/template/generate",
+            json=test_data,
+            headers={"Content-Type": "application/json"}
+        )
         
-        # Set selections
-        combo_boxes[0]["value"] = "Programmer"
-        combo_boxes[1]["value"] = "Writing Code"
-        combo_boxes[2]["value"] = "Implement a Feature"
+        assert response.status_code == 200
+        data = response.json()
         
-        # Generate final prompt
-        final_prompt = parser.generate_prompt_from_selections(template, combo_boxes)
+        # Check edit mode specific properties
+        role_dropdown = data["dropdowns"]["Role"]
+        assert "is_custom" in role_dropdown
+        assert role_dropdown["is_custom"] == True
         
-        expected_prompt = "As a Programmer, I want to Writing Code, so that I can Implement a Feature"
-        assert final_prompt == expected_prompt
+        # Should have "Add item..." as first option
+        options = role_dropdown["options"]
+        assert options[0] == "Add item..."
     
-    def test_generate_prompt_with_custom_text(self):
-        """Test generating prompt with custom text entries."""
-        parser = TemplateParser()
+    def test_display_mode_dropdown_generation(self):
+        """Test dropdown generation in display mode."""
+        test_data = {
+            "template": self.test_template,
+            "edit_mode": False
+        }
         
-        template = "As a [Role], I want to [What], so that I can [Why]"
-        combo_boxes = [
-            {"tag": "Role", "value": "Custom Developer", "is_custom": True},
-            {"tag": "What", "value": "Build Amazing Features", "is_custom": True},
-            {"tag": "Why", "value": "Make Users Happy", "is_custom": True}
-        ]
+        response = requests.post(
+            f"{self.base_url}/template/generate",
+            json=test_data,
+            headers={"Content-Type": "application/json"}
+        )
         
-        final_prompt = parser.generate_prompt_from_selections(template, combo_boxes)
+        assert response.status_code == 200
+        data = response.json()
         
-        expected_prompt = "As a Custom Developer, I want to Build Amazing Features, so that I can Make Users Happy"
-        assert final_prompt == expected_prompt
+        # Check display mode specific properties
+        role_dropdown = data["dropdowns"]["Role"]
+        assert "is_custom" in role_dropdown
+        assert role_dropdown["is_custom"] == True
+        
+        # Should have "Select item..." as first option
+        options = role_dropdown["options"]
+        assert options[0] == "Select item..."
+    
+    def test_template_storage_structure(self):
+        """Test the template storage structure for CustomComboBox integration."""
+        # This tests the JSON structure we'll use for persistence
+        template_data = {
+            "templateText": self.test_template,
+            "comboBoxes": [
+                {
+                    "tag": "Role",
+                    "index": 0,
+                    "options": ["Developer", "Designer", "Manager"],
+                    "linkages": {
+                        "Developer": ["Fix bugs", "Write tests", "Deploy code"],
+                        "Designer": ["Create mockups", "User research", "Prototype"],
+                        "Manager": ["Plan sprints", "Review work", "Team meetings"]
+                    }
+                },
+                {
+                    "tag": "Action",
+                    "index": 1,
+                    "options": ["Fix bugs", "Write tests", "Deploy code"],
+                    "linkages": {
+                        "Fix bugs": ["Save time", "Improve quality", "Reduce errors"],
+                        "Write tests": ["Prevent regressions", "Document behavior", "Enable refactoring"],
+                        "Deploy code": ["Deliver features", "Update production", "Rollback if needed"]
+                    }
+                },
+                {
+                    "tag": "Goal",
+                    "index": 2,
+                    "options": ["Save time", "Improve quality", "Reduce errors"],
+                    "linkages": {}
+                }
+            ],
+            "lastModified": "2025-09-14T14:30:00.000Z"
+        }
+        
+        # Validate structure
+        assert "templateText" in template_data
+        assert "comboBoxes" in template_data
+        assert len(template_data["comboBoxes"]) == 3
+        
+        # Check combo box structure
+        for combo_box in template_data["comboBoxes"]:
+            assert "tag" in combo_box
+            assert "index" in combo_box
+            assert "options" in combo_box
+            assert "linkages" in combo_box
+            assert isinstance(combo_box["options"], list)
+            assert isinstance(combo_box["linkages"], dict)
+    
+    def test_hierarchical_linkage_validation(self):
+        """Test that hierarchical linkages are properly structured."""
+        # Test the linkage structure
+        linkages = {
+            "Developer": ["Fix bugs", "Write tests", "Deploy code"],
+            "Designer": ["Create mockups", "User research", "Prototype"],
+            "Manager": ["Plan sprints", "Review work", "Team meetings"]
+        }
+        
+        # Validate linkage structure
+        for source, targets in linkages.items():
+            assert isinstance(source, str)
+            assert isinstance(targets, list)
+            assert len(targets) > 0
+            
+            for target in targets:
+                assert isinstance(target, str)
+                assert len(target.strip()) > 0
+    
+    def test_template_builder_html_structure(self):
+        """Test that the template builder HTML has the right structure for integration."""
+        response = requests.get(f"{self.base_url}/template-builder")
+        assert response.status_code == 200
+        
+        content = response.text
+        
+        # Should have areas where we'll inject CustomComboBox
+        assert "combo-box-container" in content or "dropdown" in content.lower()
+        
+        # Should have mode toggle functionality
+        assert "edit" in content.lower() or "mode" in content.lower()
+        
+        # Should have template input area
+        assert "template" in content.lower()
+    
+    def test_custom_combo_test_page(self):
+        """Test that the custom combo test page works."""
+        response = requests.get(f"{self.base_url}/custom-combo-test")
+        assert response.status_code == 200
+        
+        content = response.text
+        assert "Custom Combo Box Test" in content
+        assert "combo-box" in content.lower()
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

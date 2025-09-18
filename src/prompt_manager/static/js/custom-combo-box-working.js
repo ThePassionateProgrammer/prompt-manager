@@ -110,6 +110,16 @@ class CustomComboBox {
         // Key events
         this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
         
+        // Input events - handle typing
+        this.input.addEventListener('input', (e) => {
+            // If input contains a selected option value and user is typing, clear the selection
+            if (this.selectedOption && this.input.value !== this.selectedOption) {
+                this.selectedOption = null;
+                this.selectedIndex = -1;
+                this.updateSelection();
+            }
+        });
+        
         // Arrow click - only way to close dropdown
         this.arrow.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -184,6 +194,7 @@ class CustomComboBox {
     selectOption(index) {
         if (index < 0 || index >= this.options.length) return;
         
+        console.log('selectOption called with index:', index);
         const option = this.options[index];
         if (option.dataset.value === 'Add...') {
             // Handle Add... like a button - always works
@@ -206,6 +217,7 @@ class CustomComboBox {
         
         // Trigger selection change callback
         if (this.onSelectionChange && typeof this.onSelectionChange === 'function') {
+            console.log('Triggering onSelectionChange with:', this.selectedOption);
             this.onSelectionChange(this.selectedOption);
         }
         

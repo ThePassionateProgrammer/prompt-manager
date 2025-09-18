@@ -770,7 +770,7 @@ TEMPLATE_BUILDER_HTML = """
                                 console.log('Found linked options:', linkedOptions);
                                 linkedOptions.forEach(option => {
                                     console.log('Restoring option:', option);
-                                    childCombo.addOption(option, true); // Skip callback to avoid interference
+                                    childCombo.addOption(option, true, true); // Skip callback, but select the option
                                 });
                             } else {
                                 // No linkage data exists yet - child combo box starts empty (except first option)

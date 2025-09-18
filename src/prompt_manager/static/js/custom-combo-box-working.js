@@ -36,12 +36,10 @@ class EditModeState {
         } else {
             // No item selected - default to add behavior
             if (entryText !== '') {
-                this.comboBox.addOption(entryText);
-                // Clear input and deselect the newly added option
+                // Add option without selecting it, but allow callbacks for linkage creation
+                this.comboBox.addOption(entryText, false, false);
+                // Clear input field
                 this.comboBox.input.value = '';
-                this.comboBox.selectedIndex = -1;
-                this.comboBox.selectedOption = null;
-                this.comboBox.updateSelection();
             }
         }
         
@@ -289,7 +287,7 @@ class CustomComboBox {
         });
     }
     
-    addOption(value, skipCallback = false) {
+    addOption(value, skipCallback = false, selectNewOption = true) {
         // Add new option after "Add..." or "Select item..." option (index 0)
         const firstOption = this.options[0];
         const newOption = document.createElement('div');
@@ -308,19 +306,21 @@ class CustomComboBox {
         firstOption.parentNode.insertBefore(newOption, firstOption.nextSibling);
         this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
         
-        // Select the newly added option (it's at index 1)
-        this.selectedIndex = 1;
-        this.selectedOption = value;
-        this.updateSelection();
-        
-        // Trigger selection change callback
-        if (this.onSelectionChange && typeof this.onSelectionChange === 'function') {
-            this.onSelectionChange(this.selectedOption);
+        // Select the newly added option only if requested (it's at index 1)
+        if (selectNewOption) {
+            this.selectedIndex = 1;
+            this.selectedOption = value;
+            this.updateSelection();
+            
+            // Trigger selection change callback
+            if (this.onSelectionChange && typeof this.onSelectionChange === 'function') {
+                this.onSelectionChange(this.selectedOption);
+            }
         }
         
         // Trigger option added callback (only in addOption, not selectOption, and only if not skipping)
         if (!skipCallback && this.onOptionAdded && typeof this.onOptionAdded === 'function') {
-            this.onOptionAdded(this.selectedOption);
+            this.onOptionAdded(value); // Use the value parameter instead of selectedOption
         }
         
         // Clear any previous highlighting

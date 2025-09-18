@@ -224,8 +224,12 @@ class CustomComboBox {
             console.log('=== SELECTOPTION CALLBACK TRIGGER ===');
             console.log('Triggering onSelectionChange with:', this.selectedOption, '(previous:', previousSelection, ')');
             console.log('Callback function:', this.onSelectionChange);
-            this.onSelectionChange(this.selectedOption);
-            console.log('=== CALLBACK CALLED ===');
+            try {
+                this.onSelectionChange(this.selectedOption);
+                console.log('=== CALLBACK CALLED SUCCESSFULLY ===');
+            } catch (error) {
+                console.error('=== CALLBACK ERROR ===', error);
+            }
         } else {
             console.log('No callback or callback not a function:', this.onSelectionChange);
         }
@@ -295,16 +299,25 @@ class CustomComboBox {
         newOption.dataset.value = value;
         newOption.textContent = value;
         
-        // Add event listeners
+        // Insert the new option into DOM first
+        firstOption.parentNode.insertBefore(newOption, firstOption.nextSibling);
+        this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+        
+        // Add event listeners with correct index - use DOM position to determine index
         newOption.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            this.selectOption(this.options.indexOf(newOption));
+            // Calculate the correct index dynamically based on DOM position
+            const allOptions = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+            const clickedIndex = allOptions.indexOf(newOption);
+            this.selectOption(clickedIndex);
         });
-        newOption.addEventListener('mouseenter', () => this.highlightOption(this.options.indexOf(newOption)));
-        
-        firstOption.parentNode.insertBefore(newOption, firstOption.nextSibling);
-        this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+        newOption.addEventListener('mouseenter', () => {
+            // Calculate the correct index dynamically based on DOM position
+            const allOptions = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+            const hoverIndex = allOptions.indexOf(newOption);
+            this.highlightOption(hoverIndex);
+        });
         
         // Select the newly added option only if requested (it's at index 1)
         if (selectNewOption) {

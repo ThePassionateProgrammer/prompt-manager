@@ -266,7 +266,7 @@ class CustomComboBox {
         });
     }
     
-    addOption(value) {
+    addOption(value, skipCallback = false) {
         // Add new option after "Add..." or "Select item..." option (index 0)
         const firstOption = this.options[0];
         const newOption = document.createElement('div');
@@ -295,8 +295,8 @@ class CustomComboBox {
             this.onSelectionChange(this.selectedOption);
         }
         
-        // Trigger option added callback (only in addOption, not selectOption)
-        if (this.onOptionAdded && typeof this.onOptionAdded === 'function') {
+        // Trigger option added callback (only in addOption, not selectOption, and only if not skipping)
+        if (!skipCallback && this.onOptionAdded && typeof this.onOptionAdded === 'function') {
             this.onOptionAdded(this.selectedOption);
         }
         

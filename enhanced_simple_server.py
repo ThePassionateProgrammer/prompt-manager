@@ -756,10 +756,10 @@ TEMPLATE_BUILDER_HTML = """
                         const childTag = childComboBox.tag;
                         
                         if (window.linkageData[selectedValue] && window.linkageData[selectedValue][childTag]) {
-                            // Use existing linkage data
+                            // Use existing linkage data - restore previously created linkages
                             const linkedOptions = window.linkageData[selectedValue][childTag];
                             linkedOptions.forEach(option => {
-                                childComboBox.addOption(option);
+                                childComboBox.addOption(option, true); // Skip callback to avoid interference
                             });
                         } else {
                             // No linkage data exists yet - child combo box starts empty (except first option)

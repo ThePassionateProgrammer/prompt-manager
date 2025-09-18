@@ -37,7 +37,11 @@ class EditModeState {
             // No item selected - default to add behavior
             if (entryText !== '') {
                 this.comboBox.addOption(entryText);
+                // Clear input and deselect the newly added option
                 this.comboBox.input.value = '';
+                this.comboBox.selectedIndex = -1;
+                this.comboBox.selectedOption = null;
+                this.comboBox.updateSelection();
             }
         }
         
@@ -129,6 +133,7 @@ class CustomComboBox {
         // Option clicks
         this.options.forEach((option, index) => {
             option.addEventListener('click', (e) => {
+                console.log('Option clicked:', option.textContent, 'index:', index);
                 e.preventDefault();
                 e.stopPropagation();
                 this.selectOption(index);
@@ -210,14 +215,15 @@ class CustomComboBox {
         }
         
         // Select the option
+        const previousSelection = this.selectedOption;
         this.selectedIndex = index;
         this.selectedOption = option.dataset.value;
         this.input.value = option.dataset.value;
         this.updateSelection();
         
-        // Trigger selection change callback
+        // Trigger selection change callback (even if same option selected)
         if (this.onSelectionChange && typeof this.onSelectionChange === 'function') {
-            console.log('Triggering onSelectionChange with:', this.selectedOption);
+            console.log('Triggering onSelectionChange with:', this.selectedOption, '(previous:', previousSelection, ')');
             this.onSelectionChange(this.selectedOption);
         }
         

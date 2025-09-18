@@ -778,6 +778,9 @@ TEMPLATE_BUILDER_HTML = """
                                 console.log('No linkage data found for:', selectedValue, '->', childTag);
                             }
                             
+                            // Store child's selection before clearing it
+                            const childSelectedOption = childCombo.selectedOption;
+                            
                             // Clear child's selection and input
                             childCombo.selectedIndex = -1;
                             childCombo.selectedOption = null;
@@ -793,6 +796,17 @@ TEMPLATE_BUILDER_HTML = """
                                 subsequentComboBox.selectedIndex = -1;
                                 subsequentComboBox.selectedOption = null;
                                 subsequentComboBox.input.value = '';
+                            }
+                            
+                            // If we restored options to the child, trigger its linkage restoration
+                            if (window.linkageData[selectedValue] && window.linkageData[selectedValue][childTag] && childSelectedOption) {
+                                // Update current selection for the child
+                                window.currentSelections[childTag] = childSelectedOption;
+                                
+                                // Trigger linkage restoration for the child's children
+                                if (childCombo.onSelectionChange) {
+                                    childCombo.onSelectionChange(childSelectedOption);
+                                }
                             }
                         }
                     };

@@ -128,9 +128,15 @@ class TestProgrammerManagerWorkflow:
                 break
         time.sleep(1)
         
-        # Check what options after switching back to Programmer
-        what_options_after_programmer = self.driver.find_elements(By.CSS_SELECTOR, ".combo-box-option")
-        what_texts_after_programmer = [opt.text for opt in what_options_after_programmer]
+        # Check what options after switching back to Programmer using JavaScript
+        what_texts_after_programmer = self.driver.execute_script("""
+            const comboBoxes = window.customComboBoxes;
+            if (comboBoxes && comboBoxes.length > 1) {
+                const whatCombo = comboBoxes[1];
+                return Array.from(whatCombo.dropdown.querySelectorAll('.combo-box-option')).map(opt => opt.textContent);
+            }
+            return [];
+        """)
         print(f"What options after Programmer: {what_texts_after_programmer}")
         
         # Check final linkage data

@@ -223,8 +223,13 @@ class CustomComboBox {
         
         // Trigger selection change callback (even if same option selected)
         if (this.onSelectionChange && typeof this.onSelectionChange === 'function') {
+            console.log('=== SELECTOPTION CALLBACK TRIGGER ===');
             console.log('Triggering onSelectionChange with:', this.selectedOption, '(previous:', previousSelection, ')');
+            console.log('Callback function:', this.onSelectionChange);
             this.onSelectionChange(this.selectedOption);
+            console.log('=== CALLBACK CALLED ===');
+        } else {
+            console.log('No callback or callback not a function:', this.onSelectionChange);
         }
         
         // Keep dropdown open and focus on input

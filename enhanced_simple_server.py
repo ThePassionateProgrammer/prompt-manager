@@ -740,9 +740,14 @@ TEMPLATE_BUILDER_HTML = """
                 const childComboBox = customComboBoxes[i + 1];
                 
                 // Add selection change handler to parent
+                console.log('Setting up callback for', parentComboBox.tag, '->', childComboBox.tag);
+                console.log('Parent combo before callback:', parentComboBox);
                 parentComboBox.onSelectionChange = (function(parentTag, childTag, parentCombo, childCombo) {
                     return function(selectedValue) {
+                        console.log('=== LINKAGE CALLBACK TRIGGERED ===');
                         console.log('onSelectionChange called for', parentTag, 'with value:', selectedValue);
+                        console.log('Parent combo:', parentCombo);
+                        console.log('Child combo:', childCombo);
                         if (selectedValue && selectedValue !== 'Add item...' && selectedValue !== 'Select item...') {
                             // Track the current selection for this parent
                             window.currentSelections[parentTag] = selectedValue;

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Combo Box Component Test</title>
+    <link rel="stylesheet" href="src/prompt_manager/static/css/custom-combo-box.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .button:hover {
+            background-color: #0056b3;
+        }
+        
+        .button.secondary {
+            background-color: #6c757d;
+        }
+        
+        .button.secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Custom Combo Box Component Test</h1>
+        
+        <div class="status">
+            <strong>Mode:</strong> <span id="mode-status">Display Mode</span>
+        </div>
+        
+        <button class="button secondary" id="mode-toggle">Edit Mode</button>
+        <button class="button" onclick="testComponent()">Test Component</button>
+        <button class="button" onclick="saveTemplate()">Save Template</button>
+        <button class="button" onclick="loadTemplate()">Load Template</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>Combo Box 1: Role</h2>
+        <div class="combo-box-container" id="combo1">
+            <input type="text" class="combo-box-input" placeholder="Select item..." id="input1">
+            <div class="combo-box-arrow" id="arrow1"></div>
+            <div class="combo-box-dropdown" id="dropdown1">
+                <div class="combo-box-option" data-value="Select item...">Select item...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Combo Box 2: Action</h2>
+        <div class="combo-box-container" id="combo2">
+            <input type="text" class="combo-box-input" placeholder="Select item..." id="input2">
+            <div class="combo-box-arrow" id="arrow2"></div>
+            <div class="combo-box-dropdown" id="dropdown2">
+                <div class="combo-box-option" data-value="Select item...">Select item...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Combo Box 3: Goal</h2>
+        <div class="combo-box-container" id="combo3">
+            <input type="text" class="combo-box-input" placeholder="Select item..." id="input3">
+            <div class="combo-box-arrow" id="arrow3"></div>
+            <div class="combo-box-dropdown" id="dropdown3">
+                <div class="combo-box-option" data-value="Select item...">Select item...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Generated Prompt</h2>
+        <div id="generated-prompt" style="padding: 15px; background-color: #f8f9fa; border-radius: 4px; font-style: italic;">
+            Select options above to generate prompt...
+        </div>
+    </div>
+
+    <script src="src/prompt_manager/static/js/template-storage.js"></script>
+    <script src="src/prompt_manager/static/js/custom-combo-box.js"></script>
+    <script>
+        // Global variables
+        let comboBoxes = [];
+        let templateManager = new TemplateDataManager();
+        let isEditMode = false;
+        
+        // Initialize component
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeComboBoxes();
+            setupModeToggle();
+            setupTemplate();
+        });
+        
+        function initializeComboBoxes() {
+            // Create combo box instances
+            comboBoxes = [
+                new CustomComboBox({
+                    containerId: 'combo1',
+                    initialMode: 'display',
+                    onModeChange: handleModeChange,
+                    onSelectionChange: handleSelectionChange,
+                    onOptionsChange: handleOptionsChange
+                }),
+                new CustomComboBox({
+                    containerId: 'combo2',
+                    initialMode: 'display',
+                    onModeChange: handleModeChange,
+                    onSelectionChange: handleSelectionChange,
+                    onOptionsChange: handleOptionsChange
+                }),
+                new CustomComboBox({
+                    containerId: 'combo3',
+                    initialMode: 'display',
+                    onModeChange: handleModeChange,
+                    onSelectionChange: handleSelectionChange,
+                    onOptionsChange: handleOptionsChange
+                })
+            ];
+        }
+        
+        function setupModeToggle() {
+            const toggleButton = document.getElementById('mode-toggle');
+            const statusElement = document.getElementById('mode-status');
+            
+            toggleButton.addEventListener('click', function() {
+                isEditMode = !isEditMode;
+                
+                // Update all combo boxes
+                comboBoxes.forEach(comboBox => {
+                    comboBox.setMode(isEditMode ? 'edit' : 'display');
+                });
+                
+                // Update UI
+                if (isEditMode) {
+                    toggleButton.textContent = 'Display Mode';
+                    toggleButton.className = 'button';
+                    statusElement.textContent = 'Edit Mode';
+                    document.body.classList.add('edit-mode');
+                    document.body.classList.remove('display-mode');
+                } else {
+                    toggleButton.textContent = 'Edit Mode';
+                    toggleButton.className = 'button secondary';
+                    statusElement.textContent = 'Display Mode';
+                    document.body.classList.add('display-mode');
+                    document.body.classList.remove('edit-mode');
+                }
+            });
+        }
+        
+        function setupTemplate() {
+            const templateText = "As a [Role], I want to [Action], so that I can [Goal]";
+            const templateData = templateManager.initializeTemplate(templateText);
+            
+            // Set up hierarchical linkages
+            setupLinkages();
+            
+            // Initialize combo boxes with initial options
+            initializeComboBoxOptions();
+        }
+        
+        function initializeComboBoxOptions() {
+            // Set initial options for Role combo box
+            comboBoxes[0].setOptions(['Developer', 'Designer', 'Manager']);
+        }
+        
+        function setupLinkages() {
+            // Role -> Action linkages
+            const roleActionLinkages = {
+                'Developer': ['Fix bugs', 'Write tests', 'Deploy code'],
+                'Designer': ['Create mockups', 'User research', 'Prototype'],
+                'Manager': ['Plan sprints', 'Review work', 'Team meetings']
+            };
+            
+            // Action -> Goal linkages
+            const actionGoalLinkages = {
+                'Fix bugs': ['Save time', 'Improve quality', 'Reduce errors'],
+                'Write tests': ['Prevent regressions', 'Document behavior', 'Enable refactoring'],
+                'Deploy code': ['Deliver features', 'Update production', 'Rollback if needed'],
+                'Create mockups': ['Visualize ideas', 'Get feedback', 'Guide development'],
+                'User research': ['Understand needs', 'Validate assumptions', 'Improve UX'],
+                'Prototype': ['Test concepts', 'Iterate quickly', 'Reduce risk'],
+                'Plan sprints': ['Organize work', 'Set priorities', 'Track progress'],
+                'Review work': ['Ensure quality', 'Share knowledge', 'Mentor team'],
+                'Team meetings': ['Align goals', 'Solve problems', 'Build relationships']
+            };
+            
+            // Update linkages in template manager
+            Object.entries(roleActionLinkages).forEach(([role, actions]) => {
+                templateManager.updateLinkages(1, role, actions);
+            });
+            
+            Object.entries(actionGoalLinkages).forEach(([action, goals]) => {
+                templateManager.updateLinkages(2, action, goals);
+            });
+        }
+        
+        function handleModeChange(mode, containerId) {
+            console.log(`Mode changed to ${mode} for ${containerId}`);
+        }
+        
+        function handleSelectionChange(value, containerId) {
+            console.log(`Selection changed to ${value} in ${containerId}`);
+            
+            // Handle hierarchical linkages
+            if (containerId === 'combo1' && value) {
+                // Role selected, update Action options
+                const linkedOptions = templateManager.getLinkedOptions(1, value);
+                comboBoxes[1].setOptions(linkedOptions);
+                comboBoxes[2].setOptions([]); // Clear Goal options
+                comboBoxes[2].setSelectedValue('');
+            } else if (containerId === 'combo2' && value) {
+                // Action selected, update Goal options
+                const linkedOptions = templateManager.getLinkedOptions(2, value);
+                comboBoxes[2].setOptions(linkedOptions);
+            }
+            
+            updateGeneratedPrompt();
+        }
+        
+        function handleOptionsChange(options, containerId) {
+            console.log(`Options changed for ${containerId}:`, options);
+            
+            // Update template data
+            const comboBoxIndex = parseInt(containerId.replace('combo', '')) - 1;
+            templateManager.updateComboBoxOptions(comboBoxIndex, options);
+        }
+        
+        function updateGeneratedPrompt() {
+            const role = comboBoxes[0].getSelectedValue();
+            const action = comboBoxes[1].getSelectedValue();
+            const goal = comboBoxes[2].getSelectedValue();
+            
+            if (role && action && goal) {
+                const prompt = `As a ${role}, I want to ${action}, so that I can ${goal}`;
+                document.getElementById('generated-prompt').textContent = prompt;
+            } else {
+                document.getElementById('generated-prompt').textContent = 'Select options above to generate prompt...';
+            }
+        }
+        
+        function testComponent() {
+            console.log('Testing component...');
+            console.log('Combo boxes:', comboBoxes);
+            console.log('Template data:', templateManager.getCurrentTemplate());
+        }
+        
+        function saveTemplate() {
+            templateManager.saveCurrentTemplate();
+            console.log('Template saved:', templateManager.getCurrentTemplateId());
+            alert('Template saved to local storage!');
+        }
+        
+        function loadTemplate() {
+            const templateId = templateManager.getCurrentTemplateId();
+            if (templateId) {
+                const loaded = templateManager.loadTemplate(templateId);
+                if (loaded) {
+                    console.log('Template loaded:', loaded);
+                    alert('Template loaded from local storage!');
+                } else {
+                    alert('No template found in local storage');
+                }
+            } else {
+                alert('No current template to load');
+            }
+        }
+    </script>
+</body>
+</html>
+

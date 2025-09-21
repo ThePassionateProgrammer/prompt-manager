@@ -1,5 +1,5 @@
 """
-Test callback execution with console log capture.
+Debug test to check if the onSelectionChange callback is working.
 """
 
 import pytest
@@ -10,7 +10,7 @@ import time
 
 
 class TestCallbackDebug:
-    """Test callback execution with console log capture."""
+    """Debug callback functionality."""
     
     def setup_method(self):
         """Set up the test environment."""
@@ -23,12 +23,10 @@ class TestCallbackDebug:
         self.driver.quit()
     
     def test_callback_debug(self):
-        """
-        Test callback execution and capture console logs.
-        """
-        # Enter a template first
+        """Debug if the onSelectionChange callback is working."""
+        # Enter template
         template_input = self.driver.find_element(By.ID, "templateInput")
-        template_input.send_keys("As a [Role], I want to [What].")
+        template_input.send_keys("[1][2]")
         time.sleep(1)
         
         # Generate combo boxes
@@ -41,64 +39,67 @@ class TestCallbackDebug:
         edit_mode_btn.click()
         time.sleep(1)
         
-        # Get combo box input
+        # Get combo box inputs
         inputs = self.driver.find_elements(By.CSS_SELECTOR, ".combo-box-input")
-        role_input = inputs[0]    # Role
+        combo1_input = inputs[0]    # [1]
         
-        # Add "Programmer" to Role
-        role_input.click()
-        role_input.send_keys("Programmer")
-        role_input.send_keys(Keys.RETURN)
+        print("Step 1: Check if callback is set up")
+        
+        # Check if callback is set up
+        callback_info = self.driver.execute_script("""
+            const combo1 = window.customComboBoxes[0];
+            return {
+                hasCallback: !!combo1.onSelectionChange,
+                callbackType: typeof combo1.onSelectionChange,
+                callbackFunction: combo1.onSelectionChange ? combo1.onSelectionChange.toString().substring(0, 100) : null
+            };
+        """)
+        print(f"Callback info: {callback_info}")
+        
+        # Add "a" to [1] and select it
+        combo1_input.click()
+        combo1_input.send_keys("a")
+        combo1_input.send_keys(Keys.RETURN)
         time.sleep(1)
         
-        # Clear any existing logs
-        self.driver.get_log('browser')
+        print("Step 2: Select 'a' and check if callback is triggered")
         
-        # Try to click on "Programmer" option
-        print("Attempting to click on Programmer option...")
-        role_options = self.driver.find_elements(By.CSS_SELECTOR, ".combo-box-option")
-        for option in role_options:
-            if option.text == "Programmer":
-                print(f"Found Programmer option, clicking...")
-                option.click()
-                time.sleep(2)  # Wait for any async operations
-                break
-        
-        # Get browser console logs
-        logs = self.driver.get_log('browser')
-        callback_logs = [log for log in logs if 'CALLBACK' in log.get('message', '')]
-        selectoption_logs = [log for log in logs if 'SELECTOPTION' in log.get('message', '')]
-        
-        print(f"Callback logs: {callback_logs}")
-        print(f"SelectOption logs: {selectoption_logs}")
-        
-        # Also check if we can manually trigger the callback and see what happens
-        manual_result = self.driver.execute_script("""
-            const comboBoxes = window.customComboBoxes;
-            if (comboBoxes && comboBoxes.length > 0) {
-                const roleCombo = comboBoxes[0];
-                if (roleCombo.onSelectionChange) {
-                    console.log('=== MANUAL CALLBACK TEST ===');
-                    try {
-                        roleCombo.onSelectionChange('Programmer');
-                        console.log('=== MANUAL CALLBACK SUCCESS ===');
-                        return { success: 'Manual callback executed' };
-                    } catch (error) {
-                        console.error('=== MANUAL CALLBACK ERROR ===', error);
-                        return { error: error.message };
-                    }
+        # Select "a" in [1] and monitor for callback
+        result = self.driver.execute_script("""
+            // Add a flag to track if callback was called
+            window.callbackCalled = false;
+            window.callbackValue = null;
+            
+            // Store original callback
+            const originalCallback = window.customComboBoxes[0].onSelectionChange;
+            
+            // Wrap the callback to track calls
+            window.customComboBoxes[0].onSelectionChange = function(value) {
+                console.log('Callback wrapper called with:', value);
+                window.callbackCalled = true;
+                window.callbackValue = value;
+                if (originalCallback) {
+                    return originalCallback(value);
                 }
-                return { error: 'No callback function' };
+            };
+            
+            // Select the option
+            const option = document.querySelector('[data-value="a"]');
+            if (option) {
+                option.click();
             }
-            return { error: 'No combo boxes found' };
+            
+            return {
+                callbackWasCalled: window.callbackCalled,
+                callbackValue: window.callbackValue
+            };
         """)
+        time.sleep(1)
         
-        print(f"Manual callback result: {manual_result}")
+        print(f"Callback result: {result}")
         
-        # Get logs after manual callback
-        logs_after_manual = self.driver.get_log('browser')
-        manual_logs = [log for log in logs_after_manual if 'MANUAL' in log.get('message', '')]
-        print(f"Manual callback logs: {manual_logs}")
+        # Check if callback was called
+        assert result['callbackWasCalled'], f"Callback should have been called, got {result}"
+        assert result['callbackValue'] == 'a', f"Callback should have been called with 'a', got {result['callbackValue']}"
         
-        # The test passes if we can see some evidence of callback execution
-        assert len(callback_logs) > 0 or len(selectoption_logs) > 0 or manual_result.get('success'), "No callback execution detected"
+        print("✅ Callback is working correctly!")

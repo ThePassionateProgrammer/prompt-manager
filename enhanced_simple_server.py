@@ -606,8 +606,9 @@ TEMPLATE_BUILDER_HTML = """
 
     <!-- Include Custom Combo Box Component -->
     <link rel="stylesheet" href="/static/css/custom-combo-box.css">
-    <script src="/static/js/custom-combo-box-working.js"></script>
+    <script src="/static/js/custom-combo-box-working.js?v=1.0&t=1734567899&cache=bust"></script>
     <script src="/static/js/template-storage.js"></script>
+    <script src="/static/js/linkage-manager-v2.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -723,8 +724,10 @@ TEMPLATE_BUILDER_HTML = """
                     customComboBoxes.push(comboBox);
                 });
                 
-                // Set up linkages between combo boxes
+                // Set up linkages between combo boxes using working August 20th implementation
+                console.log('About to call setupLinkages()');
                 setupLinkages();
+                console.log('setupLinkages() completed');
                 
             } catch (error) {
                 console.error('Error in generateCustomComboBoxes:', error);
@@ -734,6 +737,18 @@ TEMPLATE_BUILDER_HTML = """
         }
 
         function setupLinkages() {
+            // Restore working August 20th implementation
+            console.log('=== SETTING UP LINKAGES (August 20th Implementation) ===');
+            console.log('Number of combo boxes:', customComboBoxes.length);
+            
+            // Initialize linkage data
+            if (!window.linkageData) {
+                window.linkageData = {};
+            }
+            if (!window.currentSelections) {
+                window.currentSelections = {};
+            }
+            
             // Set up parent-child linkages between combo boxes
             for (let i = 0; i < customComboBoxes.length - 1; i++) {
                 const parentComboBox = customComboBoxes[i];
@@ -759,11 +774,10 @@ TEMPLATE_BUILDER_HTML = """
                             }
                             
                             // Add new options based on dynamic linkage data
-                        
-                        console.log('Restoring linkages for:', selectedValue, '->', childTag);
-                        console.log('Linkage data:', window.linkageData);
-                        console.log('Looking for:', window.linkageData[selectedValue]);
-                        
+                            console.log('Restoring linkages for:', selectedValue, '->', childTag);
+                            console.log('Linkage data:', window.linkageData);
+                            console.log('Looking for:', window.linkageData[selectedValue]);
+                            
                             if (window.linkageData[selectedValue] && window.linkageData[selectedValue][childTag]) {
                                 // Use existing linkage data - restore previously created linkages
                                 const linkedOptions = window.linkageData[selectedValue][childTag];
@@ -814,6 +828,17 @@ TEMPLATE_BUILDER_HTML = """
                 
                 // Add option creation handler to child (for dynamic linkage creation)
                 childComboBox.onOptionAdded = function(newOption) {
+                    console.log('=== onOptionAdded callback triggered ===');
+                    console.log('newOption:', newOption);
+                    console.log('parentComboBox.isUpdating:', parentComboBox.isUpdating);
+                    console.log('childComboBox.isUpdating:', childComboBox.isUpdating);
+                    
+                    // Skip if parent is updating (to prevent interference during replacement)
+                    if (parentComboBox.isUpdating || childComboBox.isUpdating) {
+                        console.log('Skipping onOptionAdded - combo box is updating');
+                        return;
+                    }
+                    
                     // If parent has a selection, create a linkage
                     const parentTag = parentComboBox.tag;
                     if (window.currentSelections[parentTag]) {
@@ -834,7 +859,6 @@ TEMPLATE_BUILDER_HTML = """
                         }
                         
                         console.log('Created linkage:', parentSelection, '->', childTag, ':', newOption);
-                        console.log('Current linkage data:', window.linkageData);
                     }
                 };
             }
@@ -1669,6 +1693,24 @@ def working_combo():
     """Serve the working custom combo box test page."""
     with open('test_combo_box_standalone.html', 'r') as f:
         return f.read()
+
+@app.route('/static/js/linkage-service.js')
+def linkage_service_js():
+    """Serve the linkage service JavaScript file."""
+    with open('src/prompt_manager/static/js/linkage-service.js', 'r') as f:
+        return f.read(), 200, {'Content-Type': 'application/javascript'}
+
+@app.route('/debug-combo')
+def debug_combo():
+    """Debug page for combo box functionality."""
+    with open('tests/test_browser_debug.html', 'r') as f:
+        return f.read()
+
+@app.route('/static/js/linkage-manager-v2.js')
+def linkage_manager_v2_js():
+    """Serve the LinkageManagerV2 JavaScript file."""
+    with open('src/prompt_manager/static/js/linkage-manager-v2.js', 'r') as f:
+        return f.read(), 200, {'Content-Type': 'application/javascript'}
 
 @app.route('/test')
 def test_route():

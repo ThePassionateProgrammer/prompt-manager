@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Combo Box Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-info { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .combo-box-container { margin: 20px 0; }
+        .combo-box-input { width: 200px; padding: 5px; }
+        .combo-box-dropdown { border: 1px solid #ccc; background: white; max-height: 150px; overflow-y: auto; }
+        .combo-box-option { padding: 5px; cursor: pointer; }
+        .combo-box-option:hover { background: #f0f0f0; }
+        .combo-box-option.highlighted { background: #007bff; color: white; }
+        .show { display: block; }
+    </style>
+</head>
+<body>
+    <h1>Combo Box Debug Page</h1>
+    
+    <div class="debug-info">
+        <h3>Debug Information</h3>
+        <p>This page tests the combo box functionality directly.</p>
+        <p>Open browser console (F12) to see debug messages.</p>
+    </div>
+    
+    <div class="combo-box-container">
+        <h3>Test Combo Box</h3>
+        <div id="test-combo">
+            <input type="text" class="combo-box-input" placeholder="Type to add...">
+            <div class="combo-box-arrow">▼</div>
+            <div class="combo-box-dropdown">
+                <div class="combo-box-option" data-value="Add...">Add...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="debug-info">
+        <h3>Instructions</h3>
+        <ol>
+            <li>Type "Test Item" in the input field</li>
+            <li>Press Enter - this should add "Test Item" to the dropdown</li>
+            <li>Click on "Test Item" in the dropdown - this should select it and close the dropdown</li>
+            <li>Check browser console for any error messages</li>
+        </ol>
+    </div>
+    
+    <div class="debug-info">
+        <h3>Expected Behavior</h3>
+        <ul>
+            <li>✅ Pressing Enter should add items to dropdown</li>
+            <li>✅ Clicking on items should select them</li>
+            <li>✅ Dropdown should close after selection</li>
+            <li>✅ Input field should show selected value</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Simple combo box implementation for testing
+        class TestComboBox {
+            constructor(containerId) {
+                this.container = document.getElementById(containerId);
+                this.input = this.container.querySelector('.combo-box-input');
+                this.dropdown = this.container.querySelector('.combo-box-dropdown');
+                this.arrow = this.container.querySelector('.combo-box-arrow');
+                this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+                this.selectedOption = null;
+                this.selectedIndex = -1;
+                this.highlightedIndex = -1;
+                this.isDropdownVisible = false;
+                
+                this.setupEventListeners();
+                console.log('TestComboBox initialized');
+            }
+            
+            setupEventListeners() {
+                // Input focus - show dropdown
+                this.input.addEventListener('focus', () => {
+                    console.log('Input focused - showing dropdown');
+                    this.showDropdown();
+                });
+                
+                // Input keydown
+                this.input.addEventListener('keydown', (e) => {
+                    console.log('Key pressed:', e.key);
+                    switch(e.key) {
+                        case 'Enter':
+                            e.preventDefault();
+                            this.handleEnter();
+                            break;
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            this.navigateDown();
+                            break;
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            this.navigateUp();
+                            break;
+                        case 'Escape':
+                            e.preventDefault();
+                            this.hideDropdown();
+                            break;
+                    }
+                });
+                
+                // Option clicks
+                this.options.forEach((option, index) => {
+                    option.addEventListener('click', (e) => {
+                        console.log('Option clicked:', option.textContent, 'index:', index);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.selectOption(index);
+                    });
+                    option.addEventListener('mouseenter', () => {
+                        this.highlightOption(index);
+                    });
+                });
+            }
+            
+            handleEnter() {
+                console.log('Enter pressed');
+                // If there's a highlighted option, select it
+                if (this.highlightedIndex >= 0 && this.highlightedIndex < this.options.length) {
+                    console.log('Selecting highlighted option:', this.highlightedIndex);
+                    this.selectOption(this.highlightedIndex);
+                    return;
+                }
+                
+                // Otherwise, add new option
+                const entryText = this.input.value.trim();
+                if (entryText !== '') {
+                    console.log('Adding new option:', entryText);
+                    this.addOption(entryText);
+                    this.input.value = '';
+                }
+                this.showDropdown();
+            }
+            
+            selectOption(index) {
+                console.log('selectOption called with index:', index);
+                if (index < 0 || index >= this.options.length) return;
+                
+                const option = this.options[index];
+                if (option.dataset.value === 'Add...') {
+                    console.log('Add... option clicked');
+                    const entryText = this.input.value.trim();
+                    if (entryText !== '') {
+                        this.addOption(entryText);
+                        this.input.value = '';
+                    }
+                    this.showDropdown();
+                    return;
+                }
+                
+                // Select the option
+                this.selectedIndex = index;
+                this.selectedOption = option.dataset.value;
+                this.input.value = option.dataset.value;
+                console.log('Option selected:', this.selectedOption);
+                
+                // Close dropdown after selection
+                console.log('Closing dropdown after selection');
+                this.hideDropdown();
+                
+                // Select all text in input field
+                this.input.select();
+            }
+            
+            addOption(value) {
+                console.log('Adding option:', value);
+                // Add new option after "Add..." option (index 0)
+                const firstOption = this.options[0];
+                const newOption = document.createElement('div');
+                newOption.className = 'combo-box-option';
+                newOption.dataset.value = value;
+                newOption.textContent = value;
+                
+                // Insert the new option into DOM
+                firstOption.parentNode.insertBefore(newOption, firstOption.nextSibling);
+                this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+                
+                // Add event listeners
+                newOption.addEventListener('click', (e) => {
+                    console.log('Dynamic option clicked:', newOption.textContent);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const allOptions = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+                    const clickedIndex = allOptions.indexOf(newOption);
+                    this.selectOption(clickedIndex);
+                });
+                newOption.addEventListener('mouseenter', () => {
+                    const allOptions = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+                    const hoverIndex = allOptions.indexOf(newOption);
+                    this.highlightOption(hoverIndex);
+                });
+            }
+            
+            highlightOption(index) {
+                this.highlightedIndex = index;
+                this.updateHighlight();
+            }
+            
+            updateHighlight() {
+                this.options.forEach((option, i) => {
+                    if (i === this.highlightedIndex) {
+                        option.classList.add('highlighted');
+                    } else {
+                        option.classList.remove('highlighted');
+                    }
+                });
+            }
+            
+            showDropdown() {
+                console.log('Showing dropdown');
+                this.dropdown.classList.add('show');
+                this.arrow.classList.add('up');
+                this.isDropdownVisible = true;
+            }
+            
+            hideDropdown() {
+                console.log('Hiding dropdown');
+                this.dropdown.classList.remove('show');
+                this.arrow.classList.remove('up');
+                this.isDropdownVisible = false;
+                this.highlightedIndex = -1;
+                this.updateHighlight();
+            }
+            
+            navigateDown() {
+                if (!this.isDropdownVisible) {
+                    this.showDropdown();
+                }
+                if (this.highlightedIndex < this.options.length - 1) {
+                    this.highlightedIndex++;
+                    this.updateHighlight();
+                }
+            }
+            
+            navigateUp() {
+                if (this.highlightedIndex > 0) {
+                    this.highlightedIndex--;
+                    this.updateHighlight();
+                }
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, initializing combo box');
+            window.testCombo = new TestComboBox('test-combo');
+        });
+    </script>
+</body>
+</html>

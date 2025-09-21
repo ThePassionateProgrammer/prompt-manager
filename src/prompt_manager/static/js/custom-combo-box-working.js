@@ -9,6 +9,10 @@
  * - Hierarchical linkages support
  */
 
+// CustomComboBox v1.0 - Production Ready
+// Fixed: Enter key priority in edit mode
+// Date: December 2024
+
 // State Pattern Implementation
 class EditModeState {
     constructor(comboBox) {
@@ -82,26 +86,21 @@ class DisplayModeState {
 
 class CustomComboBox {
     constructor(containerId) {
-        console.log('CustomComboBox constructor called with:', containerId);
         this.container = document.getElementById(containerId);
-        console.log('Container found:', this.container);
         
         this.input = this.container.querySelector('.combo-box-input');
         this.dropdown = this.container.querySelector('.combo-box-dropdown');
         this.arrow = this.container.querySelector('.combo-box-arrow');
         this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
         
-        console.log('Elements found:', {
-            input: this.input,
-            dropdown: this.dropdown,
-            arrow: this.arrow,
-            options: this.options
-        });
-        
         this.selectedIndex = -1;
         this.selectedOption = null;
         this.highlightedIndex = -1;
         this.isDropdownVisible = false;
+        this.isEditMode = false;
+        this.originalText = null;
+        this.isUpdating = false;
+        this.newText = null;
         
         // Initialize with Display mode state
         this.setState(new DisplayModeState(this));
@@ -119,16 +118,39 @@ class CustomComboBox {
         // Focus events - always show dropdown
         this.input.addEventListener('focus', () => this.showDropdown());
         
+        // Blur events - exit edit mode if active
+        this.input.addEventListener('blur', () => {
+            if (this.isEditMode) {
+                this.exitEditMode(false); // Apply changes on focus loss
+            }
+        });
+        
         // Key events
         this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
         
         // Input events - handle typing
         this.input.addEventListener('input', (e) => {
-            // If input contains a selected option value and user is typing, clear the selection
+            // Don't clear selection when typing in edit mode - keep item highlighted
+            if (this.isEditMode) {
+                // Update stored text when typing in edit mode
+                this.newText = this.input.value;
+                // Keep the selection highlighted while editing
+                return;
+            }
+            
+            // Only clear selection if not in edit mode and input doesn't match selected option
             if (this.selectedOption && this.input.value !== this.selectedOption) {
                 this.selectedOption = null;
                 this.selectedIndex = -1;
                 this.updateSelection();
+            }
+        });
+        
+        // Handle click on input field for edit mode
+        this.input.addEventListener('click', (e) => {
+            // If there's a selected option and user clicks on input, enter edit mode
+            if (this.selectedOption && this.input.value === this.selectedOption) {
+                this.enterEditMode();
             }
         });
         
@@ -172,7 +194,11 @@ class CustomComboBox {
                 break;
             case 'Escape':
                 e.preventDefault();
-                this.hideDropdown();
+                if (this.isEditMode) {
+                    this.exitEditMode(true); // true = revert
+                } else {
+                    this.hideDropdown();
+                }
                 break;
             case 'Tab':
                 // Let default tab behavior work
@@ -181,15 +207,63 @@ class CustomComboBox {
     }
     
     handleEnter() {
-        // If there's a highlighted option, select it
+        // Priority 1: If in edit mode, apply changes and exit edit mode
+        if (this.isEditMode) {
+            this.exitEditMode(false); // false = apply changes
+            return;
+        }
+        
+        // Priority 2: If there's a highlighted option, select it
         if (this.highlightedIndex >= 0 && this.highlightedIndex < this.options.length) {
             this.selectOption(this.highlightedIndex);
             return;
         }
         
-        // Otherwise, use state-specific Enter handling
+        // Priority 3: Use state-specific Enter handling
         const entryText = this.input.value.trim();
         this.currentState.handleEnter(entryText);
+    }
+    
+    enterEditMode() {
+        this.isEditMode = true;
+        this.originalText = this.input.value;
+        this.newText = this.input.value; // Store the initial text
+        
+        // Keep dropdown open
+        this.showDropdown();
+        
+        // Move cursor to end of text
+        setTimeout(() => {
+            const length = this.input.value.length;
+            this.input.setSelectionRange(length, length);
+        }, 10);
+    }
+    
+    exitEditMode(revert = false) {
+        if (!this.isEditMode) return;
+        
+        this.isEditMode = false;
+        
+        if (revert) {
+            // Revert to original text
+            this.input.value = this.originalText;
+        } else {
+            // Apply changes - update the selected option
+            const newText = this.newText && this.newText.trim() !== '' ? this.newText.trim() : this.input.value.trim();
+            const oldValue = this.originalText;
+            
+            if (newText === '') {
+                // Delete the option if text is empty
+                this.removeOption(oldValue);
+            } else if (newText !== oldValue) {
+                // Update the option with new text (only if different)
+                this.replaceOption(oldValue, newText);
+            }
+            // If newText === oldValue, no change needed
+        }
+        
+        this.originalText = null;
+        this.newText = null;
     }
     
     navigateDown() {
@@ -227,6 +301,11 @@ class CustomComboBox {
             return;
         }
         
+        // If in edit mode, apply changes before selecting new option
+        if (this.isEditMode) {
+            this.exitEditMode(false); // Apply changes
+        }
+        
         // Select the option
         const previousSelection = this.selectedOption;
         this.selectedIndex = index;
@@ -259,6 +338,13 @@ class CustomComboBox {
         this.dropdown.classList.add('show');
         this.arrow.classList.add('up');
         this.isDropdownVisible = true;
+        
+        // Update selection highlighting when dropdown is shown
+        this.updateSelection();
+        
+        // Clear any previous highlighting
+        this.highlightedIndex = -1;
+        this.updateHighlight();
     }
     
     hideDropdown() {
@@ -350,18 +436,45 @@ class CustomComboBox {
     }
     
     replaceOption(oldValue, newValue) {
-        // Find the option by current selected index instead of value
-        if (this.selectedIndex >= 0 && this.selectedIndex < this.options.length) {
-            const option = this.options[this.selectedIndex];
-            option.dataset.value = newValue;
-            option.textContent = newValue;
-            this.selectedOption = newValue;
-            this.updateSelection();
-            
-            // Clear any previous highlighting
-            this.highlightedIndex = -1;
-            this.updateHighlight();
-        }
+        // Find the option by value instead of index
+        const option = this.options.find(opt => opt.textContent === oldValue);
+        if (!option) return;
+        
+        // Set updating flag to prevent interference
+        this.isUpdating = true;
+        
+        // Temporarily disable callbacks to prevent interference
+        const originalSelectionCallback = this.onSelectionChange;
+        const originalOptionAddedCallback = this.onOptionAdded;
+        this.onSelectionChange = null;
+        this.onOptionAdded = null;
+        
+        // Update the existing option in place
+        option.textContent = newValue;
+        option.dataset.value = newValue;
+        
+        // Update the selected option value
+        this.selectedOption = newValue;
+        
+        // Ensure the input field shows the new value
+        this.input.value = newValue;
+        
+        // Refresh the options array
+        this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+        
+        // Update selection highlighting
+        this.updateSelection();
+        
+        // Clear any previous highlighting
+        this.highlightedIndex = -1;
+        this.updateHighlight();
+        
+        // Re-enable the callbacks after a delay to ensure all updates are complete
+        setTimeout(() => {
+            this.onSelectionChange = originalSelectionCallback;
+            this.onOptionAdded = originalOptionAddedCallback;
+            this.isUpdating = false;
+        }, 500);
     }
     
     removeOption(value) {

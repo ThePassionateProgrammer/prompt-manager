@@ -9,8 +9,8 @@
  * - Hierarchical linkages support
  */
 
-// CustomComboBox v1.0 - Production Ready
-// Fixed: Enter key priority in edit mode
+// CustomComboBox v2.0 - Production Ready
+// Complete implementation with Add, Update, Delete functionality
 // Date: December 2024
 
 // State Pattern Implementation
@@ -134,7 +134,14 @@ class CustomComboBox {
             if (this.isEditMode) {
                 // Update stored text when typing in edit mode
                 this.newText = this.input.value;
-                // Keep the selection highlighted while editing
+                // Keep the selection highlighted while editing (even when text is cleared)
+                return;
+            }
+            
+            // Special case: If we have a selected option and user is deleting/clearing the text,
+            // keep the selection so Enter can delete the item
+            if (this.selectedOption && this.input.value === '') {
+                // Keep the selection highlighted so Enter will delete the item
                 return;
             }
             
@@ -165,7 +172,14 @@ class CustomComboBox {
             option.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                this.selectOption(index);
+                
+                // If clicking on already selected option, enter edit mode
+                if (this.selectedOption && option.dataset.value === this.selectedOption) {
+                    this.enterEditMode();
+                } else {
+                    // Otherwise, select the option normally
+                    this.selectOption(index);
+                }
             });
             option.addEventListener('mouseenter', () => this.highlightOption(index));
         });
@@ -199,6 +213,14 @@ class CustomComboBox {
                 } else {
                     this.hideDropdown();
                 }
+                break;
+            case 'Delete':
+                // In edit mode, Delete key should only clear text, not selection
+                if (this.isEditMode) {
+                    // Update stored text when deleting in edit mode
+                    this.newText = this.input.value;
+                }
+                // Let default Delete behavior work (don't preventDefault)
                 break;
             case 'Tab':
                 // Let default tab behavior work
@@ -478,22 +500,22 @@ class CustomComboBox {
     }
     
     removeOption(value) {
-        // Remove the currently selected option by index
-        if (this.selectedIndex >= 0 && this.selectedIndex < this.options.length) {
-            const option = this.options[this.selectedIndex];
-            if (option.dataset.value !== 'Add...' && option.dataset.value !== 'Select item...') {
-                option.remove();
-                this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
-                
-                // Clear selection
+        // Find and remove the option by value
+        const option = this.options.find(opt => opt.textContent === value);
+        if (option && option.dataset.value !== 'Add...' && option.dataset.value !== 'Select item...') {
+            option.remove();
+            this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+            
+            // Clear selection if we removed the currently selected option
+            if (this.selectedOption === value) {
                 this.selectedIndex = -1;
                 this.selectedOption = null;
                 this.updateSelection();
-                
-                // Clear any previous highlighting
-                this.highlightedIndex = -1;
-                this.updateHighlight();
             }
+            
+            // Clear any previous highlighting
+            this.highlightedIndex = -1;
+            this.updateHighlight();
         }
     }
     

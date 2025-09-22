@@ -103,6 +103,11 @@ class TestCustomComboBoxProduction:
         manager_option = dropdown.find_element(By.XPATH, "//div[text()='Manager']")
         manager_option.click()
         
+        # Verify item is highlighted/selected before deletion
+        selected_options = dropdown.find_elements(By.CSS_SELECTOR, '.combo-box-option.selected')
+        assert len(selected_options) == 1, "Item should be selected before deletion"
+        assert selected_options[0].text == 'Manager', "Selected item should be 'Manager'"
+        
         # Clear the text and hit Enter to delete
         input_field.send_keys(Keys.CONTROL + 'a')  # Select all
         input_field.send_keys(Keys.DELETE)  # Delete
@@ -114,6 +119,43 @@ class TestCustomComboBoxProduction:
         option_texts = [opt.text for opt in options if opt.text not in ['Add...']]
         
         assert len(option_texts) == 0, f"Expected 0 options, got {len(option_texts)}: {option_texts}"
+    
+    def test_delete_with_multiple_items(self, combo_box_page):
+        """Test deleting an item when multiple items exist"""
+        driver = combo_box_page
+        who_combo = driver.find_element(By.ID, 'combo-box-Who')
+        input_field = who_combo.find_element(By.CLASS_NAME, 'combo-box-input')
+        dropdown = who_combo.find_element(By.CLASS_NAME, 'combo-box-dropdown')
+        
+        # Add multiple items
+        items = ['Developer', 'Manager', 'Designer']
+        for item in items:
+            input_field.click()
+            input_field.send_keys(item)
+            input_field.send_keys(Keys.RETURN)
+            time.sleep(0.3)
+        
+        # Click on 'Manager' to enter edit mode
+        manager_option = dropdown.find_element(By.XPATH, "//div[text()='Manager']")
+        manager_option.click()
+        
+        # Clear the text and hit Enter to delete
+        input_field.send_keys(Keys.CONTROL + 'a')  # Select all
+        input_field.send_keys(Keys.DELETE)  # Delete
+        input_field.send_keys(Keys.RETURN)
+        
+        # Verify only 'Manager' was deleted
+        time.sleep(0.5)
+        options = dropdown.find_elements(By.CLASS_NAME, 'combo-box-option')
+        option_texts = [opt.text for opt in options if opt.text not in ['Add...']]
+        
+        expected_texts = ['Developer', 'Designer']
+        assert len(option_texts) == 2, f"Expected 2 options, got {len(option_texts)}: {option_texts}"
+        
+        for expected in expected_texts:
+            assert expected in option_texts, f"Expected '{expected}' in {option_texts}"
+        
+        assert 'Manager' not in option_texts, f"'Manager' should not be in {option_texts}"
     
     def test_escape_key_reverts_changes(self, combo_box_page):
         """Test that Escape key reverts changes in edit mode"""

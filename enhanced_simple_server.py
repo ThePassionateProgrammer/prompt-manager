@@ -512,6 +512,9 @@ TEMPLATE_BUILDER_HTML = """
         <div class="bg-primary text-white p-3">
             <div class="d-flex justify-content-between align-items-center">
                 <h1 class="h3 mb-0"><i class="fas fa-puzzle-piece me-2"></i>Template Builder</h1>
+                <div class="alert alert-info mb-0">
+                    <strong>Custom Combo Box Version:</strong> <span id="combo-box-version">Loading...</span>
+                </div>
                 <div>
                     <button id="testModeBtn" class="btn btn-outline-light me-2">
                         <i class="fas fa-vial me-1"></i>Test Mode
@@ -606,12 +609,15 @@ TEMPLATE_BUILDER_HTML = """
 
     <!-- Include Custom Combo Box Component -->
     <link rel="stylesheet" href="/static/css/custom-combo-box.css">
-    <script src="/static/js/custom-combo-box-working.js?v=1.0&t=1734567899&cache=bust"></script>
+    <script src="/static/js/custom-combo-box-working.js?v=2.0&t=1734567906&cache=bust"></script>
     <script src="/static/js/template-storage.js"></script>
     <script src="/static/js/linkage-manager-v2.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Display version information
+        document.getElementById('combo-box-version').textContent = 'v2.0';
+        
         // Template Builder State - Old Layout with CustomComboBox
         let currentTemplate = "";
         let customComboBoxes = [];

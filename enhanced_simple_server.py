@@ -14,6 +14,7 @@ import sys
 import os
 from datetime import datetime
 from src.prompt_manager.business.custom_combo_box_integration import CustomComboBoxIntegration
+from src.prompt_manager.template_service import TemplateService
 
 def check_port_available(port):
     """Check if a port is available."""
@@ -516,6 +517,12 @@ TEMPLATE_BUILDER_HTML = """
                     <strong>Custom Combo Box Version:</strong> <span id="combo-box-version">Loading...</span>
                 </div>
                 <div>
+                    <button id="saveTemplateBtn" class="btn btn-outline-light me-2">
+                        <i class="fas fa-save me-1"></i>Save Template
+                    </button>
+                    <button id="loadTemplateBtn" class="btn btn-outline-light me-2">
+                        <i class="fas fa-folder-open me-1"></i>Load Template
+                    </button>
                     <button id="testModeBtn" class="btn btn-outline-light me-2">
                         <i class="fas fa-vial me-1"></i>Test Mode
                     </button>
@@ -609,14 +616,14 @@ TEMPLATE_BUILDER_HTML = """
 
     <!-- Include Custom Combo Box Component -->
     <link rel="stylesheet" href="/static/css/custom-combo-box.css">
-    <script src="/static/js/custom-combo-box-working.js?v=2.0&t=1734567906&cache=bust"></script>
+    <script src="/static/js/custom-combo-box-working.js?v=2.2&t=1734567909&cache=bust"></script>
     <script src="/static/js/template-storage.js"></script>
-    <script src="/static/js/linkage-manager-v2.js"></script>
+    <script src="/static/js/linkage-manager-v3.js?v=3.0&t=1734567908&cache=bust"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Display version information
-        document.getElementById('combo-box-version').textContent = 'v2.0';
+        document.getElementById('combo-box-version').textContent = 'ComboBox v2.2 | LinkageManager v3.0';
         
         // Template Builder State - Old Layout with CustomComboBox
         let currentTemplate = "";
@@ -637,6 +644,10 @@ TEMPLATE_BUILDER_HTML = """
         });
 
         function setupEventListeners() {
+            // Template persistence
+            document.getElementById('saveTemplateBtn').addEventListener('click', saveTemplate);
+            document.getElementById('loadTemplateBtn').addEventListener('click', loadTemplate);
+            
             // Edit mode toggle
             document.getElementById('editModeBtn').addEventListener('click', toggleEditMode);
             
@@ -742,132 +753,36 @@ TEMPLATE_BUILDER_HTML = """
             }
         }
 
+        // Global LinkageManager instance
+        let linkageManager = null;
+        let currentTemplateId = null;
+
         function setupLinkages() {
-            // Restore working August 20th implementation
-            console.log('=== SETTING UP LINKAGES (August 20th Implementation) ===');
+            console.log('=== SETTING UP LINKAGES (LinkageManager v3.0) ===');
             console.log('Number of combo boxes:', customComboBoxes.length);
             
-            // Initialize linkage data
-            if (!window.linkageData) {
-                window.linkageData = {};
-            }
-            if (!window.currentSelections) {
-                window.currentSelections = {};
-            }
+            // Get template text and tags
+            const templateText = document.getElementById('templateInput').value;
+            const tags = customComboBoxes.map(combo => combo.tag);
             
-            // Set up parent-child linkages between combo boxes
-            for (let i = 0; i < customComboBoxes.length - 1; i++) {
-                const parentComboBox = customComboBoxes[i];
-                const childComboBox = customComboBoxes[i + 1];
-                
-                // Add selection change handler to parent
-                console.log('Setting up callback for', parentComboBox.tag, '->', childComboBox.tag);
-                console.log('Parent combo before callback:', parentComboBox);
-                parentComboBox.onSelectionChange = (function(parentTag, childTag, parentCombo, childCombo) {
-                    return function(selectedValue) {
-                        console.log('=== LINKAGE CALLBACK TRIGGERED ===');
-                        console.log('onSelectionChange called for', parentTag, 'with value:', selectedValue);
-                        console.log('Parent combo:', parentCombo);
-                        console.log('Child combo:', childCombo);
-                        if (selectedValue && selectedValue !== 'Add item...' && selectedValue !== 'Select item...') {
-                            // Track the current selection for this parent
-                            window.currentSelections[parentTag] = selectedValue;
-                        
-                            // Clear child combo box options (keep first option)
-                            const childOptions = childCombo.dropdown.querySelectorAll('.combo-box-option');
-                            for (let j = childOptions.length - 1; j > 0; j--) {
-                                childOptions[j].remove();
-                            }
-                            
-                            // Add new options based on dynamic linkage data
-                            console.log('Restoring linkages for:', selectedValue, '->', childTag);
-                            console.log('Linkage data:', window.linkageData);
-                            console.log('Looking for:', window.linkageData[selectedValue]);
-                            
-                            if (window.linkageData[selectedValue] && window.linkageData[selectedValue][childTag]) {
-                                // Use existing linkage data - restore previously created linkages
-                                const linkedOptions = window.linkageData[selectedValue][childTag];
-                                console.log('Found linked options:', linkedOptions);
-                                linkedOptions.forEach(option => {
-                                    console.log('Restoring option:', option);
-                                    childCombo.addOption(option, true, true); // Skip callback, but select the option
-                                });
-                            } else {
-                                // No linkage data exists yet - child combo box starts empty (except first option)
-                                // User will add options to create linkages
-                                console.log('No linkage data found for:', selectedValue, '->', childTag);
-                            }
-                            
-                            // Store child's selection before clearing it
-                            const childSelectedOption = childCombo.selectedOption;
-                            
-                            // Clear child's selection and input
-                            childCombo.selectedIndex = -1;
-                            childCombo.selectedOption = null;
-                            childCombo.input.value = '';
-                            
-                            // Clear subsequent combo boxes
-                            for (let k = i + 2; k < customComboBoxes.length; k++) {
-                                const subsequentComboBox = customComboBoxes[k];
-                                const subsequentOptions = subsequentComboBox.dropdown.querySelectorAll('.combo-box-option');
-                                for (let l = subsequentOptions.length - 1; l > 0; l--) {
-                                    subsequentOptions[l].remove();
-                                }
-                                subsequentComboBox.selectedIndex = -1;
-                                subsequentComboBox.selectedOption = null;
-                                subsequentComboBox.input.value = '';
-                            }
-                            
-                            // If we restored options to the child, trigger its linkage restoration
-                            if (window.linkageData[selectedValue] && window.linkageData[selectedValue][childTag] && childSelectedOption) {
-                                // Update current selection for the child
-                                window.currentSelections[childTag] = childSelectedOption;
-                                
-                                // Trigger linkage restoration for the child's children
-                                if (childCombo.onSelectionChange) {
-                                    childCombo.onSelectionChange(childSelectedOption);
-                                }
-                            }
-                        }
-                    };
-                })(parentComboBox.tag, childComboBox.tag, parentComboBox, childComboBox);
-                
-                // Add option creation handler to child (for dynamic linkage creation)
-                childComboBox.onOptionAdded = function(newOption) {
-                    console.log('=== onOptionAdded callback triggered ===');
-                    console.log('newOption:', newOption);
-                    console.log('parentComboBox.isUpdating:', parentComboBox.isUpdating);
-                    console.log('childComboBox.isUpdating:', childComboBox.isUpdating);
-                    
-                    // Skip if parent is updating (to prevent interference during replacement)
-                    if (parentComboBox.isUpdating || childComboBox.isUpdating) {
-                        console.log('Skipping onOptionAdded - combo box is updating');
-                        return;
-                    }
-                    
-                    // If parent has a selection, create a linkage
-                    const parentTag = parentComboBox.tag;
-                    if (window.currentSelections[parentTag]) {
-                        const parentSelection = window.currentSelections[parentTag];
-                        const childTag = childComboBox.tag;
-                        
-                        // Initialize linkage data if it doesn't exist
-                        if (!window.linkageData[parentSelection]) {
-                            window.linkageData[parentSelection] = {};
-                        }
-                        if (!window.linkageData[parentSelection][childTag]) {
-                            window.linkageData[parentSelection][childTag] = [];
-                        }
-                        
-                        // Add the new option to the linkage (if not already there)
-                        if (!window.linkageData[parentSelection][childTag].includes(newOption)) {
-                            window.linkageData[parentSelection][childTag].push(newOption);
-                        }
-                        
-                        console.log('Created linkage:', parentSelection, '->', childTag, ':', newOption);
-                    }
-                };
-            }
+            // Initialize LinkageManager
+            linkageManager = new LinkageManager();
+            currentTemplateId = linkageManager.initializeTemplate(templateText, tags);
+            console.log('Initialized template with ID:', currentTemplateId);
+            
+            // Create combo boxes object with tag as key
+            const comboBoxesByTag = {};
+            customComboBoxes.forEach(combo => {
+                comboBoxesByTag[combo.tag] = combo;
+            });
+            
+            // Register combo boxes with LinkageManager
+            linkageManager.registerComboBoxes(currentTemplateId, comboBoxesByTag);
+            
+            // Load existing linkage data if available
+            linkageManager.loadFromTemplateStorage(currentTemplateId);
+            
+            console.log('LinkageManager setup completed');
         }
 
         // Test Panel Functions
@@ -979,15 +894,23 @@ TEMPLATE_BUILDER_HTML = """
                 return;
             }
             
-            // Test 2: Verify linkage data structure exists
-            if (!window.linkageData) {
-                results.push('✗ Linkage data structure not found');
-                results.push('🔧 Need to create linkageData object');
+            // Test 2: Verify LinkageManager exists
+            if (!linkageManager) {
+                results.push('✗ LinkageManager not found');
+                results.push('🔧 Need to initialize LinkageManager');
             } else {
-                results.push('✓ Linkage data structure exists');
+                results.push('✓ LinkageManager exists');
             }
             
-            // Test 3: Check if combo boxes have linkage setup
+            // Test 3: Verify template ID exists
+            if (!currentTemplateId) {
+                results.push('✗ Template ID not found');
+                results.push('🔧 Need to initialize template');
+            } else {
+                results.push(`✓ Template ID: ${currentTemplateId}`);
+            }
+            
+            // Test 4: Check if combo boxes have linkage setup
             let linkageSetupCount = 0;
             customComboBoxes.forEach((comboBox, index) => {
                 if (comboBox.onSelectionChange && typeof comboBox.onSelectionChange === 'function') {
@@ -1002,7 +925,13 @@ TEMPLATE_BUILDER_HTML = """
                 results.push('🔧 Need to implement onSelectionChange handlers');
             }
             
-            // Test 4: Test actual linkage behavior (this will fail initially)
+            // Test 5: Get debug info from LinkageManager
+            if (linkageManager && currentTemplateId) {
+                const debugInfo = linkageManager.getDebugInfo(currentTemplateId);
+                results.push(`✓ Debug Info: ${JSON.stringify(debugInfo, null, 2)}`);
+            }
+            
+            // Test 6: Test actual linkage behavior
             try {
                 const firstComboBox = customComboBoxes[0];
                 const secondComboBox = customComboBoxes[1];
@@ -1065,6 +994,171 @@ TEMPLATE_BUILDER_HTML = """
                 alert('Error saving prompt: ' + error);
             });
         });
+        
+        // Template Persistence Functions
+        function saveTemplate() {
+            const templateText = document.getElementById('templateInput').value.trim();
+            if (!templateText) {
+                alert('Please enter a template text first');
+                return;
+            }
+            
+            // Get template name and description
+            const templateName = prompt('Enter a name for this template:');
+            if (!templateName) return;
+            
+            const templateDescription = prompt('Enter a description for this template (optional):') || '';
+            
+            // Collect combo box values and linkage data
+            const comboBoxValues = {};
+            const linkageData = {};
+            
+            // Get current combo box values
+            if (window.customComboBoxes) {
+                window.customComboBoxes.forEach(combo => {
+                    if (combo.tag) {
+                        comboBoxValues[combo.tag] = combo.options.slice(1); // Remove "Add..." option
+                        
+                        // Get linkage data if available
+                        if (window.linkageManager && window.linkageManager.linkageData) {
+                            const templateId = Object.keys(window.linkageManager.linkageData)[0];
+                            if (templateId) {
+                                const templateLinkages = window.linkageManager.linkageData[templateId];
+                                Object.keys(templateLinkages).forEach(parentValue => {
+                                    if (!linkageData[parentValue]) {
+                                        linkageData[parentValue] = {};
+                                    }
+                                    Object.keys(templateLinkages[parentValue]).forEach(childTag => {
+                                        linkageData[parentValue][childTag] = templateLinkages[parentValue][childTag];
+                                    });
+                                });
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Save template
+            const templateData = {
+                name: templateName,
+                description: templateDescription,
+                template_text: templateText,
+                combo_box_values: comboBoxValues,
+                linkage_data: linkageData
+            };
+            
+            fetch('/api/template-persistence/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(templateData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Template saved successfully!');
+                } else {
+                    alert('Error saving template: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error saving template: ' + error);
+            });
+        }
+        
+        function loadTemplate() {
+            // First, get list of available templates
+            fetch('/api/template-persistence/list')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const templates = data.templates;
+                    const templateNames = Object.keys(templates);
+                    
+                    if (templateNames.length === 0) {
+                        alert('No saved templates found');
+                        return;
+                    }
+                    
+                    // Create selection dialog
+                    let optionsHtml = '<option value="">Select a template...</option>';
+                    templateNames.forEach(name => {
+                        const template = templates[name];
+                        optionsHtml += `<option value="${name}">${name} - ${template.description || 'No description'}</option>`;
+                    });
+                    
+                    const selectHtml = `
+                        <div style="margin: 10px 0;">
+                            <label for="templateSelect" style="display: block; margin-bottom: 5px;">Choose Template:</label>
+                            <select id="templateSelect" style="width: 100%; padding: 5px;">
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                    `;
+                    
+                    const result = confirm(selectHtml);
+                    if (result) {
+                        const selectedName = document.getElementById('templateSelect').value;
+                        if (selectedName) {
+                            loadSpecificTemplate(selectedName);
+                        }
+                    }
+                } else {
+                    alert('Error loading templates: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error loading templates: ' + error);
+            });
+        }
+        
+        function loadSpecificTemplate(templateName) {
+            fetch(`/api/template-persistence/load/${encodeURIComponent(templateName)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const template = data.template;
+                    
+                    // Load template text
+                    document.getElementById('templateInput').value = template.template_text;
+                    
+                    // Generate combo boxes
+                    generateCustomComboBoxes();
+                    
+                    // Wait for combo boxes to be created, then load values
+                    setTimeout(() => {
+                        // Load combo box values
+                        if (window.customComboBoxes && template.combo_box_values) {
+                            window.customComboBoxes.forEach(combo => {
+                                if (combo.tag && template.combo_box_values[combo.tag]) {
+                                    const values = template.combo_box_values[combo.tag];
+                                    values.forEach(value => {
+                                        combo.addOption(value, true, false); // Skip callback, don't auto-select
+                                    });
+                                }
+                            });
+                        }
+                        
+                        // Load linkage data
+                        if (window.linkageManager && template.linkage_data) {
+                            // Clear existing linkage data
+                            window.linkageManager.linkageData = {};
+                            window.linkageManager.currentSelections = {};
+                            
+                            // Set up new linkage data
+                            const templateId = Object.keys(window.linkageManager.linkageData)[0] || 'default';
+                            window.linkageManager.linkageData[templateId] = template.linkage_data;
+                        }
+                        
+                        alert('Template loaded successfully!');
+                    }, 500);
+                } else {
+                    alert('Error loading template: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error loading template: ' + error);
+            });
+        }
     </script>
 </body>
 </html>
@@ -1712,10 +1806,10 @@ def debug_combo():
     with open('tests/test_browser_debug.html', 'r') as f:
         return f.read()
 
-@app.route('/static/js/linkage-manager-v2.js')
-def linkage_manager_v2_js():
-    """Serve the LinkageManagerV2 JavaScript file."""
-    with open('src/prompt_manager/static/js/linkage-manager-v2.js', 'r') as f:
+@app.route('/static/js/linkage-manager-v3.js')
+def linkage_manager_v3_js():
+    """Serve the LinkageManager v3.0 JavaScript file."""
+    with open('src/prompt_manager/static/js/linkage-manager-v3.js', 'r') as f:
         return f.read(), 200, {'Content-Type': 'application/javascript'}
 
 @app.route('/test')
@@ -1728,6 +1822,134 @@ def combo_standalone():
     """Serve the standalone custom combo box test page."""
     with open('test_combo_box_standalone.html', 'r') as f:
         return f.read()
+
+# Template Persistence Routes
+@app.route('/api/templates/save', methods=['POST'])
+def save_template():
+    """Save a template to persistent storage."""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['name', 'description', 'template_text', 'combo_box_values', 'linkage_data']
+        for field in required_fields:
+            if field not in data:
+                return json.dumps({
+                    "success": False,
+                    "error": f"Missing required field: {field}"
+                }), 400
+        
+        # Initialize template service
+        template_service = TemplateService('templates.json')
+        
+        # Save template
+        template_service.save_template(
+            name=data['name'],
+            description=data['description'],
+            template_text=data['template_text'],
+            combo_box_values=data['combo_box_values'],
+            linkage_data=data['linkage_data']
+        )
+        
+        return json.dumps({
+            "success": True,
+            "message": "Template saved successfully"
+        }), 200
+        
+    except ValueError as e:
+        return json.dumps({
+            "success": False,
+            "error": str(e)
+        }), 400
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": f"Unexpected error: {str(e)}"
+        }), 500
+
+@app.route('/api/templates/load/<template_name>', methods=['GET'])
+def load_template(template_name):
+    """Load a template by name."""
+    try:
+        template_service = TemplateService('templates.json')
+        template = template_service.load_template(template_name)
+        
+        return json.dumps({
+            "success": True,
+            "template": template
+        }), 200
+        
+    except ValueError as e:
+        return json.dumps({
+            "success": False,
+            "error": str(e)
+        }), 404
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": f"Unexpected error: {str(e)}"
+        }), 500
+
+@app.route('/api/templates/list', methods=['GET'])
+def list_templates():
+    """List all saved templates."""
+    try:
+        template_service = TemplateService('templates.json')
+        templates = template_service.list_templates()
+        
+        return json.dumps({
+            "success": True,
+            "templates": templates
+        }), 200
+        
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": f"Unexpected error: {str(e)}"
+        }), 500
+
+@app.route('/api/templates/delete/<template_name>', methods=['DELETE'])
+def delete_template(template_name):
+    """Delete a template by name."""
+    try:
+        template_service = TemplateService('templates.json')
+        
+        if not template_service.template_exists(template_name):
+            return json.dumps({
+                "success": False,
+                "error": "Template not found"
+            }), 404
+        
+        template_service.delete_template(template_name)
+        
+        return json.dumps({
+            "success": True,
+            "message": "Template deleted successfully"
+        }), 200
+        
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": f"Unexpected error: {str(e)}"
+        }), 500
+
+@app.route('/api/templates/exists/<template_name>', methods=['GET'])
+def template_exists(template_name):
+    """Check if a template exists."""
+    try:
+        template_service = TemplateService('templates.json')
+        exists = template_service.template_exists(template_name)
+        
+        return json.dumps({
+            "success": True,
+            "exists": exists
+        }), 200
+        
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": f"Unexpected error: {str(e)}"
+        }), 500
 
 if __name__ == '__main__':
     print("🚀 Starting Enhanced Simple Prompt Manager Web Server...")

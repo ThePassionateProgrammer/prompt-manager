@@ -538,6 +538,140 @@ class PromptManagerAPI:
         def health_check():
             """Health check endpoint."""
             return jsonify({'status': 'healthy'}), 200
+        
+        # New Template Persistence Routes (Phase 1)
+        @self.app.route('/api/template-persistence/save', methods=['POST'])
+        def save_template_persistence():
+            """Save a template to persistent storage using new TemplateService."""
+            try:
+                data = request.get_json()
+                
+                # Validate required fields
+                required_fields = ['name', 'description', 'template_text', 'combo_box_values', 'linkage_data']
+                for field in required_fields:
+                    if field not in data:
+                        return jsonify({
+                            "success": False,
+                            "error": f"Missing required field: {field}"
+                        }), 400
+                
+                # Initialize template service
+                from .template_service import TemplateService
+                template_service = TemplateService('templates.json')
+                
+                # Save template
+                template_service.save_template(
+                    name=data['name'],
+                    description=data['description'],
+                    template_text=data['template_text'],
+                    combo_box_values=data['combo_box_values'],
+                    linkage_data=data['linkage_data']
+                )
+                
+                return jsonify({
+                    "success": True,
+                    "message": "Template saved successfully"
+                }), 200
+                
+            except ValueError as e:
+                return jsonify({
+                    "success": False,
+                    "error": str(e)
+                }), 400
+            except Exception as e:
+                return jsonify({
+                    "success": False,
+                    "error": f"Unexpected error: {str(e)}"
+                }), 500
+
+        @self.app.route('/api/template-persistence/load/<template_name>', methods=['GET'])
+        def load_template_persistence(template_name):
+            """Load a template by name using new TemplateService."""
+            try:
+                from .template_service import TemplateService
+                template_service = TemplateService('templates.json')
+                template = template_service.load_template(template_name)
+                
+                return jsonify({
+                    "success": True,
+                    "template": template
+                }), 200
+                
+            except ValueError as e:
+                return jsonify({
+                    "success": False,
+                    "error": str(e)
+                }), 404
+            except Exception as e:
+                return jsonify({
+                    "success": False,
+                    "error": f"Unexpected error: {str(e)}"
+                }), 500
+
+        @self.app.route('/api/template-persistence/list', methods=['GET'])
+        def list_templates_persistence():
+            """List all saved templates using new TemplateService."""
+            try:
+                from .template_service import TemplateService
+                template_service = TemplateService('templates.json')
+                templates = template_service.list_templates()
+                
+                return jsonify({
+                    "success": True,
+                    "templates": templates
+                }), 200
+                
+            except Exception as e:
+                return jsonify({
+                    "success": False,
+                    "error": f"Unexpected error: {str(e)}"
+                }), 500
+
+        @self.app.route('/api/template-persistence/delete/<template_name>', methods=['DELETE'])
+        def delete_template_persistence(template_name):
+            """Delete a template by name using new TemplateService."""
+            try:
+                from .template_service import TemplateService
+                template_service = TemplateService('templates.json')
+                
+                if not template_service.template_exists(template_name):
+                    return jsonify({
+                        "success": False,
+                        "error": "Template not found"
+                    }), 404
+                
+                template_service.delete_template(template_name)
+                
+                return jsonify({
+                    "success": True,
+                    "message": "Template deleted successfully"
+                }), 200
+                
+            except Exception as e:
+                return jsonify({
+                    "success": False,
+                    "error": f"Unexpected error: {str(e)}"
+                }), 500
+
+        @self.app.route('/api/template-persistence/exists/<template_name>', methods=['GET'])
+        def template_exists_persistence(template_name):
+            """Check if a template exists using new TemplateService."""
+            try:
+                from .template_service import TemplateService
+                template_service = TemplateService('templates.json')
+                exists = template_service.template_exists(template_name)
+                
+                return jsonify({
+                    "success": True,
+                    "exists": exists
+                }), 200
+                
+            except Exception as e:
+                return jsonify({
+                    "success": False,
+                    "error": f"Unexpected error: {str(e)}"
+                }), 500
+        
     
     def run(self, host: str = '0.0.0.0', port: int = 5000, debug: bool = False):
         """Run the API server."""

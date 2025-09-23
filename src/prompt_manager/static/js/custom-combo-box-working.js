@@ -229,10 +229,21 @@ class CustomComboBox {
     }
     
     handleEnter() {
-        // Priority 1: If in edit mode, apply changes and exit edit mode
+        const entryText = this.input.value.trim();
+        
+        // Priority 1: If in edit mode, check if user is trying to add new item vs edit existing
         if (this.isEditMode) {
-            this.exitEditMode(false); // false = apply changes
-            return;
+            // If the input text is different from the original text, treat as adding new item
+            if (entryText !== this.originalText && entryText !== '') {
+                // User is adding a new item, not editing the existing one
+                this.exitEditMode(true); // Revert the edit mode
+                this.currentState.handleEnter(entryText); // Add the new item
+                return;
+            } else {
+                // User is editing the existing item
+                this.exitEditMode(false); // Apply changes
+                return;
+            }
         }
         
         // Priority 2: If there's a highlighted option, select it
@@ -242,7 +253,6 @@ class CustomComboBox {
         }
         
         // Priority 3: Use state-specific Enter handling
-        const entryText = this.input.value.trim();
         this.currentState.handleEnter(entryText);
     }
     

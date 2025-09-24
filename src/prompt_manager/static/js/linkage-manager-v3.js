@@ -73,13 +73,8 @@ class LinkageManager {
      * @param {string} templateId - Template ID
      */
     setupEventHandlers(templateId) {
-        console.log('=== LinkageManager v3.0: setupEventHandlers ===');
-        console.log('templateId:', templateId);
-        
         const tags = this.comboBoxTags[templateId];
         const comboBoxes = this.comboBoxes[templateId];
-        console.log('tags:', tags);
-        console.log('comboBoxes:', Object.keys(comboBoxes));
         
         // Setup parent-child linkages
         for (let i = 0; i < tags.length - 1; i++) {
@@ -88,26 +83,16 @@ class LinkageManager {
             const parentCombo = comboBoxes[parentTag];
             const childCombo = comboBoxes[childTag];
             
-            console.log(`Setting up linkage: ${parentTag} -> ${childTag}`);
-            console.log('parentCombo exists:', !!parentCombo);
-            console.log('childCombo exists:', !!childCombo);
-            
             if (parentCombo && childCombo) {
                 // Setup parent selection change handler
                 parentCombo.onSelectionChange = (selectedValue) => {
-                    console.log(`Parent ${parentTag} selection changed to: ${selectedValue}`);
                     this.handleParentSelectionChange(templateId, parentTag, childTag, selectedValue);
                 };
                 
                 // Setup child option added handler
                 childCombo.onOptionAdded = (newOptionValue) => {
-                    console.log(`Child ${childTag} option added: ${newOptionValue}`);
                     this.handleChildOptionAdded(templateId, parentTag, childTag, newOptionValue);
                 };
-                
-                console.log('Event handlers set up successfully');
-            } else {
-                console.log('Missing combo boxes for linkage setup');
             }
         }
     }
@@ -120,28 +105,15 @@ class LinkageManager {
      * @param {string} selectedValue - Selected value
      */
     handleParentSelectionChange(templateId, parentTag, childTag, selectedValue) {
-        console.log('=== LinkageManager v3.0: handleParentSelectionChange ===');
-        console.log('templateId:', templateId);
-        console.log('parentTag:', parentTag);
-        console.log('childTag:', childTag);
-        console.log('selectedValue:', selectedValue);
-        
         // Update current selection
         this.currentSelections[templateId][parentTag] = selectedValue;
-        console.log('Updated current selection for', parentTag, ':', selectedValue);
         
         // Clear all subsequent combo boxes (children, grandchildren, etc.)
         this.clearSubsequentComboBoxes(templateId, parentTag);
         
         // Restore linkages for the child if they exist
-        console.log('Checking for linkage data:', templateId, selectedValue, childTag);
-        console.log('hasLinkageData result:', this.hasLinkageData(templateId, selectedValue, childTag));
-        
         if (this.hasLinkageData(templateId, selectedValue, childTag)) {
-            console.log('Restoring child linkages for:', selectedValue, '->', childTag);
             this.restoreChildLinkages(templateId, selectedValue, childTag);
-        } else {
-            console.log('No linkage data found for:', selectedValue, '->', childTag);
         }
         
         // Save to template storage
@@ -156,23 +128,11 @@ class LinkageManager {
      * @param {string} newOptionValue - New option value
      */
     handleChildOptionAdded(templateId, parentTag, childTag, newOptionValue) {
-        console.log('=== LinkageManager v3.0: handleChildOptionAdded ===');
-        console.log('templateId:', templateId);
-        console.log('parentTag:', parentTag);
-        console.log('childTag:', childTag);
-        console.log('newOptionValue:', newOptionValue);
-        
         const parentSelection = this.currentSelections[templateId][parentTag];
-        console.log('parentSelection:', parentSelection);
-        console.log('isValidSelection:', this.isValidSelection(parentSelection));
         
         if (parentSelection && this.isValidSelection(parentSelection)) {
-            console.log('Creating linkage:', parentSelection, '->', childTag, ':', newOptionValue);
             this.createLinkage(templateId, parentTag, parentSelection, childTag, newOptionValue);
             this.saveToTemplateStorage(templateId);
-            console.log('Linkage created and saved');
-        } else {
-            console.log('No valid parent selection, skipping linkage creation');
         }
     }
 
@@ -230,33 +190,21 @@ class LinkageManager {
      * @param {string} childTag - Child tag
      */
     restoreChildLinkages(templateId, parentValue, childTag) {
-        console.log('=== LinkageManager v3.0: restoreChildLinkages ===');
-        console.log('templateId:', templateId);
-        console.log('parentValue:', parentValue);
-        console.log('childTag:', childTag);
-        
         const comboBoxes = this.comboBoxes[templateId];
         const childCombo = comboBoxes[childTag];
-        
-        console.log('childCombo exists:', !!childCombo);
         
         if (!childCombo) return;
         
         const linkedOptions = this.getLinkedOptions(templateId, parentValue, childTag);
-        console.log('linkedOptions:', linkedOptions);
         
         if (linkedOptions.length === 0) {
-            console.log('No linked options found');
             return;
         }
         
         // Add linked options to child combo box
         linkedOptions.forEach(option => {
-            console.log('Adding option to child combo:', option);
             childCombo.addOption(option, true, false); // Skip callback, don't auto-select
         });
-        
-        console.log('Options added successfully');
         
         // Recursively restore linkages for the child's children
         const childSelection = this.currentSelections[templateId][childTag];
@@ -280,37 +228,20 @@ class LinkageManager {
      * @param {string} optionValue - Option value
      */
     createLinkage(templateId, parentTag, parentValue, childTag, optionValue) {
-        console.log('=== LinkageManager v3.0: createLinkage ===');
-        console.log('templateId:', templateId);
-        console.log('parentTag:', parentTag);
-        console.log('parentValue:', parentValue);
-        console.log('childTag:', childTag);
-        console.log('optionValue:', optionValue);
-        console.log('Before createLinkage - linkageData:', this.linkageData);
-        
         if (!this.linkageData[templateId]) {
             this.linkageData[templateId] = {};
-            console.log('Created templateId entry');
         }
         if (!this.linkageData[templateId][parentValue]) {
             this.linkageData[templateId][parentValue] = {};
-            console.log('Created parentValue entry');
         }
         if (!this.linkageData[templateId][parentValue][childTag]) {
             this.linkageData[templateId][parentValue][childTag] = [];
-            console.log('Created childTag array');
         }
         
         // Add option if not already present
         if (!this.linkageData[templateId][parentValue][childTag].includes(optionValue)) {
             this.linkageData[templateId][parentValue][childTag].push(optionValue);
-            console.log('Added option to array');
-        } else {
-            console.log('Option already exists in array');
         }
-        
-        console.log('After createLinkage - linkageData:', this.linkageData);
-        console.log('Final structure:', this.linkageData[templateId][parentValue][childTag]);
     }
 
     /**
@@ -321,22 +252,10 @@ class LinkageManager {
      * @returns {boolean}
      */
     hasLinkageData(templateId, parentValue, childTag) {
-        console.log('=== LinkageManager v3.0: hasLinkageData ===');
-        console.log('templateId:', templateId);
-        console.log('parentValue:', parentValue);
-        console.log('childTag:', childTag);
-        console.log('this.linkageData:', this.linkageData);
-        console.log('this.linkageData[templateId]:', this.linkageData[templateId]);
-        console.log('this.linkageData[templateId][parentValue]:', this.linkageData[templateId] ? this.linkageData[templateId][parentValue] : 'N/A');
-        console.log('this.linkageData[templateId][parentValue][childTag]:', this.linkageData[templateId] && this.linkageData[templateId][parentValue] ? this.linkageData[templateId][parentValue][childTag] : 'N/A');
-        
-        const result = this.linkageData[templateId] && 
+        return this.linkageData[templateId] && 
                this.linkageData[templateId][parentValue] &&
                this.linkageData[templateId][parentValue][childTag] && 
                this.linkageData[templateId][parentValue][childTag].length > 0;
-        
-        console.log('hasLinkageData result:', result);
-        return result;
     }
 
     /**
@@ -347,18 +266,9 @@ class LinkageManager {
      * @returns {Array}
      */
     getLinkedOptions(templateId, parentValue, childTag) {
-        console.log('=== LinkageManager v3.0: getLinkedOptions ===');
-        console.log('templateId:', templateId);
-        console.log('parentValue:', parentValue);
-        console.log('childTag:', childTag);
-        console.log('linkageData structure:', this.linkageData);
-        
         if (this.hasLinkageData(templateId, parentValue, childTag)) {
-            const options = this.linkageData[templateId][parentValue][childTag];
-            console.log('Found linked options:', options);
-            return options;
+            return this.linkageData[templateId][parentValue][childTag];
         }
-        console.log('No linkage data found');
         return [];
     }
 
@@ -442,6 +352,37 @@ class LinkageManager {
         delete this.comboBoxTags[templateId];
         
         localStorage.removeItem(`linkageData_${templateId}`);
+    }
+
+    /**
+     * Get the current template ID
+     * @returns {string|null}
+     */
+    getCurrentTemplateId() {
+        return this.currentTemplateId;
+    }
+
+    /**
+     * Collect linkage data for template storage
+     * @param {string} templateId - Template ID
+     * @returns {Object} - Linkage data in the format expected by template storage
+     */
+    collectLinkageDataForStorage(templateId) {
+        if (!this.linkageData[templateId]) {
+            return {};
+        }
+        
+        const linkageData = {};
+        const templateLinkages = this.linkageData[templateId];
+        
+        Object.keys(templateLinkages).forEach(parentValue => {
+            linkageData[parentValue] = {};
+            Object.keys(templateLinkages[parentValue]).forEach(childTag => {
+                linkageData[parentValue][childTag] = templateLinkages[parentValue][childTag];
+            });
+        });
+        
+        return linkageData;
     }
 
     /**

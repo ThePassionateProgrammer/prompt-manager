@@ -62,7 +62,7 @@ def find_available_port(start_port=8000, max_attempts=10):
     return None
 
 def setup_port():
-    """Setup port with user interaction."""
+    """Setup port automatically without user interaction."""
     default_port = 8000
     
     print("🔍 Checking port availability...")
@@ -80,43 +80,24 @@ def setup_port():
         for process in processes:
             print(f"   {process}")
     
-    while True:
-        print("\n🛠️  Port Management Options:")
-        print("1. Kill processes on port 8000 and use it")
-        print("2. Use a different port")
-        print("3. Exit")
-        
-        choice = input("\nEnter your choice (1-3): ").strip()
-        
-        if choice == "1":
-            if kill_processes_on_port(default_port):
-                print(f"✅ Killed processes on port {default_port}")
-                # Wait a moment for the port to be released
-                import time
-                time.sleep(1)
-                if check_port_available(default_port):
-                    print(f"✅ Port {default_port} is now available")
-                    return default_port
-                else:
-                    print(f"❌ Port {default_port} still not available")
-            else:
-                print(f"❌ Failed to kill processes on port {default_port}")
-        
-        elif choice == "2":
-            print("🔍 Finding available port...")
-            available_port = find_available_port(8001, 20)
-            if available_port:
-                print(f"✅ Found available port: {available_port}")
-                return available_port
-            else:
-                print("❌ No available ports found in range 8001-8020")
-        
-        elif choice == "3":
-            print("👋 Goodbye!")
-            sys.exit(0)
-        
-        else:
-            print("❌ Invalid choice. Please enter 1, 2, or 3.")
+    print("🛠️  Automatically killing processes on port 8000...")
+    if kill_processes_on_port(default_port):
+        print(f"✅ Killed processes on port {default_port}")
+        # Wait a moment for the port to be released
+        import time
+        time.sleep(2)
+        if check_port_available(default_port):
+            print(f"✅ Port {default_port} is now available")
+            return default_port
+    
+    print("🔍 Finding alternative available port...")
+    available_port = find_available_port(8001, 20)
+    if available_port:
+        print(f"✅ Found available port: {available_port}")
+        return available_port
+    else:
+        print("❌ No available ports found. Using port 8000 anyway...")
+        return default_port
 
 app = Flask(__name__, 
            template_folder='src/prompt_manager/templates',
@@ -517,12 +498,15 @@ TEMPLATE_BUILDER_HTML = """
                     <strong>Custom Combo Box Version:</strong> <span id="combo-box-version">Loading...</span>
                 </div>
                 <div>
-                    <button id="saveTemplateBtn" class="btn btn-outline-light me-2">
-                        <i class="fas fa-save me-1"></i>Save Template
-                    </button>
-                    <button id="loadTemplateBtn" class="btn btn-outline-light me-2">
-                        <i class="fas fa-folder-open me-1"></i>Load Template
-                    </button>
+                <button id="saveTemplateBtn" class="btn btn-outline-light me-2">
+                    <i class="fas fa-save me-1"></i>Save Template
+                </button>
+                <button id="saveAsTemplateBtn" class="btn btn-outline-light me-2">
+                    <i class="fas fa-save me-1"></i>Save As...
+                </button>
+                <button id="loadTemplateBtn" class="btn btn-outline-light me-2">
+                    <i class="fas fa-folder-open me-1"></i>Load Template
+                </button>
                     <button id="testModeBtn" class="btn btn-outline-light me-2">
                         <i class="fas fa-vial me-1"></i>Test Mode
                     </button>
@@ -616,14 +600,14 @@ TEMPLATE_BUILDER_HTML = """
 
     <!-- Include Custom Combo Box Component -->
     <link rel="stylesheet" href="/static/css/custom-combo-box.css">
-    <script src="/static/js/custom-combo-box-working.js?v=2.2&t=1734567909&cache=bust"></script>
+    <script src="/static/js/custom-combo-box-working.js?v=2.5&t=1734567910&cache=bust"></script>
     <script src="/static/js/template-storage.js"></script>
-    <script src="/static/js/linkage-manager-v3.js?v=3.0&t=1734567908&cache=bust"></script>
+        <script src="/static/js/linkage-manager-v3.js?v=3.1&t=1734567908&cache=bust"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Display version information
-        document.getElementById('combo-box-version').textContent = 'ComboBox v2.2 | LinkageManager v3.0';
+        document.getElementById('combo-box-version').textContent = 'ComboBox v2.5 | LinkageManager v3.1';
         
         // Template Builder State - Old Layout with CustomComboBox
         let currentTemplate = "";
@@ -642,10 +626,83 @@ TEMPLATE_BUILDER_HTML = """
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
         });
+        
+        // Debug function to test template loading manually
+        window.debugLoadTemplate = function(templateName) {
+            console.log('=== MANUAL DEBUG LOAD ===');
+            console.log('Loading template:', templateName);
+            
+            fetch(`/api/templates/load/${encodeURIComponent(templateName)}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('API Response:', data);
+                if (data.success) {
+                    const template = data.template;
+                    console.log('Template data:', template);
+                    
+                    // Test combo box generation
+                    document.getElementById('templateInput').value = template.template_text;
+                    generateCustomComboBoxes();
+                    
+                    setTimeout(() => {
+                        console.log('=== AFTER COMBO BOX GENERATION ===');
+                        console.log('customComboBoxes:', window.customComboBoxes);
+                        console.log('customComboBoxes length:', window.customComboBoxes ? window.customComboBoxes.length : 'undefined');
+                        
+                        if (window.customComboBoxes) {
+                            window.customComboBoxes.forEach((combo, index) => {
+                                console.log(`Combo ${index}:`, combo);
+                                console.log(`Combo ${index} tag:`, combo.tag);
+                                console.log(`Combo ${index} options:`, combo.options);
+                                console.log(`Combo ${index} dropdown HTML:`, combo.dropdown.innerHTML);
+                            });
+                        }
+                        
+                        // Now test the actual loading logic
+                        console.log('=== TESTING LOADING LOGIC ===');
+                        console.log('template.combo_box_values:', template.combo_box_values);
+                        
+                        if (window.customComboBoxes && template.combo_box_values) {
+                            window.customComboBoxes.forEach(combo => {
+                                console.log('Processing combo box for tag:', combo.tag);
+                                if (combo.tag && template.combo_box_values[combo.tag]) {
+                                    const values = template.combo_box_values[combo.tag];
+                                    console.log('Values for', combo.tag, ':', values);
+                                    
+                                    // Simply add saved options to existing combo box
+                                    values.forEach(value => {
+                                        console.log('Adding value:', value);
+                                        // Check if option already exists to avoid duplicates
+                                        const existingOption = combo.dropdown.querySelector(`[data-value="${value}"]`);
+                                        if (!existingOption) {
+                                            console.log('Option does not exist, adding:', value);
+                                            combo.addOption(value, false, false); // Add without selecting, skip callback
+                                        } else {
+                                            console.log('Option already exists:', value);
+                                        }
+                                    });
+                                } else {
+                                    console.log('No values found for tag:', combo.tag);
+                                }
+                            });
+                        } else {
+                            console.log('Missing customComboBoxes or combo_box_values');
+                        }
+                    }, 1000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        };
 
+        // Global variable to track current template name
+        let currentTemplateName = null;
+        
         function setupEventListeners() {
             // Template persistence
             document.getElementById('saveTemplateBtn').addEventListener('click', saveTemplate);
+            document.getElementById('saveAsTemplateBtn').addEventListener('click', saveAsTemplate);
             document.getElementById('loadTemplateBtn').addEventListener('click', loadTemplate);
             
             // Edit mode toggle
@@ -720,7 +777,7 @@ TEMPLATE_BUILDER_HTML = """
                             <input type="text" class="combo-box-input" placeholder="Type to add...">
                             <div class="combo-box-arrow"></div>
                             <div class="combo-box-dropdown">
-                                <div class="combo-box-option" data-value="Add item...">Add item...</div>
+                                <div class="combo-box-option" data-value="Select item...">Select item...</div>
                             </div>
                         </div>
                     `;
@@ -767,6 +824,7 @@ TEMPLATE_BUILDER_HTML = """
             
             // Initialize LinkageManager
             linkageManager = new LinkageManager();
+            window.linkageManager = linkageManager; // Make it globally accessible
             currentTemplateId = linkageManager.initializeTemplate(templateText, tags);
             console.log('Initialized template with ID:', currentTemplateId);
             
@@ -996,18 +1054,34 @@ TEMPLATE_BUILDER_HTML = """
         });
         
         // Template Persistence Functions
-        function saveTemplate() {
+        function saveAsTemplate() {
+            saveTemplate(true); // true = force new name
+        }
+        
+        function saveTemplate(forceNewName = false) {
+            console.log('=== SAVE TEMPLATE FUNCTION CALLED ===');
+            
             const templateText = document.getElementById('templateInput').value.trim();
+            console.log('Template text:', templateText);
+            
             if (!templateText) {
                 alert('Please enter a template text first');
                 return;
             }
             
-            // Get template name and description
-            const templateName = prompt('Enter a name for this template:');
-            if (!templateName) return;
+            let templateName = currentTemplateName;
+            let templateDescription = '';
             
-            const templateDescription = prompt('Enter a description for this template (optional):') || '';
+            // If no current template name or forcing new name, prompt for name
+            if (!templateName || forceNewName) {
+                templateName = prompt('Enter a name for this template:');
+                if (!templateName) return;
+                
+                templateDescription = prompt('Enter a description for this template (optional):') || '';
+            }
+            
+            console.log('Template name:', templateName);
+            console.log('Template description:', templateDescription);
             
             // Collect combo box values and linkage data
             const comboBoxValues = {};
@@ -1015,27 +1089,27 @@ TEMPLATE_BUILDER_HTML = """
             
             // Get current combo box values
             if (window.customComboBoxes) {
+                console.log('Found', window.customComboBoxes.length, 'combo boxes');
                 window.customComboBoxes.forEach(combo => {
                     if (combo.tag) {
-                        comboBoxValues[combo.tag] = combo.options.slice(1); // Remove "Add..." option
-                        
-                        // Get linkage data if available
-                        if (window.linkageManager && window.linkageManager.linkageData) {
-                            const templateId = Object.keys(window.linkageManager.linkageData)[0];
-                            if (templateId) {
-                                const templateLinkages = window.linkageManager.linkageData[templateId];
-                                Object.keys(templateLinkages).forEach(parentValue => {
-                                    if (!linkageData[parentValue]) {
-                                        linkageData[parentValue] = {};
-                                    }
-                                    Object.keys(templateLinkages[parentValue]).forEach(childTag => {
-                                        linkageData[parentValue][childTag] = templateLinkages[parentValue][childTag];
-                                    });
-                                });
-                            }
-                        }
+                        const values = combo.options.slice(1).map(option => option.dataset.value);
+                        comboBoxValues[combo.tag] = values;
+                        console.log('Combo box', combo.tag, 'values:', values);
                     }
                 });
+            } else {
+                console.log('No custom combo boxes found');
+            }
+            
+            // Get linkage data if available
+            if (window.linkageManager) {
+                const templateId = window.linkageManager.getCurrentTemplateId();
+                if (templateId) {
+                    Object.assign(linkageData, window.linkageManager.collectLinkageDataForStorage(templateId));
+                    console.log('Linkage data:', linkageData);
+                }
+            } else {
+                console.log('No linkage manager found');
             }
             
             // Save template
@@ -1047,27 +1121,36 @@ TEMPLATE_BUILDER_HTML = """
                 linkage_data: linkageData
             };
             
-            fetch('/api/template-persistence/save', {
+            console.log('Sending template data:', templateData);
+            
+            fetch('/api/templates/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(templateData)
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data);
                 if (data.success) {
+                    // Update current template name
+                    currentTemplateName = templateName;
                     alert('Template saved successfully!');
                 } else {
                     alert('Error saving template: ' + data.error);
                 }
             })
             .catch(error => {
+                console.error('Fetch error:', error);
                 alert('Error saving template: ' + error);
             });
         }
         
         function loadTemplate() {
             // First, get list of available templates
-            fetch('/api/template-persistence/list')
+            fetch('/api/templates/list')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -1079,29 +1162,77 @@ TEMPLATE_BUILDER_HTML = """
                         return;
                     }
                     
-                    // Create selection dialog
-                    let optionsHtml = '<option value="">Select a template...</option>';
+                    // Build template list HTML
+                    let templateListHtml = '';
                     templateNames.forEach(name => {
                         const template = templates[name];
-                        optionsHtml += `<option value="${name}">${name} - ${template.description || 'No description'}</option>`;
+                        const description = template.description || 'No description';
+                        const createdDate = template.created_at ? new Date(template.created_at).toLocaleDateString() : 'Unknown';
+                        templateListHtml += `
+                            <div class="template-item" data-template-name="${name}" style="padding: 10px; border: 1px solid #ddd; margin: 5px 0; cursor: pointer; border-radius: 4px; transition: background-color 0.2s;">
+                                <h6 style="margin: 0; color: #007bff;">${name}</h6>
+                                <small style="color: #666;">${description}</small><br>
+                                <small style="color: #999;">Created: ${createdDate}</small>
+                            </div>
+                        `;
                     });
                     
-                    const selectHtml = `
-                        <div style="margin: 10px 0;">
-                            <label for="templateSelect" style="display: block; margin-bottom: 5px;">Choose Template:</label>
-                            <select id="templateSelect" style="width: 100%; padding: 5px;">
-                                ${optionsHtml}
-                            </select>
+                    // Show modal with template list
+                    const modalHtml = `
+                        <div class="modal fade" id="loadTemplateModal" tabindex="-1" aria-labelledby="loadTemplateModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="loadTemplateModalLabel">Load Template</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Select a template to load:</p>
+                                        <div id="templateList">
+                                            ${templateListHtml}
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     `;
                     
-                    const result = confirm(selectHtml);
-                    if (result) {
-                        const selectedName = document.getElementById('templateSelect').value;
-                        if (selectedName) {
-                            loadSpecificTemplate(selectedName);
-                        }
+                    // Remove existing modal if any
+                    const existingModal = document.getElementById('loadTemplateModal');
+                    if (existingModal) {
+                        existingModal.remove();
                     }
+                    
+                    // Add modal to page
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    
+                    // Add click handlers to template items
+                    document.querySelectorAll('.template-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            const templateName = this.getAttribute('data-template-name');
+                            loadSpecificTemplate(templateName);
+                            // Close modal
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('loadTemplateModal'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                        });
+                        
+                        // Add hover effects
+                        item.addEventListener('mouseenter', function() {
+                            this.style.backgroundColor = '#f8f9fa';
+                        });
+                        item.addEventListener('mouseleave', function() {
+                            this.style.backgroundColor = '';
+                        });
+                    });
+                    
+                    // Show modal
+                    const modal = new bootstrap.Modal(document.getElementById('loadTemplateModal'));
+                    modal.show();
                 } else {
                     alert('Error loading templates: ' + data.error);
                 }
@@ -1112,7 +1243,7 @@ TEMPLATE_BUILDER_HTML = """
         }
         
         function loadSpecificTemplate(templateName) {
-            fetch(`/api/template-persistence/load/${encodeURIComponent(templateName)}`)
+            fetch(`/api/templates/load/${encodeURIComponent(templateName)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -1126,28 +1257,115 @@ TEMPLATE_BUILDER_HTML = """
                     
                     // Wait for combo boxes to be created, then load values
                     setTimeout(() => {
+                        console.log('=== LOADING TEMPLATE VALUES ===');
+                        console.log('customComboBoxes:', window.customComboBoxes);
+                        console.log('template.combo_box_values:', template.combo_box_values);
+                        
                         // Load combo box values
                         if (window.customComboBoxes && template.combo_box_values) {
-                            window.customComboBoxes.forEach(combo => {
+                            console.log('=== LOADING COMBO BOX VALUES ===');
+                            console.log('customComboBoxes:', window.customComboBoxes);
+                            console.log('template.combo_box_values:', template.combo_box_values);
+                            
+                            window.customComboBoxes.forEach((combo, index) => {
+                                console.log(`=== Processing combo ${index} ===`);
+                                console.log('combo.tag:', combo.tag);
+                                console.log('template.combo_box_values[combo.tag]:', template.combo_box_values[combo.tag]);
+                                
                                 if (combo.tag && template.combo_box_values[combo.tag]) {
                                     const values = template.combo_box_values[combo.tag];
-                                    values.forEach(value => {
-                                        combo.addOption(value, true, false); // Skip callback, don't auto-select
+                                    console.log('Values for', combo.tag, ':', values);
+                                    console.log('Values length:', values.length);
+                                    
+                                    // Simply add saved options to existing combo box
+                                    values.forEach((value, valueIndex) => {
+                                        console.log(`Adding value ${valueIndex}:`, value);
+                                        // Check if option already exists to avoid duplicates
+                                        const existingOption = combo.dropdown.querySelector(`[data-value="${value}"]`);
+                                        if (!existingOption) {
+                                            console.log('Option does not exist, adding:', value);
+                                            try {
+                                                combo.addOption(value, true, false); // Add without selecting, skip callback to prevent linkage interference
+                                                console.log('Successfully added option:', value);
+                                                console.log('Dropdown HTML after adding:', combo.dropdown.innerHTML);
+                                                console.log('Options array length:', combo.options.length);
+                                                console.log('Dropdown visible:', combo.dropdown.style.display);
+                                                console.log('Dropdown class list:', combo.dropdown.classList.toString());
+                                            } catch (error) {
+                                                console.error('Error adding option:', value, error);
+                                            }
+                                        } else {
+                                            console.log('Option already exists:', value);
+                                        }
                                     });
+                                } else {
+                                    console.log('No values found for tag:', combo.tag);
                                 }
                             });
+                        } else {
+                            console.log('Missing customComboBoxes or combo_box_values');
                         }
                         
-                        // Load linkage data
+                        // Load linkage data if available
                         if (window.linkageManager && template.linkage_data) {
-                            // Clear existing linkage data
-                            window.linkageManager.linkageData = {};
-                            window.linkageManager.currentSelections = {};
+                            console.log('=== LOADING LINKAGE DATA ===');
+                            console.log('template.linkage_data:', template.linkage_data);
                             
-                            // Set up new linkage data
-                            const templateId = Object.keys(window.linkageManager.linkageData)[0] || 'default';
-                            window.linkageManager.linkageData[templateId] = template.linkage_data;
+                            // Get the current template ID from LinkageManager
+                            const templateId = window.linkageManager.getCurrentTemplateId();
+                            if (templateId) {
+                                console.log('Restoring linkage data for template ID:', templateId);
+                                
+                                // Restore linkage data to LinkageManager
+                                window.linkageManager.linkageData[templateId] = template.linkage_data;
+                                
+                                console.log('Linkage data restored:', window.linkageManager.linkageData[templateId]);
+                            } else {
+                                console.log('No current template ID found');
+                            }
+                        } else {
+                            console.log('No linkage data to restore or LinkageManager not available');
                         }
+                        
+        // Final summary of all combo boxes
+        console.log('=== FINAL COMBO BOX SUMMARY ===');
+        window.customComboBoxes.forEach((combo, index) => {
+            console.log(`Combo ${index} (${combo.tag}):`);
+            console.log(`  - Options count: ${combo.options.length}`);
+            console.log(`  - Dropdown HTML: ${combo.dropdown.innerHTML}`);
+            console.log(`  - Dropdown visible: ${combo.dropdown.style.display}`);
+            console.log(`  - Options array:`, combo.options.map(opt => opt.dataset.value));
+        });
+        
+        // Add a test function to manually check dropdown contents
+        window.testDropdown = function(tag) {
+            const combo = window.customComboBoxes.find(c => c.tag === tag);
+            if (combo) {
+                console.log(`=== TESTING DROPDOWN FOR ${tag} ===`);
+                console.log('Options array length:', combo.options.length);
+                console.log('Options array:', combo.options.map(opt => opt.dataset.value));
+                console.log('DOM query result:', Array.from(combo.dropdown.querySelectorAll('.combo-box-option')).map(opt => opt.dataset.value));
+                console.log('Dropdown HTML:', combo.dropdown.innerHTML);
+            } else {
+                console.log('Combo box not found for tag:', tag);
+            }
+        };
+        
+        // Add a function to force refresh options array
+        window.refreshOptions = function(tag) {
+            const combo = window.customComboBoxes.find(c => c.tag === tag);
+            if (combo) {
+                console.log(`=== REFRESHING OPTIONS FOR ${tag} ===`);
+                console.log('Before refresh:', combo.options.map(opt => opt.dataset.value));
+                combo.options = Array.from(combo.dropdown.querySelectorAll('.combo-box-option'));
+                console.log('After refresh:', combo.options.map(opt => opt.dataset.value));
+            }
+        };
+                        
+                        // Note: Linkage data is restored in the main loading section above
+                        
+                        // Update current template name
+                        currentTemplateName = templateName;
                         
                         alert('Template loaded successfully!');
                     }, 500);
@@ -1840,7 +2058,7 @@ def save_template():
                 }), 400
         
         # Initialize template service
-        template_service = TemplateService('templates.json')
+        template_service = TemplateService('templates/templates.json')
         
         # Save template
         template_service.save_template(
@@ -1871,7 +2089,7 @@ def save_template():
 def load_template(template_name):
     """Load a template by name."""
     try:
-        template_service = TemplateService('templates.json')
+        template_service = TemplateService('templates/templates.json')
         template = template_service.load_template(template_name)
         
         return json.dumps({
@@ -1894,7 +2112,7 @@ def load_template(template_name):
 def list_templates():
     """List all saved templates."""
     try:
-        template_service = TemplateService('templates.json')
+        template_service = TemplateService('templates/templates.json')
         templates = template_service.list_templates()
         
         return json.dumps({
@@ -1912,7 +2130,7 @@ def list_templates():
 def delete_template(template_name):
     """Delete a template by name."""
     try:
-        template_service = TemplateService('templates.json')
+        template_service = TemplateService('templates/templates.json')
         
         if not template_service.template_exists(template_name):
             return json.dumps({
@@ -1937,7 +2155,7 @@ def delete_template(template_name):
 def template_exists(template_name):
     """Check if a template exists."""
     try:
-        template_service = TemplateService('templates.json')
+        template_service = TemplateService('templates/templates.json')
         exists = template_service.template_exists(template_name)
         
         return json.dumps({

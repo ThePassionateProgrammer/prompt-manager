@@ -449,6 +449,7 @@ class CustomComboBox {
         if (selectNewOption) {
             this.selectedIndex = 1;
             this.selectedOption = value;
+            this.input.value = value; // Set the input field value to show the selection
             this.updateSelection();
             
             // Trigger selection change callback

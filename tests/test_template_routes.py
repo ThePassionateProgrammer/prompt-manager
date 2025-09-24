@@ -8,7 +8,7 @@ from src.prompt_manager.template_service import TemplateService
 class TestTemplateRoutes:
     """Test the Flask routes for template persistence."""
     
-    def test_save_template_route(self, client):
+    def test_save_template_route(self, template_client):
         """Test the save template route."""
         # Arrange
         template_data = {
@@ -30,7 +30,7 @@ class TestTemplateRoutes:
         }
         
         # Act
-        response = client.post('/api/template-persistence/save', 
+        response = template_client.post('/api/template-persistence/save', 
                              json=template_data,
                              content_type='application/json')
         
@@ -40,7 +40,7 @@ class TestTemplateRoutes:
         assert result["success"] == True
         assert result["message"] == "Template saved successfully"
     
-    def test_save_template_validation_error(self, client):
+    def test_save_template_validation_error(self, template_client):
         """Test that validation errors are returned properly."""
         # Arrange
         invalid_template_data = {
@@ -52,7 +52,7 @@ class TestTemplateRoutes:
         }
         
         # Act
-        response = client.post('/api/template-persistence/save',
+        response = template_client.post('/api/template-persistence/save',
                              json=invalid_template_data,
                              content_type='application/json')
         
@@ -62,7 +62,7 @@ class TestTemplateRoutes:
         assert result["success"] == False
         assert "Template text contains malformed tags" in result["error"]
     
-    def test_load_template_route(self, client):
+    def test_load_template_route(self, template_client):
         """Test the load template route."""
         # Arrange - First save a template
         template_data = {
@@ -73,12 +73,12 @@ class TestTemplateRoutes:
             "linkage_data": {}
         }
         
-        client.post('/api/template-persistence/save',
+        template_client.post('/api/template-persistence/save',
                    json=template_data,
                    content_type='application/json')
         
         # Act
-        response = client.get('/api/template-persistence/load/Load Test Template')
+        response = template_client.get('/api/template-persistence/load/Load Test Template')
         
         # Assert
         assert response.status_code == 200
@@ -87,10 +87,10 @@ class TestTemplateRoutes:
         assert result["template"]["name"] == "Load Test Template"
         assert result["template"]["template_text"] == "Load [Tag] template"
     
-    def test_load_template_not_found(self, client):
+    def test_load_template_not_found(self, template_client):
         """Test loading a non-existent template."""
         # Act
-        response = client.get('/api/template-persistence/load/Non-existent Template')
+        response = template_client.get('/api/template-persistence/load/Non-existent Template')
         
         # Assert
         assert response.status_code == 404
@@ -98,7 +98,7 @@ class TestTemplateRoutes:
         assert result["success"] == False
         assert "Template not found" in result["error"]
     
-    def test_list_templates_route(self, client):
+    def test_list_templates_route(self, template_client):
         """Test the list templates route."""
         # Arrange - Save some templates
         template1 = {
@@ -117,11 +117,11 @@ class TestTemplateRoutes:
             "linkage_data": {}
         }
         
-        client.post('/api/template-persistence/save', json=template1, content_type='application/json')
-        client.post('/api/template-persistence/save', json=template2, content_type='application/json')
+        template_client.post('/api/template-persistence/save', json=template1, content_type='application/json')
+        template_client.post('/api/template-persistence/save', json=template2, content_type='application/json')
         
         # Act
-        response = client.get('/api/template-persistence/list')
+        response = template_client.get('/api/template-persistence/list')
         
         # Assert
         assert response.status_code == 200
@@ -132,7 +132,7 @@ class TestTemplateRoutes:
         assert "Template 1" in templates
         assert "Template 2" in templates
     
-    def test_delete_template_route(self, client):
+    def test_delete_template_route(self, template_client):
         """Test the delete template route."""
         # Arrange - Save a template first
         template_data = {
@@ -143,12 +143,12 @@ class TestTemplateRoutes:
             "linkage_data": {}
         }
         
-        client.post('/api/template-persistence/save',
+        template_client.post('/api/template-persistence/save',
                    json=template_data,
                    content_type='application/json')
         
         # Act
-        response = client.delete('/api/template-persistence/delete/Delete Test Template')
+        response = template_client.delete('/api/template-persistence/delete/Delete Test Template')
         
         # Assert
         assert response.status_code == 200
@@ -157,13 +157,13 @@ class TestTemplateRoutes:
         assert result["message"] == "Template deleted successfully"
         
         # Verify it's actually deleted
-        load_response = client.get('/api/template-persistence/load/Delete Test Template')
+        load_response = template_client.get('/api/template-persistence/load/Delete Test Template')
         assert load_response.status_code == 404
     
-    def test_delete_template_not_found(self, client):
+    def test_delete_template_not_found(self, template_client):
         """Test deleting a non-existent template."""
         # Act
-        response = client.delete('/api/template-persistence/delete/Non-existent Template')
+        response = template_client.delete('/api/template-persistence/delete/Non-existent Template')
         
         # Assert
         assert response.status_code == 404
@@ -171,7 +171,7 @@ class TestTemplateRoutes:
         assert result["success"] == False
         assert "Template not found" in result["error"]
     
-    def test_template_exists_route(self, client):
+    def test_template_exists_route(self, template_client):
         """Test the template exists route."""
         # Arrange - Save a template
         template_data = {
@@ -182,12 +182,12 @@ class TestTemplateRoutes:
             "linkage_data": {}
         }
         
-        client.post('/api/template-persistence/save',
+        template_client.post('/api/template-persistence/save',
                    json=template_data,
                    content_type='application/json')
         
         # Act - Check existing template
-        response = client.get('/api/template-persistence/exists/Exists Test Template')
+        response = template_client.get('/api/template-persistence/exists/Exists Test Template')
         
         # Assert
         assert response.status_code == 200
@@ -196,7 +196,7 @@ class TestTemplateRoutes:
         assert result["exists"] == True
         
         # Act - Check non-existing template
-        response = client.get('/api/template-persistence/exists/Non-existent Template')
+        response = template_client.get('/api/template-persistence/exists/Non-existent Template')
         
         # Assert
         assert response.status_code == 200

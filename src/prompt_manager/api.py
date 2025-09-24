@@ -115,13 +115,14 @@ class PromptManagerAPI:
                     return jsonify({'error': 'Text is required'}), 400
                 
                 # Validate prompt using business logic
-                try:
-                    self.validator.validate_prompt(name, text, category)
-                except ValidationError as e:
-                    return jsonify({'error': str(e)}), 400
+                is_valid, errors = self.validator.validate_prompt_creation(name, text, category)
+                if not is_valid:
+                    error_messages = [f"{error.field}: {error.message}" for error in errors]
+                    return jsonify({'error': '; '.join(error_messages)}), 400
                 
                 # Create prompt
-                prompt = self.manager.create_prompt(name, text, category)
+                prompt_id = self.manager.add_prompt(name, text, category)
+                prompt = self.manager.get_prompt(prompt_id)
                 return jsonify(prompt.to_dict()), 201
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
@@ -153,16 +154,18 @@ class PromptManagerAPI:
                     return jsonify({'error': 'Text is required'}), 400
                 
                 # Validate prompt using business logic
-                try:
-                    self.validator.validate_prompt(name, text, category)
-                except ValidationError as e:
-                    return jsonify({'error': str(e)}), 400
+                is_valid, errors = self.validator.validate_prompt_creation(name, text, category)
+                if not is_valid:
+                    error_messages = [f"{error.field}: {error.message}" for error in errors]
+                    return jsonify({'error': '; '.join(error_messages)}), 400
                 
                 # Update prompt
-                prompt = self.manager.update_prompt(prompt_id, name, text, category)
-                if not prompt:
+                success = self.manager.update_prompt(prompt_id, name, text, category)
+                if not success:
                     return jsonify({'error': 'Prompt not found'}), 404
                 
+                # Get the updated prompt
+                prompt = self.manager.get_prompt(prompt_id)
                 return jsonify(prompt.to_dict()), 200
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
@@ -203,7 +206,7 @@ class PromptManagerAPI:
             """Get all available categories."""
             try:
                 prompts = self.manager.list_prompts()
-                categories = self.search_service.get_all_categories(prompts)
+                categories = self.search_service.get_categories(prompts)
                 return jsonify(categories), 200
             except Exception as e:
                 return jsonify({'error': str(e)}), 500

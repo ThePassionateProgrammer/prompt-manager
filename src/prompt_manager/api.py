@@ -11,9 +11,7 @@ from .business.llm_provider import OpenAIProvider
 from .business.key_loader import load_openai_api_key
 from .business.key_loader import save_openai_api_key
 from .business.prompt_builder import PromptBuilder
-from .business.template_parser import TemplateParser
-from .business.component_manager import ComponentManager
-from .business.template_storage import TemplateStorage
+# Removed unused imports: template_parser, component_manager, template_storage
 import uuid
 from .business.custom_combo_box_integration import CustomComboBoxIntegration
 
@@ -37,9 +35,8 @@ class PromptManagerAPI:
         self.validator = PromptValidator()
         self.search_service = SearchService()
         self.prompt_builder = PromptBuilder()
-        self.template_parser = TemplateParser()
-        self.component_manager = ComponentManager()
-        self.template_storage = TemplateStorage()
+        # Removed TemplateParser - using simple regex parsing instead
+        # Removed ComponentManager and TemplateStorage - using simpler alternatives
         
         # Initialize Flask app
         self.app = Flask(__name__)
@@ -298,136 +295,8 @@ class PromptManagerAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
         
-        # Template Builder Endpoints
-        @self.app.route('/api/template-builder/generate', methods=['POST'])
-        def generate_template_combo_boxes():
-            """Generate combo boxes from template."""
-            try:
-                data = request.get_json()
-                if not data:
-                    return jsonify({'error': 'No data provided'}), 400
-                
-                template = data.get('template', '').strip()
-                if not template:
-                    return jsonify({'error': 'Template is required'}), 400
-                
-                combo_boxes = self.template_parser.generate_combo_boxes(template)
-                return jsonify({'combo_boxes': combo_boxes}), 200
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/template-builder/components', methods=['GET'])
-        def get_template_components():
-            """Get component data for template builder."""
-            try:
-                components = self.component_manager.get_all_components()
-                return jsonify({'components': components}), 200
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/template-builder/build', methods=['POST'])
-        def build_template_prompt():
-            """Build final prompt from template selections."""
-            try:
-                data = request.get_json()
-                if not data:
-                    return jsonify({'error': 'No data provided'}), 400
-                
-                template = data.get('template', '').strip()
-                combo_boxes = data.get('combo_boxes', [])
-                
-                if not template:
-                    return jsonify({'error': 'Template is required'}), 400
-                
-                final_prompt = self.template_parser.generate_prompt_from_selections(template, combo_boxes)
-                return jsonify({'prompt': final_prompt}), 200
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        # Template Storage Endpoints
-        @self.app.route('/api/templates', methods=['GET'])
-        def get_templates():
-            """Get all saved templates."""
-            try:
-                templates = self.template_storage.list_templates()
-                return jsonify(templates), 200
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/templates/<template_id>', methods=['GET'])
-        def get_template(template_id: str):
-            """Get a specific template by ID."""
-            try:
-                template = self.template_storage.load_template(template_id)
-                if not template:
-                    return jsonify({'error': 'Template not found'}), 404
-                
-                return jsonify(template), 200
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/templates', methods=['POST'])
-        def create_template():
-            """Create a new template."""
-            try:
-                data = request.get_json()
-                if not data:
-                    return jsonify({'error': 'No data provided'}), 400
-                
-                # Validate required fields
-                name = data.get('name', '').strip()
-                template = data.get('template', '').strip()
-                
-                if not name:
-                    return jsonify({'error': 'Name is required'}), 400
-                if not template:
-                    return jsonify({'error': 'Template is required'}), 400
-                
-                template_id = self.template_storage.save_template(data)
-                return jsonify({'id': template_id, 'message': 'Template saved successfully'}), 201
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/templates/<template_id>', methods=['PUT'])
-        def update_template(template_id: str):
-            """Update an existing template."""
-            try:
-                data = request.get_json()
-                if not data:
-                    return jsonify({'error': 'No data provided'}), 400
-                
-                success = self.template_storage.update_template(template_id, data)
-                if not success:
-                    return jsonify({'error': 'Template not found'}), 404
-                
-                return jsonify({'message': 'Template updated successfully'}), 200
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/templates/<template_id>', methods=['DELETE'])
-        def delete_template(template_id: str):
-            """Delete a template."""
-            try:
-                success = self.template_storage.delete_template(template_id)
-                if not success:
-                    return jsonify({'error': 'Template not found'}), 404
-                
-                return jsonify({'message': 'Template deleted successfully'}), 200
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/templates/search', methods=['GET'])
-        def search_templates():
-            """Search templates by query."""
-            try:
-                query = request.args.get('q', '').strip()
-                if not query:
-                    return jsonify([]), 200
-                
-                templates = self.template_storage.search_templates(query)
-                return jsonify(templates), 200
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
+        # Template endpoints are now handled by routes/linkage.py
+        # Removed duplicate template builder and storage routes
         
         # Custom Combo Box Integration Endpoints
         @self.app.route('/api/custom-combo-box/create-template', methods=['POST'])

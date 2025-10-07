@@ -40,7 +40,7 @@ def add_provider():
         
         # Save the API key securely
         key_manager = SecureKeyManager()
-        key_manager.save_openai_api_key(api_key)
+        key_manager.save_key(f'{name.lower()}_api_key', api_key)
         
         return jsonify({
             'message': f'Provider {name} added successfully',
@@ -81,10 +81,9 @@ def remove_provider(provider_name):
         
         provider_manager.remove_provider(provider_name)
         
-        # Also remove from secure storage if it's OpenAI
-        if provider_name.lower() == 'openai':
-            key_manager = SecureKeyManager()
-            key_manager.delete_openai_api_key()
+        # Also remove from secure storage
+        key_manager = SecureKeyManager()
+        key_manager.delete_key(f'{provider_name.lower()}_api_key')
         
         return jsonify({'message': f'Provider {provider_name} removed successfully'})
         
@@ -133,10 +132,15 @@ def send_chat_message():
         if not provider_name:
             return jsonify({'error': 'Provider is required'}), 400
         
-        # Generate response using the provider manager
-        response = provider_manager.generate(
-            message, 
-            provider_name=provider_name
+        # Get the provider and generate response
+        provider = provider_manager.get_provider(provider_name)
+        if not provider:
+            return jsonify({'error': f'Provider {provider_name} not found'}), 404
+        
+        response = provider.generate(
+            message,
+            temperature=temperature,
+            max_tokens=max_tokens
         )
         
         return jsonify({

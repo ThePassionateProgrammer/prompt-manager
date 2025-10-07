@@ -119,13 +119,12 @@ class TestChatSendAPI:
         assert data['model'] == 'gpt-3.5-turbo'
         assert data['temperature'] == 0.7
         
-        # Verify provider was called correctly
-        mock_provider.generate.assert_called_once_with(
-            'Test message',
-            model='gpt-3.5-turbo',
-            temperature=0.7,
-            max_tokens=2048
-        )
+        # Verify provider was called with messages array
+        call_kwargs = mock_provider.generate.call_args[1]
+        assert 'messages' in call_kwargs
+        assert call_kwargs['model'] == 'gpt-3.5-turbo'
+        assert call_kwargs['temperature'] == 0.7
+        assert call_kwargs['max_tokens'] == 2048
     
     @patch('routes.dashboard.provider_manager')
     def test_send_message_missing_provider(self, mock_manager, client):

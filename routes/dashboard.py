@@ -6,11 +6,13 @@ from flask import Blueprint, request, jsonify, render_template
 from src.prompt_manager.business.llm_provider_manager import LLMProviderManager
 from src.prompt_manager.business.llm_provider import OpenAIProvider
 from src.prompt_manager.business.key_loader import SecureKeyManager
+from src.prompt_manager.business.conversation_manager import ConversationManager
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
-# Initialize the provider manager
+# Initialize managers
 provider_manager = LLMProviderManager()
+conversation_manager = ConversationManager()
 
 @dashboard_bp.route('/dashboard')
 def dashboard():
@@ -338,3 +340,73 @@ def estimate_tokens_endpoint():
     estimated = sum(estimate_tokens(msg.get('content', '')) for msg in messages)
     
     return jsonify({'estimated_tokens': estimated})
+
+# Conversation persistence routes
+@dashboard_bp.route('/api/conversations/save', methods=['POST'])
+def save_conversation():
+    """Save a conversation."""
+    try:
+        data = request.get_json()
+        saved = conversation_manager.save_conversation(data)
+        
+        return jsonify({
+            'message': 'Conversation saved successfully',
+            'id': saved['id'],
+            'title': saved['title'],
+            'created_at': saved.get('created_at'),
+            'updated_at': saved.get('updated_at')
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/conversations/load/<conversation_id>', methods=['GET'])
+def load_conversation(conversation_id):
+    """Load a conversation by ID."""
+    try:
+        conversation = conversation_manager.load_conversation(conversation_id)
+        
+        if not conversation:
+            return jsonify({'error': 'Conversation not found'}), 404
+        
+        return jsonify(conversation)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/conversations/list', methods=['GET'])
+def list_conversations():
+    """List all conversations."""
+    try:
+        sort_by = request.args.get('sort', 'date')
+        conversations = conversation_manager.list_conversations(sort_by=sort_by)
+        
+        return jsonify({'conversations': conversations})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/conversations/delete/<conversation_id>', methods=['DELETE'])
+def delete_conversation(conversation_id):
+    """Delete a conversation."""
+    try:
+        deleted = conversation_manager.delete_conversation(conversation_id)
+        
+        if not deleted:
+            return jsonify({'error': 'Conversation not found'}), 404
+        
+        return jsonify({'message': 'Conversation deleted successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/conversations/search', methods=['GET'])
+def search_conversations():
+    """Search conversations."""
+    try:
+        query = request.args.get('q', '')
+        
+        if not query:
+            return jsonify({'error': 'Query parameter required'}), 400
+        
+        results = conversation_manager.search_conversations(query)
+        
+        return jsonify({'conversations': results})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

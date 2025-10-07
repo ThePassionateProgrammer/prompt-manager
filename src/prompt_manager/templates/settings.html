@@ -402,6 +402,37 @@
                 </button>
             </form>
 
+            <div class="saved-keys" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e2e8f0;">
+                <h2>System Prompt</h2>
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <div class="info-box-title">💭 What is a system prompt?</div>
+                    <div class="info-box-text">
+                        The system prompt sets the AI's behavior and personality for all conversations.
+                    </div>
+                </div>
+                
+                <form id="system-prompt-form">
+                    <div class="form-group">
+                        <label for="system-prompt">Custom System Prompt</label>
+                        <textarea 
+                            id="system-prompt" 
+                            rows="4"
+                            style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-family: inherit; resize: vertical;"
+                            placeholder="You are a helpful assistant..."
+                        ></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn" style="flex: 1;">
+                            💾 Save System Prompt
+                        </button>
+                        <button type="button" class="btn" style="flex: 1; background: #718096;" onclick="loadDefaultSystemPrompt()">
+                            🔄 Reset to Default
+                        </button>
+                    </div>
+                </form>
+            </div>
+
             <div class="saved-keys">
                 <h2>Saved API Keys</h2>
                 <div id="keys-list">
@@ -415,9 +446,10 @@
     </div>
 
     <script>
-        // Load saved keys on page load
+        // Load saved keys and system prompt on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadSavedKeys();
+            loadSystemPrompt();
         });
 
         function togglePassword() {
@@ -557,6 +589,62 @@
                 notification.remove();
             }, 3000);
         }
+
+        // System prompt management
+        async function loadSystemPrompt() {
+            try {
+                const response = await fetch('/api/settings/system-prompt');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('system-prompt').value = data.prompt;
+                }
+            } catch (error) {
+                console.error('Error loading system prompt:', error);
+            }
+        }
+
+        async function loadDefaultSystemPrompt() {
+            try {
+                const response = await fetch('/api/settings/system-prompt/default');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('system-prompt').value = data.prompt;
+                    showNotification('System prompt reset to default', 'success');
+                }
+            } catch (error) {
+                showNotification('Error loading default prompt', 'error');
+            }
+        }
+
+        document.getElementById('system-prompt-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const prompt = document.getElementById('system-prompt').value.trim();
+
+            if (!prompt) {
+                showNotification('Please enter a system prompt', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/settings/system-prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                if (response.ok) {
+                    showNotification('System prompt saved successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Failed to save system prompt', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error: ' + error.message, 'error');
+            }
+        });
     </script>
 </body>
 </html>

@@ -278,6 +278,67 @@
             border-bottom: 1px solid #e2e8f0;
         }
 
+        /* Token usage display */
+        .token-usage {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .token-bar-container {
+            flex: 1;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .token-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78 0%, #ed8936 50%, #fc8181 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            background-size: 200% 100%;
+        }
+
+        .token-bar-fill.low {
+            background-position: 0% 0%;
+        }
+
+        .token-bar-fill.medium {
+            background-position: 50% 0%;
+        }
+
+        .token-bar-fill.high {
+            background-position: 100% 0%;
+        }
+
+        .token-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            min-width: 100px;
+        }
+
+        .token-percentage {
+            font-size: 13px;
+            font-weight: 700;
+            color: #667eea;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .token-warning {
+            font-size: 11px;
+            color: #ed8936;
+            font-weight: 600;
+        }
+
         /* Chat Area */
         .chat-container {
             flex: 1;
@@ -640,6 +701,18 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Token Usage Display -->
+                <div class="controls-row">
+                    <div class="token-usage" id="token-usage">
+                        <span class="token-label">Context Usage:</span>
+                        <div class="token-bar-container">
+                            <div class="token-bar-fill low" id="token-bar" style="width: 0%"></div>
+                        </div>
+                        <span class="token-percentage" id="token-percentage">0%</span>
+                        <span class="token-warning" id="token-warning" style="display: none;"></span>
+                    </div>
+                </div>
             </div>
             <button class="toggle-panel-btn" id="toggle-panel-btn" onclick="togglePanel()">
                 ▲ Hide Controls
@@ -692,11 +765,14 @@
         let messages = [];
         let currentProvider = 'openai';
         let isLoading = false;
+        let currentConversationId = null;
+        let systemPrompt = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
             updateWelcomeTime();
+            loadSystemPrompt();
             loadChatHistory();
         });
 
@@ -761,6 +837,14 @@
             const temperature = parseFloat(document.getElementById('temperature').value);
             const maxTokens = parseInt(document.getElementById('max-tokens').value);
 
+            // Build history (exclude system messages and welcome message)
+            const history = messages
+                .filter(msg => msg.type !== 'system')
+                .map(msg => ({
+                    role: msg.type === 'user' ? 'user' : 'assistant',
+                    content: msg.content
+                }));
+
             // Show loading
             isLoading = true;
             document.getElementById('loading-indicator').classList.add('active');
@@ -777,14 +861,32 @@
                         provider: currentProvider,
                         model: model,
                         temperature: temperature,
-                        max_tokens: maxTokens
+                        max_tokens: maxTokens,
+                        history: history,
+                        system_prompt: systemPrompt,
+                        auto_trim: true
                     })
                 });
 
                 if (response.ok) {
                     const result = await response.json();
                     addMessage('assistant', result.response);
-                    saveChatHistory();
+                    
+                    // Update token usage display
+                    updateTokenUsage(result.token_usage);
+                    
+                    // Show warning if context is filling
+                    if (result.token_usage.warning) {
+                        showNotification(result.token_usage.warning, 'warning');
+                    }
+                    
+                    // Show trimming notice
+                    if (result.trimmed) {
+                        showNotification(`Auto-trimmed ${result.trimmed} old messages to fit context`, 'success');
+                    }
+                    
+                    // Auto-save conversation
+                    await saveConversationAuto();
                 } else {
                     const error = await response.json();
                     addMessage('system', `Error: ${error.error || 'Failed to send message'}`);
@@ -941,6 +1043,111 @@
             setTimeout(() => {
                 notification.remove();
             }, 3000);
+        }
+
+        async function loadSystemPrompt() {
+            try {
+                const response = await fetch('/api/settings/system-prompt');
+                if (response.ok) {
+                    const data = await response.json();
+                    systemPrompt = data.prompt;
+                }
+            } catch (error) {
+                console.error('Error loading system prompt:', error);
+            }
+        }
+
+        function updateTokenUsage(tokenUsage) {
+            const percentage = tokenUsage.percentage || 0;
+            const bar = document.getElementById('token-bar');
+            const percentageEl = document.getElementById('token-percentage');
+            const warningEl = document.getElementById('token-warning');
+            
+            // Update percentage display
+            percentageEl.textContent = `${percentage}%`;
+            bar.style.width = `${percentage}%`;
+            
+            // Update bar color class
+            bar.className = 'token-bar-fill';
+            if (percentage < 50) {
+                bar.classList.add('low');
+            } else if (percentage < 80) {
+                bar.classList.add('medium');
+            } else {
+                bar.classList.add('high');
+            }
+            
+            // Show warning if high
+            if (tokenUsage.warning) {
+                warningEl.textContent = tokenUsage.warning;
+                warningEl.style.display = 'inline';
+            } else {
+                warningEl.style.display = 'none';
+            }
+        }
+
+        async function saveConversationAuto() {
+            if (messages.length <= 1) return; // Don't save empty chats
+            
+            const model = document.getElementById('model-select').value;
+            
+            const conversationData = {
+                id: currentConversationId,
+                messages: messages.filter(m => m.type !== 'system').map(m => ({
+                    role: m.type === 'user' ? 'user' : 'assistant',
+                    content: m.content
+                })),
+                model: model,
+                system_prompt: systemPrompt
+            };
+            
+            try {
+                const response = await fetch('/api/conversations/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(conversationData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    currentConversationId = result.id;
+                }
+            } catch (error) {
+                console.error('Error saving conversation:', error);
+            }
+        }
+
+        async function loadConversation(conversationId) {
+            try {
+                const response = await fetch(`/api/conversations/load/${conversationId}`);
+                
+                if (response.ok) {
+                    const conversation = await response.json();
+                    
+                    // Clear current messages
+                    messages = [];
+                    document.getElementById('messages-area').innerHTML = '';
+                    
+                    // Load messages
+                    conversation.messages.forEach(msg => {
+                        addMessage(msg.role, msg.content);
+                    });
+                    
+                    // Set conversation ID
+                    currentConversationId = conversation.id;
+                    
+                    // Update model if stored
+                    if (conversation.model) {
+                        document.getElementById('model-select').value = conversation.model;
+                    }
+                    
+                    showNotification('Conversation loaded', 'success');
+                }
+            } catch (error) {
+                showNotification('Error loading conversation', 'error');
+            }
         }
     </script>
 </body>

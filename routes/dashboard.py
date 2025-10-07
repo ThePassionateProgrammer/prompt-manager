@@ -17,6 +17,11 @@ def dashboard():
     """Render the main dashboard page."""
     return render_template('dashboard.html')
 
+@dashboard_bp.route('/chat')
+def chat_dashboard():
+    """Render the enhanced chat dashboard."""
+    return render_template('chat_dashboard.html')
+
 @dashboard_bp.route('/api/providers/add', methods=['POST'])
 def add_provider():
     """Add a new LLM provider."""
@@ -122,23 +127,22 @@ def send_chat_message():
     try:
         data = request.get_json()
         message = data.get('message')
-        provider_name = data.get('provider')
+        provider_name = data.get('provider', 'openai')
+        model = data.get('model', 'gpt-3.5-turbo')
         temperature = data.get('temperature', 0.7)
-        max_tokens = data.get('max_tokens', 256)
+        max_tokens = data.get('max_tokens', 2048)
         
         if not message:
             return jsonify({'error': 'Message is required'}), 400
         
-        if not provider_name:
-            return jsonify({'error': 'Provider is required'}), 400
-        
         # Get the provider and generate response
         provider = provider_manager.get_provider(provider_name)
         if not provider:
-            return jsonify({'error': f'Provider {provider_name} not found'}), 404
+            return jsonify({'error': f'Provider {provider_name} not found. Please add your API key in Settings.'}), 404
         
         response = provider.generate(
             message,
+            model=model,
             temperature=temperature,
             max_tokens=max_tokens
         )
@@ -146,6 +150,7 @@ def send_chat_message():
         return jsonify({
             'response': response,
             'provider': provider_name,
+            'model': model,
             'temperature': temperature,
             'max_tokens': max_tokens
         })
@@ -172,3 +177,36 @@ def set_default_provider():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/models/list', methods=['GET'])
+def list_models():
+    """List available models for a provider."""
+    provider_name = request.args.get('provider', 'openai')
+    
+    # OpenAI models
+    if provider_name.lower() == 'openai':
+        models = {
+            'gpt-4-turbo-preview': {
+                'name': 'GPT-4 Turbo',
+                'description': 'Most capable, faster and cheaper than GPT-4',
+                'context': '128K tokens'
+            },
+            'gpt-4': {
+                'name': 'GPT-4',
+                'description': 'Most capable model, best for complex tasks',
+                'context': '8K tokens'
+            },
+            'gpt-3.5-turbo': {
+                'name': 'GPT-3.5 Turbo',
+                'description': 'Fast and efficient for most tasks',
+                'context': '4K tokens'
+            },
+            'gpt-3.5-turbo-16k': {
+                'name': 'GPT-3.5 Turbo 16K',
+                'description': 'Extended context for longer conversations',
+                'context': '16K tokens'
+            }
+        }
+        return jsonify({'models': models})
+    
+    return jsonify({'models': {}})

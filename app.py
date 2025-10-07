@@ -25,9 +25,11 @@ def create_app():
     # Register blueprints
     from routes.linkage import linkage_bp
     from routes.static import static_bp
+    from routes.dashboard import dashboard_bp
     
     app.register_blueprint(linkage_bp)
     app.register_blueprint(static_bp)
+    app.register_blueprint(dashboard_bp)
     
     return app
 
@@ -93,10 +95,12 @@ if __name__ == '__main__':
     app = create_app()
     
     print(f"\n🌐 Web interface available at: http://localhost:{port}")
+    print(f"📊 Dashboard available at: http://localhost:{port}/dashboard")
     print("✨ Features:")
     print("  - Prompt management with validation")
     print("  - Template builder with custom combo boxes") 
     print("  - Linkage system for dynamic templates")
+    print("  - LLM Provider Management & Chat Interface")
     print("  - Clean, modular architecture")
     print()
     print("🛑 Press Ctrl+C to stop the server")

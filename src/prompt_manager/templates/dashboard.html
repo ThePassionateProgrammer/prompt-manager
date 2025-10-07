@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Manager - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .provider-section {
+            margin-bottom: 20px;
+        }
+
+        .provider-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4299e1;
+        }
+
+        .provider-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #48bb78;
+        }
+
+        .status-indicator.unavailable {
+            background: #f56565;
+        }
+
+        .btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #3182ce;
+        }
+
+        .btn-secondary {
+            background: #718096;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+
+        .btn-success {
+            background: #48bb78;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .chat-section {
+            grid-column: 1 / -1;
+        }
+
+        .chat-window {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #e2e8f0;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: #4299e1;
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.assistant {
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+
+        .message.system {
+            background: #fef5e7;
+            border: 1px solid #f6e05e;
+            color: #744210;
+            font-style: italic;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .chat-input button {
+            padding: 12px 24px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .chat-input button:hover {
+            background: #38a169;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4299e1;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #feb2b2;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #9ae6b4;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Prompt Manager Dashboard</h1>
+            <p>LLM Provider Management & Chat Interface</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Provider Management Card -->
+            <div class="card">
+                <h2>🤖 LLM Providers</h2>
+                
+                <div class="provider-section">
+                    <div class="input-group">
+                        <label for="provider-name">Provider Name:</label>
+                        <input type="text" id="provider-name" placeholder="e.g., openai, anthropic">
+                    </div>
+                    <div class="input-group">
+                        <label for="api-key">API Key:</label>
+                        <input type="password" id="api-key" placeholder="Enter your API key">
+                    </div>
+                    <button class="btn" onclick="addProvider()">Add Provider</button>
+                </div>
+
+                <div id="providers-list">
+                    <div class="loading">Loading providers...</div>
+                </div>
+            </div>
+
+            <!-- Chat Controls Card -->
+            <div class="card">
+                <h2>💬 Chat Controls</h2>
+                
+                <div class="input-group">
+                    <label for="default-provider">Default Provider:</label>
+                    <select id="default-provider">
+                        <option value="">Select a provider</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="temperature">Temperature:</label>
+                    <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                    <span id="temperature-value">0.7</span>
+                </div>
+
+                <div class="input-group">
+                    <label for="max-tokens">Max Tokens:</label>
+                    <input type="number" id="max-tokens" min="1" max="4000" value="256">
+                </div>
+
+                <button class="btn btn-success" onclick="testConnection()">Test Connection</button>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="card chat-section">
+                <h2>💭 Chat Interface</h2>
+                
+                <div class="chat-window" id="chat-window">
+                    <div class="message system">
+                        Welcome to Prompt Manager! Add a provider and start chatting with your LLM.
+                    </div>
+                </div>
+
+                <div class="chat-input">
+                    <input type="text" id="chat-input" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-providers">0</div>
+                <div class="stat-label">Total Providers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="available-providers">0</div>
+                <div class="stat-label">Available Providers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="messages-sent">0</div>
+                <div class="stat-label">Messages Sent</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let providers = {};
+        let messageCount = 0;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProviders();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Temperature slider
+            document.getElementById('temperature').addEventListener('input', function() {
+                document.getElementById('temperature-value').textContent = this.value;
+            });
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function addProvider() {
+            const name = document.getElementById('provider-name').value.trim();
+            const apiKey = document.getElementById('api-key').value.trim();
+
+            if (!name || !apiKey) {
+                showError('Please enter both provider name and API key');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/providers/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, api_key: apiKey })
+                });
+
+                if (response.ok) {
+                    showSuccess(`Provider ${name} added successfully!`);
+                    document.getElementById('provider-name').value = '';
+                    document.getElementById('api-key').value = '';
+                    loadProviders();
+                } else {
+                    const error = await response.json();
+                    showError(error.message || 'Failed to add provider');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            }
+        }
+
+        async function loadProviders() {
+            try {
+                const response = await fetch('/api/providers/list');
+                if (response.ok) {
+                    const data = await response.json();
+                    providers = data.providers || {};
+                    updateProvidersList();
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Error loading providers:', error);
+            }
+        }
+
+        function updateProvidersList() {
+            const container = document.getElementById('providers-list');
+            const defaultSelect = document.getElementById('default-provider');
+            
+            if (Object.keys(providers).length === 0) {
+                container.innerHTML = '<div class="message system">No providers added yet. Add one above to get started!</div>';
+                return;
+            }
+
+            let html = '';
+            let selectOptions = '<option value="">Select a provider</option>';
+
+            for (const [name, provider] of Object.entries(providers)) {
+                const isAvailable = provider.is_available;
+                const statusClass = isAvailable ? '' : 'unavailable';
+                
+                html += `
+                    <div class="provider-item">
+                        <div class="provider-info">
+                            <div class="status-indicator ${statusClass}"></div>
+                            <span><strong>${name}</strong> - ${isAvailable ? 'Available' : 'Unavailable'}</span>
+                        </div>
+                        <button class="btn btn-secondary" onclick="removeProvider('${name}')">Remove</button>
+                    </div>
+                `;
+                
+                selectOptions += `<option value="${name}">${name}</option>`;
+            }
+
+            container.innerHTML = html;
+            defaultSelect.innerHTML = selectOptions;
+        }
+
+        function updateStats() {
+            const total = Object.keys(providers).length;
+            const available = Object.values(providers).filter(p => p.is_available).length;
+            
+            document.getElementById('total-providers').textContent = total;
+            document.getElementById('available-providers').textContent = available;
+        }
+
+        async function removeProvider(name) {
+            if (!confirm(`Are you sure you want to remove ${name}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/providers/remove/${name}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showSuccess(`Provider ${name} removed successfully!`);
+                    loadProviders();
+                } else {
+                    const error = await response.json();
+                    showError(error.message || 'Failed to remove provider');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            }
+        }
+
+        async function testConnection() {
+            const providerName = document.getElementById('default-provider').value;
+            if (!providerName) {
+                showError('Please select a provider to test');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/providers/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ provider: providerName })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showSuccess(`Connection test successful! Response: "${result.response}"`);
+                } else {
+                    const error = await response.json();
+                    showError(error.message || 'Connection test failed');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message) {
+                return;
+            }
+
+            // Add user message to chat
+            addMessageToChat('user', message);
+            input.value = '';
+
+            // Get chat parameters
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const maxTokens = parseInt(document.getElementById('max-tokens').value);
+            const provider = document.getElementById('default-provider').value;
+
+            if (!provider) {
+                addMessageToChat('system', 'Please select a default provider first!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        provider: provider,
+                        temperature: temperature,
+                        max_tokens: maxTokens
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    addMessageToChat('assistant', result.response);
+                    messageCount++;
+                    document.getElementById('messages-sent').textContent = messageCount;
+                } else {
+                    const error = await response.json();
+                    addMessageToChat('system', `Error: ${error.message}`);
+                }
+            } catch (error) {
+                addMessageToChat('system', `Network error: ${error.message}`);
+            }
+        }
+
+        function addMessageToChat(type, content) {
+            const chatWindow = document.getElementById('chat-window');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = content;
+            chatWindow.appendChild(messageDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function showError(message) {
+            const container = document.querySelector('.container');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            container.insertBefore(errorDiv, container.firstChild);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        function showSuccess(message) {
+            const container = document.querySelector('.container');
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            container.insertBefore(successDiv, container.firstChild);
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

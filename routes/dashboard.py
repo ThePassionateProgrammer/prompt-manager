@@ -22,6 +22,11 @@ def chat_dashboard():
     """Render the enhanced chat dashboard."""
     return render_template('chat_dashboard.html')
 
+@dashboard_bp.route('/settings')
+def settings():
+    """Render the settings page."""
+    return render_template('settings.html')
+
 @dashboard_bp.route('/api/providers/add', methods=['POST'])
 def add_provider():
     """Add a new LLM provider."""

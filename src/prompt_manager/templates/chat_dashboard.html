@@ -118,9 +118,12 @@
             overflow: hidden;
         }
 
+        .control-panel.collapsed .panel-content {
+            display: none;
+        }
+        
         .control-panel.collapsed {
-            max-height: 0;
-            border-bottom: none;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .panel-content {
@@ -254,12 +257,13 @@
         /* Toggle Button */
         .toggle-panel-btn {
             width: 100%;
-            padding: 6px;
+            padding: 8px;
             background: #f7fafc;
             border: none;
             border-top: 1px solid #e2e8f0;
             color: #718096;
             font-size: 12px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -267,6 +271,11 @@
         .toggle-panel-btn:hover {
             background: #edf2f7;
             color: #4a5568;
+        }
+        
+        .control-panel.collapsed .toggle-panel-btn {
+            border-top: none;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         /* Chat Area */

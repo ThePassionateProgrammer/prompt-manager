@@ -126,9 +126,39 @@ def test_provider():
     except Exception as e:
         return jsonify({'error': f'Connection test failed: {str(e)}'}), 500
 
+# Default system prompt
+DEFAULT_SYSTEM_PROMPT = "You are a helpful, knowledgeable, and friendly AI assistant. Provide clear, accurate, and concise responses."
+
+# Model context limits (in tokens)
+MODEL_CONTEXT_LIMITS = {
+    'gpt-4-turbo-preview': 128000,
+    'gpt-4': 8192,
+    'gpt-3.5-turbo': 4096,
+    'gpt-3.5-turbo-16k': 16384
+}
+
+def estimate_tokens(text):
+    """Rough token estimation (approximately 4 characters per token)."""
+    return len(text) // 4
+
+def calculate_token_usage(messages, model):
+    """Calculate approximate token usage for messages."""
+    total = sum(estimate_tokens(msg.get('content', '')) for msg in messages)
+    context_limit = MODEL_CONTEXT_LIMITS.get(model, 4096)
+    percentage = min(100, (total / context_limit) * 100)
+    
+    return {
+        'prompt_tokens': total,
+        'completion_tokens': 0,  # Updated after response
+        'total_tokens': total,
+        'context_limit': context_limit,
+        'percentage': round(percentage, 1),
+        'warning': 'Approaching context limit' if percentage > 80 else None
+    }
+
 @dashboard_bp.route('/api/chat/send', methods=['POST'])
 def send_chat_message():
-    """Send a chat message to a provider."""
+    """Send a chat message to a provider with history and context management."""
     try:
         data = request.get_json()
         message = data.get('message')
@@ -136,29 +166,79 @@ def send_chat_message():
         model = data.get('model', 'gpt-3.5-turbo')
         temperature = data.get('temperature', 0.7)
         max_tokens = data.get('max_tokens', 2048)
+        history = data.get('history', [])
+        system_prompt = data.get('system_prompt', DEFAULT_SYSTEM_PROMPT)
+        auto_trim = data.get('auto_trim', False)
         
         if not message:
             return jsonify({'error': 'Message is required'}), 400
         
-        # Get the provider and generate response
+        # Get the provider
         provider = provider_manager.get_provider(provider_name)
         if not provider:
             return jsonify({'error': f'Provider {provider_name} not found. Please add your API key in Settings.'}), 404
         
+        # Build messages array: system + history + new message
+        messages = []
+        
+        # Add system prompt
+        messages.append({
+            'role': 'system',
+            'content': system_prompt
+        })
+        
+        # Add history
+        messages.extend(history)
+        
+        # Add new user message
+        messages.append({
+            'role': 'user',
+            'content': message
+        })
+        
+        # Auto-trim if needed
+        trimmed_count = 0
+        if auto_trim:
+            token_usage = calculate_token_usage(messages, model)
+            if token_usage['percentage'] > 90:
+                # Keep system prompt and last few messages
+                keep_count = 5
+                if len(messages) > keep_count + 1:  # +1 for system
+                    trimmed_count = len(messages) - keep_count - 1
+                    messages = [messages[0]] + messages[-(keep_count):]
+        
+        # Calculate token usage before sending
+        token_usage = calculate_token_usage(messages, model)
+        
+        # Generate response using messages
         response = provider.generate(
-            message,
+            messages=messages,
             model=model,
             temperature=temperature,
             max_tokens=max_tokens
         )
         
-        return jsonify({
+        # Update token usage with completion
+        token_usage['completion_tokens'] = estimate_tokens(response)
+        token_usage['total_tokens'] = token_usage['prompt_tokens'] + token_usage['completion_tokens']
+        
+        result = {
             'response': response,
             'provider': provider_name,
             'model': model,
             'temperature': temperature,
-            'max_tokens': max_tokens
-        })
+            'max_tokens': max_tokens,
+            'token_usage': token_usage,
+            'metadata': {
+                'message_count': len(messages) - 1,  # Exclude system prompt
+                'has_history': len(history) > 0
+            }
+        }
+        
+        if trimmed_count > 0:
+            result['trimmed'] = trimmed_count
+        
+        return jsonify(result)
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -215,3 +295,46 @@ def list_models():
         return jsonify({'models': models})
     
     return jsonify({'models': {}})
+
+@dashboard_bp.route('/api/models/context-limits', methods=['GET'])
+def get_context_limits():
+    """Get context limits for all models."""
+    return jsonify({'limits': MODEL_CONTEXT_LIMITS})
+
+@dashboard_bp.route('/api/settings/system-prompt', methods=['GET', 'POST'])
+def system_prompt():
+    """Get or set the system prompt."""
+    if request.method == 'GET':
+        # For now, return default. In future, load from user settings
+        return jsonify({'prompt': DEFAULT_SYSTEM_PROMPT})
+    else:
+        data = request.get_json()
+        prompt = data.get('prompt')
+        if not prompt:
+            return jsonify({'error': 'Prompt is required'}), 400
+        
+        # TODO: Save to user settings/database
+        return jsonify({'message': 'System prompt saved successfully', 'prompt': prompt})
+
+@dashboard_bp.route('/api/settings/system-prompt/default', methods=['GET'])
+def get_default_system_prompt():
+    """Get the default system prompt."""
+    return jsonify({'prompt': DEFAULT_SYSTEM_PROMPT})
+
+@dashboard_bp.route('/api/chat/estimate-tokens', methods=['POST'])
+def estimate_tokens_endpoint():
+    """Estimate token usage for a message and history."""
+    data = request.get_json()
+    message = data.get('message', '')
+    history = data.get('history', [])
+    system_prompt = data.get('system_prompt', DEFAULT_SYSTEM_PROMPT)
+    
+    # Build messages
+    messages = [{'role': 'system', 'content': system_prompt}]
+    messages.extend(history)
+    messages.append({'role': 'user', 'content': message})
+    
+    # Estimate
+    estimated = sum(estimate_tokens(msg.get('content', '')) for msg in messages)
+    
+    return jsonify({'estimated_tokens': estimated})

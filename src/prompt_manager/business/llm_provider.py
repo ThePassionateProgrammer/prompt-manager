@@ -60,14 +60,31 @@ class OpenAIProvider(LLMProvider):
         except (ValueError, ImportError):
             return False
     
-    def generate(self, prompt: str, **kwargs) -> str:
-        """Generate text from a prompt."""
+    def generate(self, prompt: str = None, messages: list = None, **kwargs) -> str:
+        """Generate text from a prompt or messages array.
+        
+        Args:
+            prompt: Single prompt string (legacy)
+            messages: Array of message dicts with role and content (preferred)
+            **kwargs: Additional parameters (model, temperature, max_tokens)
+        
+        Returns:
+            Generated text response
+        """
         try:
             self._initialize_client()
             
+            # Support both prompt string and messages array
+            if messages:
+                msg_array = messages
+            elif prompt:
+                msg_array = [{"role": "user", "content": prompt}]
+            else:
+                raise ValueError("Either prompt or messages must be provided")
+            
             response = self.client.chat.completions.create(
                 model=kwargs.get('model', 'gpt-3.5-turbo'),
-                messages=[{"role": "user", "content": prompt}],
+                messages=msg_array,
                 max_tokens=kwargs.get('max_tokens', 256),
                 temperature=kwargs.get('temperature', 0.7),
             )

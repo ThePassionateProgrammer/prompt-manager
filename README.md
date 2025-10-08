@@ -1,197 +1,289 @@
 # Prompt Manager
 
-A simple command-line tool for managing prompts with JSON persistence.
+A modern web-based prompt management system with AI chat capabilities, template building, and secure API key management.
 
-## Features
+## 🌟 Features
 
-- **GUID-based identification**: Each prompt has a unique GUID for reliable identification
-- **JSON persistence**: Prompts are stored in JSON format in the current working directory
-- **CLI interface**: Full command-line interface for all operations
-- **Search functionality**: Search prompts by name or content
-- **Category organization**: Organize prompts by categories
-- **Error handling**: Graceful error handling for all operations
+### **AI Chat Interface**
+- **Multi-Model Support**: GPT-4, GPT-4 Turbo, GPT-3.5, GPT-3.5-16K
+- **Chat History**: Full conversation context maintained automatically
+- **Token Tracking**: Real-time context usage with visual indicators
+- **Auto-Trimming**: Intelligent message trimming to prevent context overflow
+- **Conversation Persistence**: Save and reload conversations
+- **Customizable System Prompts**: Define AI behavior and personality
 
-## Installation
+### **Secure API Key Management**
+- **Encrypted Storage**: API keys encrypted at rest using Fernet encryption
+- **Multiple Providers**: Support for OpenAI, Claude, Gemini (extensible)
+- **Test Connections**: Verify API keys before use
+- **Local Storage**: Keys never leave your machine
 
-1. Clone the repository
-2. Create a virtual environment:
+### **Prompt Management**
+- **GUID-based identification**: Unique IDs for reliable prompt tracking
+- **JSON persistence**: Structured storage in JSON format
+- **Search functionality**: Find prompts by name, content, or category
+- **Category organization**: Organize prompts hierarchically
+- **Template Builder**: Create dynamic prompt templates with variables
+
+### **Template Builder**
+- **Interactive UI**: Build complex prompt templates visually
+- **Custom Combo Boxes**: Cascading dependencies between variables
+- **Save & Load**: Persist templates for reuse
+- **Linkage System**: Dynamic template variable resolution
+
+## 🚀 Quick Start
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd prompt-manager
+   ```
+
+2. **Create a virtual environment**
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
-3. Install dependencies:
+
+3. **Install dependencies**
    ```bash
-   pip install pytest
+   pip install -r requirements.txt
    ```
 
-## Usage
+### Running the Application
 
-### Demo Script
-
-The easiest way to see the prompt manager in action is to run the demo script:
-
+**Start the web server:**
 ```bash
-# Activate virtual environment
-source venv/bin/activate
-
-# Run the demo script
-python demo_script.py
+python prompt_manager_app.py
 ```
 
-This will:
-1. Add two sample prompts (a greeting and farewell)
-2. List all prompts in storage
-3. Retrieve and display the first prompt in both human-readable and JSON formats
+The application will:
+- Automatically find an available port (default: 8000)
+- Open your browser to the web interface
+- Display available features and URLs
 
-### CLI Commands
+**Access the application:**
+- **Chat Interface**: http://localhost:8000/chat
+- **Settings**: http://localhost:8000/settings
+- **Template Builder**: http://localhost:8000/template-builder
+- **Dashboard**: http://localhost:8000/dashboard
 
-The prompt manager provides a full CLI interface:
+### First-Time Setup
 
-```bash
-# Add a prompt with text
-python prompt_manager.py add "My Prompt" --text "This is my prompt text"
+1. Navigate to **Settings** (http://localhost:8000/settings)
+2. Add your OpenAI API key
+3. (Optional) Customize your system prompt
+4. Test your connection
+5. Start chatting at http://localhost:8000/chat
 
-# Add a prompt by reading from stdin
-echo "This is my prompt text" | python prompt_manager.py add "My Prompt"
+## 💬 Usage Guide
 
-# List all prompts
-python prompt_manager.py list
+### Chat Interface
 
-# List prompts by category
-python prompt_manager.py list --category greeting
+The chat interface provides a full-featured AI conversation experience:
 
-# Get a specific prompt by ID or name
-python prompt_manager.py get "prompt-id-or-name"
+**Basic Chat:**
+1. Type your message in the input box
+2. Press Enter or click Send
+3. View AI response with context awareness
 
-# Delete a prompt by ID or name
-python prompt_manager.py delete "prompt-id-or-name"
+**Advanced Features:**
+- **Model Selection**: Choose between GPT-4, GPT-3.5, and variants
+- **Temperature Control**: Adjust creativity (0.0 = focused, 1.0 = creative)
+- **Max Tokens**: Control response length
+- **Token Tracking**: Visual bar shows context usage
+- **Auto-Trim**: Automatically manages long conversations
+- **Collapsible Controls**: Hide/show settings panel
 
-# Search prompts
-python prompt_manager.py search "search term"
+**Token Management:**
+- Green bar (0-50%): Plenty of context available
+- Orange bar (50-80%): Moderate usage
+- Red bar (80-100%): Approaching limit, auto-trim enabled
 
-# Use a custom storage file
-python prompt_manager.py --storage my_prompts.json add "My Prompt" --text "Text"
+### Settings Management
+
+**API Keys:**
+- Add keys for OpenAI, Claude, Gemini
+- Test connection before saving
+- Keys encrypted with Fernet encryption
+- Stored locally at `~/.prompt_manager/keys.enc`
+
+**System Prompts:**
+- Define AI personality and behavior
+- Applies to all conversations
+- Reset to default anytime
+- Examples: "You are a coding expert", "You are a creative writer"
+
+### Template Builder
+
+Build dynamic prompt templates with variables:
+
+1. **Create Template**: Define slots with `{{variable_name}}`
+2. **Add Dropdowns**: Create custom combo boxes for each variable
+3. **Define Options**: Add choices for each dropdown
+4. **Set Dependencies**: Create cascading relationships
+5. **Save Template**: Persist for reuse
+6. **Generate Prompts**: Fill in variables to create final prompt
+
+**Example Template:**
 ```
-
-### Web Interface
-
-The prompt manager includes a web interface for easy interaction:
-
-```bash
-# Activate virtual environment
-source venv/bin/activate
-
-# Start the web server
-python enhanced_simple_server.py
+You are a {{role}} helping with {{task}} for a {{audience}} audience.
+Use a {{tone}} tone and {{format}} format.
 ```
-
-This will:
-1. Start a Flask web server (usually on port 8000)
-2. Open your browser to `http://localhost:8000`
-3. Provide a web interface for:
-   - Adding new prompts
-   - Viewing existing prompts
-   - Searching prompts
-   - Deleting prompts
-   - Template builder for data-driven prompts
-
-**Features of the Web Interface:**
-- **Bootstrap UI**: Modern, responsive design
-- **Real-time search**: Instant search results as you type
-- **Template Builder**: Interactive prompt template system with cascading dependencies
-- **Port Management**: Automatically handles port conflicts
-- **Flash Messages**: Clear feedback for all operations
-
-**Template Builder:**
-The web interface includes an advanced template builder that allows you to:
-- Create prompt templates with dynamic slots
-- Define cascading dependencies between variables
-- Build prompts interactively with dropdown selections
-- Save and reuse templates
 
 ### Programmatic Usage
 
-You can also use the prompt manager programmatically:
+Use the business logic directly in your Python code:
 
 ```python
-from src.prompt_manager.prompt_manager import PromptManager
+from src.prompt_manager.business.llm_provider_manager import LLMProviderManager
+from src.prompt_manager.business.llm_provider import OpenAIProvider
+from src.prompt_manager.business.conversation_manager import ConversationManager
 
-# Initialize with custom storage file
-manager = PromptManager("my_prompts.json")
+# Set up LLM provider
+provider_manager = LLMProviderManager()
+provider_manager.add_provider('openai', OpenAIProvider(api_key='your-key'))
+provider_manager.set_default_provider('openai')
 
-# Add a prompt
-prompt_id = manager.add_prompt("My Prompt", "This is my prompt text", "category")
+# Generate response
+response = provider_manager.generate(
+    prompt="Hello, how are you?",
+    model="gpt-3.5-turbo",
+    temperature=0.7
+)
 
-# Get a prompt
-prompt = manager.get_prompt(prompt_id)
-
-# List all prompts
-prompts = manager.list_prompts()
-
-# Search prompts
-results = manager.search_prompts("search term")
-```
-
-## Storage
-
-Prompts are stored in JSON format in the current working directory. The default file is `prompts.json`, but you can specify a custom path using the `--storage` option.
-
-Example storage file structure:
-```json
-{
-  "prompts": {
-    "uuid-1": {
-      "id": "uuid-1",
-      "name": "Greeting Prompt",
-      "text": "Hello! How can I assist you today?",
-      "category": "greeting",
-      "created_at": "2025-07-26T10:39:39.738929",
-      "modified_at": "2025-07-26T10:39:39.738929"
-    }
-  }
+# Manage conversations
+conv_manager = ConversationManager()
+conversation = {
+    'messages': [
+        {'role': 'user', 'content': 'Hello'},
+        {'role': 'assistant', 'content': 'Hi there!'}
+    ],
+    'model': 'gpt-3.5-turbo'
 }
+saved = conv_manager.save_conversation(conversation)
 ```
 
-## Testing
+## 📁 Data Storage
 
-Run all tests:
+The application stores data locally in structured formats:
+
+### **API Keys**
+- Location: `~/.prompt_manager/keys.enc`
+- Format: Encrypted binary (Fernet)
+- Contains: Provider names and encrypted API keys
+
+### **Conversations**
+- Location: `conversations/conversations.json`
+- Format: JSON
+- Contains: Full conversation history with metadata
+
+### **Templates**
+- Location: `templates/templates.json`
+- Format: JSON
+- Contains: Saved prompt templates and linkages
+
+### **Settings**
+- Location: `settings/user_settings.json` (planned)
+- Format: JSON
+- Contains: User preferences, default models, system prompts
+
+## 🧪 Testing
+
+The project uses pytest with comprehensive test coverage:
+
+**Run all tests:**
 ```bash
 python -m pytest tests/ -v
 ```
 
-Run specific test files:
+**Run specific test suites:**
 ```bash
-python -m pytest tests/test_prompt_manager.py -v
-python -m pytest tests/test_cli.py -v
-python -m pytest tests/test_demo_script.py -v
+# Business logic tests
+python -m pytest tests/test_llm_provider_manager.py -v
+python -m pytest tests/test_conversation_storage.py -v
+python -m pytest tests/test_chat_context_management.py -v
+
+# Integration tests
+python -m pytest tests/test_chat_routes.py -v
+python -m pytest tests/test_api.py -v
 ```
 
-## Project Structure
+**Test coverage:**
+```bash
+python -m pytest tests/ --cov=src --cov-report=html
+```
 
+See `TESTING_GUIDE.md` for detailed testing documentation.
+
+## 🏗️ Architecture
+
+### **Project Structure**
 ```
 prompt-manager/
+├── prompt_manager_app.py          # Main application entry point
+├── routes/
+│   ├── dashboard.py               # Chat & settings routes
+│   ├── linkage.py                 # Template builder routes
+│   └── static.py                  # Static file serving
 ├── src/prompt_manager/
-│   ├── __init__.py
-│   ├── prompt.py              # Prompt class
-│   ├── prompt_manager.py      # Main manager class
-│   ├── storage.py             # JSON persistence
-│   └── cli.py                 # Command-line interface
-├── tests/
-│   ├── test_prompt.py
-│   ├── test_prompt_manager.py
-│   ├── test_storage.py
-│   ├── test_cli.py
-│   └── test_demo_script.py
-├── demo_script.py             # Demo script
-├── prompt_manager.py          # CLI entry point
-└── README.md
+│   ├── business/                  # Business logic (testable)
+│   │   ├── llm_provider_manager.py
+│   │   ├── llm_provider.py
+│   │   ├── conversation_manager.py
+│   │   ├── key_loader.py
+│   │   └── ...
+│   ├── templates/                 # Jinja2 HTML templates
+│   │   ├── chat_dashboard.html
+│   │   ├── settings.html
+│   │   └── ...
+│   ├── static/                    # CSS, JS, images
+│   ├── prompt_manager.py          # Core prompt management
+│   └── template_service.py        # Template persistence
+└── tests/                         # Comprehensive test suite
+    ├── test_llm_provider_manager.py
+    ├── test_conversation_storage.py
+    ├── test_chat_context_management.py
+    └── ...
 ```
 
-## Future Enhancements
+### **Clean Architecture Principles**
+- **Business Logic**: Isolated, testable manager classes
+- **Routes**: Thin HTTP handlers, no business logic
+- **Templates**: Presentation only, no logic
+- **Tests**: 100% coverage for business logic
 
-- GUI interface
-- Export/import functionality
-- Version history
-- Template variables
-- Usage statistics
-- Backup/restore functionality 
+## 🚀 Roadmap
+
+### **Version 1.0** (Current)
+- ✅ Multi-model chat interface
+- ✅ Token tracking and management
+- ✅ Conversation persistence
+- ✅ Secure API key storage
+- ✅ System prompt customization
+- ⏳ Code refactoring (in progress)
+
+### **Version 2.0** (Planned)
+- 🔮 Claude and Gemini integration
+- 🔮 Conversation history UI
+- 🔮 Export conversations (Markdown, PDF)
+- 🔮 Prompt library integration
+- 🔮 Usage analytics and cost tracking
+- 🔮 Multi-user support
+
+## 📝 Documentation
+
+- **TESTING_GUIDE.md**: Comprehensive testing documentation
+- **REFACTORING_PLAN.md**: Code cleanup roadmap
+- **CHAT_IMPLEMENTATION.md**: Chat feature technical details
+- **YOUTUBE_SCRIPT_EP6.md**: Video content for this build
+
+## 🤝 Contributing
+
+This is a learning project built with AI pair programming. Contributions welcome!
+
+## 📄 License
+
+MIT License - See LICENSE file for details 

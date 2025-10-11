@@ -776,6 +776,27 @@
         </div>
     </div>
 
+    <!-- Prompts Library Modal -->
+    <div id="prompts-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 16px; width: 90%; max-width: 700px; max-height: 80vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+            <div style="padding: 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-size: 24px; color: #1a202c; margin: 0;">📚 Prompt Library</h2>
+                <button onclick="closePromptsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #718096;">×</button>
+            </div>
+            <div style="padding: 16px 24px; border-bottom: 1px solid #e2e8f0;">
+                <input type="text" id="prompt-search" placeholder="🔍 Search prompts..." 
+                       style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;"
+                       onkeyup="filterPrompts()">
+            </div>
+            <div id="prompts-list" style="padding: 24px; overflow-y: auto; max-height: calc(80vh - 200px);">
+                <div style="text-align: center; color: #718096; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+                    <div>Loading prompts...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // State management
         let messages = [];
@@ -1027,9 +1048,138 @@
             showNotification('Prompt library integration coming soon!', 'success');
         }
 
-        function openPromptLibrary() {
-            // TODO: Open prompt library modal
-            showNotification('Prompt library integration coming soon!', 'success');
+        // Prompts Library Modal Functions
+        let allPrompts = [];
+        
+        async function openPromptLibrary() {
+            const modal = document.getElementById('prompts-modal');
+            modal.style.display = 'flex';
+            
+            // Load prompts
+            await loadPromptsList();
+        }
+
+        function closePromptsModal() {
+            const modal = document.getElementById('prompts-modal');
+            modal.style.display = 'none';
+        }
+
+        async function loadPromptsList() {
+            const listContainer = document.getElementById('prompts-list');
+            
+            try {
+                const response = await fetch('/api/prompts');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    allPrompts = data.prompts || [];
+                    
+                    if (allPrompts.length === 0) {
+                        listContainer.innerHTML = `
+                            <div style="text-align: center; color: #718096; padding: 40px;">
+                                <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                                <div style="font-size: 18px; margin-bottom: 8px;">No saved prompts yet</div>
+                                <div style="font-size: 14px;">Prompts you save will appear here!</div>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Render prompts
+                    renderPromptsList(allPrompts);
+                } else {
+                    listContainer.innerHTML = `
+                        <div style="text-align: center; color: #e53e3e; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                            <div>Failed to load prompts</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                listContainer.innerHTML = `
+                    <div style="text-align: center; color: #e53e3e; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                        <div>Error: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderPromptsList(prompts) {
+            const listContainer = document.getElementById('prompts-list');
+            
+            listContainer.innerHTML = prompts.map(prompt => `
+                <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; background: white; transition: all 0.2s ease;"
+                     onmouseover="this.style.background='#f7fafc'; this.style.borderColor='#cbd5e0';"
+                     onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0';">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-weight: 600; color: #1a202c; font-size: 16px; margin-bottom: 4px;">${prompt.name || 'Untitled'}</div>
+                            ${prompt.category ? `<span style="display: inline-block; padding: 4px 12px; background: #edf2f7; color: #4a5568; border-radius: 12px; font-size: 12px; font-weight: 500;">📁 ${prompt.category}</span>` : ''}
+                        </div>
+                    </div>
+                    <div style="color: #718096; font-size: 14px; line-height: 1.6; margin-bottom: 12px; max-height: 60px; overflow: hidden; text-overflow: ellipsis;">
+                        ${(prompt.text || '').substring(0, 150)}${prompt.text && prompt.text.length > 150 ? '...' : ''}
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="insertPrompt('${prompt.id}')" 
+                                style="flex: 1; padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 13px;">
+                            ✏️ Insert
+                        </button>
+                        <button onclick="viewPromptDetails('${prompt.id}')" 
+                                style="padding: 8px 16px; background: #f7fafc; color: #4a5568; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 13px;">
+                            👁️ View
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterPrompts() {
+            const searchTerm = document.getElementById('prompt-search').value.toLowerCase();
+            
+            if (!searchTerm) {
+                renderPromptsList(allPrompts);
+                return;
+            }
+            
+            const filtered = allPrompts.filter(prompt => 
+                (prompt.name && prompt.name.toLowerCase().includes(searchTerm)) ||
+                (prompt.text && prompt.text.toLowerCase().includes(searchTerm)) ||
+                (prompt.category && prompt.category.toLowerCase().includes(searchTerm))
+            );
+            
+            renderPromptsList(filtered);
+        }
+
+        function insertPrompt(promptId) {
+            const prompt = allPrompts.find(p => p.id === promptId);
+            if (prompt && prompt.text) {
+                const input = document.getElementById('chat-input');
+                input.value = prompt.text;
+                input.style.height = 'auto';
+                input.style.height = input.scrollHeight + 'px';
+                input.focus();
+                closePromptsModal();
+                showNotification(`Inserted: ${prompt.name}`, 'success');
+            }
+        }
+
+        function viewPromptDetails(promptId) {
+            const prompt = allPrompts.find(p => p.id === promptId);
+            if (prompt) {
+                const details = `
+Name: ${prompt.name}
+Category: ${prompt.category || 'None'}
+
+Text:
+${prompt.text || 'No text'}
+
+Created: ${prompt.created_at ? new Date(prompt.created_at).toLocaleString() : 'Unknown'}
+                `.trim();
+                
+                alert(details);
+            }
         }
 
         function saveChatHistory() {

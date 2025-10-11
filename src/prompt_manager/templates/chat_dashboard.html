@@ -760,6 +760,22 @@
         </div>
     </div>
 
+    <!-- History Modal -->
+    <div id="history-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 16px; width: 90%; max-width: 700px; max-height: 80vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+            <div style="padding: 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-size: 24px; color: #1a202c; margin: 0;">💬 Conversation History</h2>
+                <button onclick="closeHistoryModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #718096;">×</button>
+            </div>
+            <div id="history-list" style="padding: 24px; overflow-y: auto; max-height: calc(80vh - 120px);">
+                <div style="text-align: center; color: #718096; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📜</div>
+                    <div>Loading conversations...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // State management
         let messages = [];
@@ -806,6 +822,7 @@
             document.getElementById('export-btn').addEventListener('click', exportChat);
             document.getElementById('prompts-btn').addEventListener('click', openPromptLibrary);
             document.getElementById('prompt-lib-btn').addEventListener('click', openPromptLibrary);
+            document.getElementById('chat-history-btn').addEventListener('click', openHistoryModal);
         }
 
         function togglePanel() {
@@ -1148,6 +1165,120 @@
             } catch (error) {
                 showNotification('Error loading conversation', 'error');
             }
+        }
+
+        // History Modal Functions
+        async function openHistoryModal() {
+            const modal = document.getElementById('history-modal');
+            modal.style.display = 'flex';
+            
+            // Load conversations
+            await loadConversationsList();
+        }
+
+        function closeHistoryModal() {
+            const modal = document.getElementById('history-modal');
+            modal.style.display = 'none';
+        }
+
+        async function loadConversationsList() {
+            const listContainer = document.getElementById('history-list');
+            
+            try {
+                const response = await fetch('/api/conversations/list?sort=date');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const conversations = data.conversations || [];
+                    
+                    if (conversations.length === 0) {
+                        listContainer.innerHTML = `
+                            <div style="text-align: center; color: #718096; padding: 40px;">
+                                <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                                <div style="font-size: 18px; margin-bottom: 8px;">No conversations yet</div>
+                                <div style="font-size: 14px;">Start chatting to create your first conversation!</div>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Render conversation list
+                    listContainer.innerHTML = conversations.map(conv => `
+                        <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s ease; background: white;"
+                             onmouseover="this.style.background='#f7fafc'; this.style.borderColor='#cbd5e0';"
+                             onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0';"
+                             onclick="loadConversationFromHistory('${conv.id}')">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                <div style="font-weight: 600; color: #1a202c; font-size: 16px; flex: 1;">${conv.title || 'Untitled Conversation'}</div>
+                                <button onclick="event.stopPropagation(); deleteConversationFromHistory('${conv.id}')" 
+                                        style="background: none; border: none; color: #e53e3e; cursor: pointer; font-size: 18px; padding: 0 8px;"
+                                        title="Delete conversation">🗑️</button>
+                            </div>
+                            <div style="display: flex; gap: 16px; font-size: 13px; color: #718096;">
+                                <span>💬 ${conv.message_count || 0} messages</span>
+                                <span>📅 ${formatDate(conv.updated_at || conv.created_at)}</span>
+                                ${conv.model ? `<span>🤖 ${conv.model}</span>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    listContainer.innerHTML = `
+                        <div style="text-align: center; color: #e53e3e; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                            <div>Failed to load conversations</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                listContainer.innerHTML = `
+                    <div style="text-align: center; color: #e53e3e; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                        <div>Error: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadConversationFromHistory(conversationId) {
+            closeHistoryModal();
+            await loadConversation(conversationId);
+        }
+
+        async function deleteConversationFromHistory(conversationId) {
+            if (!confirm('Are you sure you want to delete this conversation?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/conversations/delete/${conversationId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showNotification('Conversation deleted', 'success');
+                    await loadConversationsList(); // Reload list
+                } else {
+                    showNotification('Failed to delete conversation', 'error');
+                }
+            } catch (error) {
+                showNotification('Error deleting conversation', 'error');
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            
+            return date.toLocaleDateString();
         }
     </script>
 </body>

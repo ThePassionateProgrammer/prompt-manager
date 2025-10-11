@@ -22,14 +22,20 @@ def create_app():
     app.config['CUSTOM_COMBO_INTEGRATION'] = CustomComboBoxIntegration()
     app.config['TEMPLATE_SERVICE'] = TemplateService('templates/templates.json')
     
+    # Initialize separate API instance (runs its own Flask app for /api/* routes)
+    # Note: The API routes are in src/prompt_manager/api.py
+    # For now, we'll create a simple prompts route in a new blueprint
+    
     # Register blueprints
     from routes.linkage import linkage_bp
     from routes.static import static_bp
     from routes.dashboard import dashboard_bp
+    from routes.prompts_api import prompts_bp
     
     app.register_blueprint(linkage_bp)
     app.register_blueprint(static_bp)
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(prompts_bp)
     
     return app
 

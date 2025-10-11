@@ -7,12 +7,14 @@ from src.prompt_manager.business.llm_provider_manager import LLMProviderManager
 from src.prompt_manager.business.llm_provider import OpenAIProvider
 from src.prompt_manager.business.key_loader import SecureKeyManager
 from src.prompt_manager.business.conversation_manager import ConversationManager
+from src.prompt_manager.business.token_manager import TokenManager
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
 # Initialize managers
 provider_manager = LLMProviderManager()
 conversation_manager = ConversationManager()
+token_manager = TokenManager()
 
 @dashboard_bp.route('/dashboard')
 def dashboard():
@@ -131,33 +133,6 @@ def test_provider():
 # Default system prompt
 DEFAULT_SYSTEM_PROMPT = "You are a helpful, knowledgeable, and friendly AI assistant. Provide clear, accurate, and concise responses."
 
-# Model context limits (in tokens)
-MODEL_CONTEXT_LIMITS = {
-    'gpt-4-turbo-preview': 128000,
-    'gpt-4': 8192,
-    'gpt-3.5-turbo': 4096,
-    'gpt-3.5-turbo-16k': 16384
-}
-
-def estimate_tokens(text):
-    """Rough token estimation (approximately 4 characters per token)."""
-    return len(text) // 4
-
-def calculate_token_usage(messages, model):
-    """Calculate approximate token usage for messages."""
-    total = sum(estimate_tokens(msg.get('content', '')) for msg in messages)
-    context_limit = MODEL_CONTEXT_LIMITS.get(model, 4096)
-    percentage = min(100, (total / context_limit) * 100)
-    
-    return {
-        'prompt_tokens': total,
-        'completion_tokens': 0,  # Updated after response
-        'total_tokens': total,
-        'context_limit': context_limit,
-        'percentage': round(percentage, 1),
-        'warning': 'Approaching context limit' if percentage > 80 else None
-    }
-
 @dashboard_bp.route('/api/chat/send', methods=['POST'])
 def send_chat_message():
     """Send a chat message to a provider with history and context management."""
@@ -201,16 +176,12 @@ def send_chat_message():
         # Auto-trim if needed
         trimmed_count = 0
         if auto_trim:
-            token_usage = calculate_token_usage(messages, model)
-            if token_usage['percentage'] > 90:
-                # Keep system prompt and last few messages
-                keep_count = 5
-                if len(messages) > keep_count + 1:  # +1 for system
-                    trimmed_count = len(messages) - keep_count - 1
-                    messages = [messages[0]] + messages[-(keep_count):]
+            prompt_tokens = token_manager.calculate_message_tokens(messages)
+            if token_manager.should_trim(prompt_tokens, model, threshold=0.9):
+                messages, trimmed_count = token_manager.trim_messages(messages, keep_count=5)
         
         # Calculate token usage before sending
-        token_usage = calculate_token_usage(messages, model)
+        token_usage = token_manager.calculate_token_usage(messages, model)
         
         # Generate response using messages
         response = provider.generate(
@@ -221,8 +192,7 @@ def send_chat_message():
         )
         
         # Update token usage with completion
-        token_usage['completion_tokens'] = estimate_tokens(response)
-        token_usage['total_tokens'] = token_usage['prompt_tokens'] + token_usage['completion_tokens']
+        token_usage = token_manager.update_with_completion(token_usage, response)
         
         result = {
             'response': response,
@@ -301,7 +271,7 @@ def list_models():
 @dashboard_bp.route('/api/models/context-limits', methods=['GET'])
 def get_context_limits():
     """Get context limits for all models."""
-    return jsonify({'limits': MODEL_CONTEXT_LIMITS})
+    return jsonify({'limits': token_manager.get_all_model_limits()})
 
 @dashboard_bp.route('/api/settings/system-prompt', methods=['GET', 'POST'])
 def system_prompt():
@@ -336,8 +306,8 @@ def estimate_tokens_endpoint():
     messages.extend(history)
     messages.append({'role': 'user', 'content': message})
     
-    # Estimate
-    estimated = sum(estimate_tokens(msg.get('content', '')) for msg in messages)
+    # Estimate using TokenManager
+    estimated = token_manager.calculate_message_tokens(messages)
     
     return jsonify({'estimated_tokens': estimated})
 

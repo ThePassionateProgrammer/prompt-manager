@@ -823,6 +823,7 @@
             document.getElementById('prompts-btn').addEventListener('click', openPromptLibrary);
             document.getElementById('prompt-lib-btn').addEventListener('click', openPromptLibrary);
             document.getElementById('chat-history-btn').addEventListener('click', openHistoryModal);
+            document.getElementById('regenerate-btn').addEventListener('click', regenerateLastResponse);
         }
 
         function togglePanel() {
@@ -838,9 +839,9 @@
             }
         }
 
-        async function sendMessage() {
+        async function sendMessage(providedMessage = null) {
             const input = document.getElementById('chat-input');
-            const message = input.value.trim();
+            const message = providedMessage || input.value.trim();
             
             if (!message || isLoading) return;
 
@@ -952,6 +953,9 @@
             messagesArea.scrollTop = messagesArea.scrollHeight;
 
             messages.push({ type, content, time: new Date().toISOString() });
+            
+            // Update regenerate button state
+            updateRegenerateButton();
         }
 
         function escapeHtml(text) {
@@ -1279,6 +1283,45 @@
             if (diffDays < 7) return `${diffDays}d ago`;
             
             return date.toLocaleDateString();
+        }
+
+        // Regenerate Last Response
+        async function regenerateLastResponse() {
+            if (messages.length < 2 || isLoading) return;
+            
+            // Find the last user message
+            let lastUserMessage = null;
+            for (let i = messages.length - 1; i >= 0; i--) {
+                if (messages[i].type === 'user') {
+                    lastUserMessage = messages[i];
+                    break;
+                }
+            }
+            
+            if (!lastUserMessage) {
+                showNotification('No user message to regenerate from', 'error');
+                return;
+            }
+            
+            // Remove all messages after the last user message
+            const userMessageIndex = messages.indexOf(lastUserMessage);
+            messages = messages.slice(0, userMessageIndex);
+            
+            // Re-render messages
+            const messagesArea = document.getElementById('messages-area');
+            messagesArea.innerHTML = '';
+            messages.forEach(msg => {
+                addMessage(msg.type, msg.content);
+            });
+            
+            // Resend the last user message
+            await sendMessage(lastUserMessage.content);
+        }
+
+        // Helper to update regenerate button state
+        function updateRegenerateButton() {
+            const hasUserMessages = messages.some(m => m.type === 'user');
+            document.getElementById('regenerate-btn').disabled = !hasUserMessages;
         }
     </script>
 </body>

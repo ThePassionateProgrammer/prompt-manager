@@ -788,21 +788,238 @@ def template_exists(template_name):
             "error": f"Unexpected error: {str(e)}"
         }), 500
 
-# Template Builder API Routes - Restored from Episode 5
+# Additional Template Builder API Routes - Episode 5 Complete Integration
 @linkage_bp.route('/template/parse', methods=['POST'])
 def parse_template():
     """Parse template text and extract bracketed variables."""
     try:
         data = request.get_json()
         template_text = data.get('template', '')
-        
-        # Extract variables in brackets [variable]
+        import re
+        variables = re.findall(r'\[([^\]]+)\]', template_text)
+        return json.dumps({'variables': variables, 'template': template_text}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/template/generate-dropdowns', methods=['POST'])
+def generate_dropdowns():
+    """Generate dropdown options for detected variables."""
+    try:
+        data = request.get_json()
+        template_text = data.get('template', '')
+        import re
+        variables = re.findall(r'\[([^\]]+)\]', template_text)
+        default_options = {
+            'role': ['Programmer', 'Chef', 'Soccer Coach', 'Teacher', 'Designer'],
+            'what': ['Write code', 'Shop for food', 'Create tests', 'Prepare lunch', 'Plan dinner party', 'Refactor'],
+            'why': ['Build better software', 'Cook delicious meals', 'Improve code quality', 'Feed my family', 'Host friends'],
+            'action': ['Write code', 'Create tests', 'Refactor', 'Shop for food', 'Prepare lunch'],
+            'context': ['Web development', 'Mobile app', 'Backend API', 'Kitchen', 'Restaurant']
+        }
+        dropdowns = {}
+        for var in variables:
+            dropdowns[var] = {'options': default_options.get(var, [f'Option 1 for {var}', f'Option 2 for {var}'])}
+        return json.dumps({'dropdowns': dropdowns, 'template': template_text}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/template/update-options', methods=['POST'])
+def update_options():
+    """Update dropdown options based on context."""
+    try:
+        data = request.get_json()
+        variable = data.get('variable', '')
+        context = data.get('context', {})
+        context_options = {
+            'what': {
+                'Programmer': ['Write code', 'Create tests', 'Refactor', 'Debug', 'Optimize'],
+                'Chef': ['Shop for food', 'Prepare lunch', 'Plan dinner party', 'Cook meal', 'Bake dessert'],
+                'Soccer Coach': ['Train players', 'Plan strategy', 'Analyze games', 'Motivate team', 'Teach skills']
+            },
+            'why': {
+                'Write code': ['Build better software', 'Solve problems', 'Learn new skills', 'Improve efficiency'],
+                'Shop for food': ['Cook delicious meals', 'Feed my family', 'Save money', 'Eat healthy'],
+                'Create tests': ['Ensure quality', 'Prevent bugs', 'Build confidence', 'Document behavior']
+            }
+        }
+        if variable in context_options:
+            for context_key, options in context_options[variable].items():
+                if context_key in context.values():
+                    return json.dumps({'options': options}), 200, {'Content-Type': 'application/json'}
+        default_options = {'what': ['Write code', 'Shop for food', 'Create tests', 'Prepare lunch'], 'why': ['Build better software', 'Cook delicious meals', 'Improve quality', 'Feed my family']}
+        return json.dumps({'options': default_options.get(variable, [f'Option for {variable}'])}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/template/generate-final', methods=['POST'])
+def generate_template_final_prompt():
+    """Generate final prompt by replacing variables with user selections."""
+    try:
+        data = request.get_json()
+        template_text = data.get('template', '')
+        selections = data.get('selections', {})
+        final_prompt = template_text
+        for variable, value in selections.items():
+            final_prompt = final_prompt.replace(f'[{variable}]', value)
+        return json.dumps({'final_prompt': final_prompt, 'template': template_text, 'selections': selections}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/template/edit-mode', methods=['POST'])
+def toggle_edit_mode():
+    """Toggle edit mode for the template builder."""
+    try:
+        data = request.get_json()
+        enabled = data.get('enabled', False)
+        return json.dumps({'edit_mode': enabled}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/template/generate', methods=['POST'])
+def generate_template():
+    """Main generate endpoint that processes template and returns dropdowns."""
+    from flask import current_app
+    try:
+        data = request.get_json()
+        template_text = data.get('template', '')
+        edit_mode = data.get('edit_mode', False)
         import re
         variables = re.findall(r'\[([^\]]+)\]', template_text)
         
-        return json.dumps({
-            'variables': variables,
-            'template': template_text
-        }), 200, {'Content-Type': 'application/json'}
+        if edit_mode:
+            custom_combo_integration = current_app.config['CUSTOM_COMBO_INTEGRATION']
+            custom_result = custom_combo_integration.create_template_with_custom_combo_boxes(template_text)
+            dropdowns = {}
+            for combo_box in custom_result["combo_boxes"]:
+                tag = combo_box["tag"]
+                dropdowns[tag] = {
+                    "options": combo_box["options"] if combo_box["options"] else [f"Option 1 for {tag}", f"Option 2 for {tag}"],
+                    "enabled": combo_box["enabled"],
+                    "value": combo_box["value"],
+                    "is_custom": True
+                }
+        else:
+            default_options = {
+                'role': ['Programmer', 'Chef', 'Soccer Coach', 'Teacher', 'Designer'],
+                'what': ['Write code', 'Shop for food', 'Create tests', 'Prepare lunch', 'Plan dinner party', 'Refactor'],
+                'why': ['Build better software', 'Cook delicious meals', 'Improve code quality', 'Feed my family', 'Host friends'],
+                'action': ['Write code', 'Create tests', 'Refactor', 'Shop for food', 'Prepare lunch'],
+                'context': ['Web development', 'Mobile app', 'Backend API', 'Kitchen', 'Restaurant']
+            }
+            dropdowns = {}
+            for var in variables:
+                dropdowns[var] = {'options': default_options.get(var.lower(), [f'Option 1 for {var}', f'Option 2 for {var}'])}
+        
+        return json.dumps({'dropdowns': dropdowns, 'template': template_text, 'edit_mode': edit_mode}), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/api/custom-combo-box/create-template', methods=['POST'])
+def create_template_with_custom_combo_boxes():
+    """Create a template with custom combo boxes."""
+    from flask import current_app
+    try:
+        data = request.get_json()
+        if not data or 'template' not in data:
+            return json.dumps({'error': 'Template is required'}), 400, {'Content-Type': 'application/json'}
+        template = data['template']
+        custom_combo_integration = current_app.config['CUSTOM_COMBO_INTEGRATION']
+        result = custom_combo_integration.create_template_with_custom_combo_boxes(template)
+        return json.dumps(result), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/api/custom-combo-box/handle-change', methods=['POST'])
+def handle_custom_combo_box_change():
+    """Handle a combo box change and update cascading state."""
+    from flask import current_app
+    try:
+        data = request.get_json()
+        if not data or 'combo_box_id' not in data or 'new_value' not in data or 'combo_boxes' not in data:
+            return json.dumps({'error': 'combo_box_id, new_value, and combo_boxes are required'}), 400, {'Content-Type': 'application/json'}
+        combo_box_id = data['combo_box_id']
+        new_value = data['new_value']
+        combo_boxes = data['combo_boxes']
+        custom_combo_integration = current_app.config['CUSTOM_COMBO_INTEGRATION']
+        updated_combo_boxes = custom_combo_integration.handle_combo_box_change(combo_box_id, new_value, combo_boxes)
+        return json.dumps({'combo_boxes': updated_combo_boxes}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/api/custom-combo-box/generate-prompt', methods=['POST'])
+def generate_custom_combo_box_prompt():
+    """Generate final prompt from template and combo box selections."""
+    from flask import current_app
+    try:
+        data = request.get_json()
+        if not data or 'template' not in data or 'combo_boxes' not in data:
+            return json.dumps({'error': 'template and combo_boxes are required'}), 400, {'Content-Type': 'application/json'}
+        template = data['template']
+        combo_boxes = data['combo_boxes']
+        custom_combo_integration = current_app.config['CUSTOM_COMBO_INTEGRATION']
+        final_prompt = custom_combo_integration.generate_final_prompt(template, combo_boxes)
+        return json.dumps({'final_prompt': final_prompt}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/api/custom-combo-box/validate-template', methods=['POST'])
+def validate_custom_combo_box_template():
+    """Validate a template."""
+    from flask import current_app
+    try:
+        data = request.get_json()
+        if not data or 'template' not in data:
+            return json.dumps({'error': 'template is required'}), 400, {'Content-Type': 'application/json'}
+        template = data['template']
+        custom_combo_integration = current_app.config['CUSTOM_COMBO_INTEGRATION']
+        validation = custom_combo_integration.validate_template(template)
+        return json.dumps(validation), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/api/custom-combo-box/available-templates', methods=['GET'])
+def get_available_templates():
+    """Get list of available templates."""
+    from flask import current_app
+    try:
+        custom_combo_integration = current_app.config['CUSTOM_COMBO_INTEGRATION']
+        templates = custom_combo_integration.get_available_templates()
+        return json.dumps({'templates': templates}), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/api/custom-combo-box/export-config', methods=['POST'])
+def export_template_config():
+    """Export template configuration."""
+    from flask import current_app
+    try:
+        data = request.get_json()
+        if not data or 'template' not in data or 'combo_boxes' not in data:
+            return json.dumps({'error': 'template and combo_boxes are required'}), 400, {'Content-Type': 'application/json'}
+        template = data['template']
+        combo_boxes = data['combo_boxes']
+        custom_combo_integration = current_app.config['CUSTOM_COMBO_INTEGRATION']
+        config = custom_combo_integration.export_template_config(template, combo_boxes)
+        return json.dumps(config), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/api/custom-combo-box/import-config', methods=['POST'])
+def import_template_config():
+    """Import template configuration."""
+    from flask import current_app
+    try:
+        data = request.get_json()
+        if not data:
+            return json.dumps({'error': 'config data is required'}), 400, {'Content-Type': 'application/json'}
+        custom_combo_integration = current_app.config['CUSTOM_COMBO_INTEGRATION']
+        result = custom_combo_integration.import_template_config(data)
+        return json.dumps(result), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'}
+
+@linkage_bp.route('/custom-combo-box-builder')
+def custom_combo_box_builder():
+    """Serve the custom combo box builder interface."""
+    with open('src/prompt_manager/templates/custom_combo_box_builder.html', 'r') as f:
+        return f.read()

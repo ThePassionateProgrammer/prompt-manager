@@ -757,14 +757,14 @@
                         <textarea 
                             class="chat-input" 
                             id="chat-input"
-                            placeholder="Type your message here... (Shift+Enter for new line)"
-                            rows="1"
+                            placeholder="Type your message here... (Enter for new line, click Send to submit)"
+                            rows="3"
                         ></textarea>
                     </div>
                     <button class="btn-send" id="send-btn" title="Send Message">🚀</button>
                 </div>
                 <div class="input-hint">
-                    Press Enter to send • Shift+Enter for new line
+                    Enter for new line • Click 🚀 to send message
                 </div>
             </div>
         </div>
@@ -872,12 +872,8 @@
                 this.style.height = this.scrollHeight + 'px';
             });
 
-            chatInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
+            // Enter creates new line - no special handling needed
+            // Only Send button submits message
 
             // Button handlers
             document.getElementById('send-btn').addEventListener('click', sendMessage);
@@ -1004,7 +1000,7 @@
                         <span class="message-time">${time}</span>
                     </div>
                     <div class="message-text">${escapeHtml(content)}</div>
-                    ${type === 'assistant' ? `
+                    ${type !== 'system' ? `
                     <div class="message-actions">
                         <button class="btn-msg-action" onclick="copyMessage(this)">📋 Copy</button>
                         <button class="btn-msg-action" onclick="saveAsPrompt(this)">💾 Save as Prompt</button>

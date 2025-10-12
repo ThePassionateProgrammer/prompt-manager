@@ -85,8 +85,8 @@ TEMPLATE_BUILDER_HTML = """
                     <button id="editModeBtn" class="btn btn-outline-light me-2">
                         <i class="fas fa-edit me-1"></i>Edit Mode
                     </button>
-                    <a href="/" class="btn btn-outline-light">
-                        <i class="fas fa-arrow-left me-1"></i>Back to Prompts
+                    <a href="/dashboard" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
                     </a>
                 </div>
             </div>

@@ -31,11 +31,13 @@ def create_app():
     from routes.static import static_bp
     from routes.dashboard import dashboard_bp
     from routes.prompts_api import prompts_bp
+    from routes.prompts_library import prompts_library_bp
     
     app.register_blueprint(linkage_bp)
     app.register_blueprint(static_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(prompts_bp)
+    app.register_blueprint(prompts_library_bp)
     
     return app
 

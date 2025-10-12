@@ -1568,9 +1568,9 @@ Created: ${prompt.created_at ? new Date(prompt.created_at).toLocaleString() : 'U
                 return;
             }
             
-            // Remove all messages after the last user message
+            // Remove all messages after the last user message (keep the user message)
             const userMessageIndex = messages.indexOf(lastUserMessage);
-            messages = messages.slice(0, userMessageIndex);
+            messages = messages.slice(0, userMessageIndex + 1);
             
             // Re-render messages
             const messagesArea = document.getElementById('messages-area');

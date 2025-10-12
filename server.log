@@ -1,0 +1,29 @@
+🚀 Starting Prompt Manager...
+📋 Version: 2.0 - Clean Architecture
+============================================================
+❌ Port 8000 is in use
+🛠️  Automatically killing processes on port 8000...
+Killing process 16380 on port 8000
+✅ Port 8000 is now available
+
+🌐 Web interface available at: http://localhost:8000
+💬 Chat Interface: http://localhost:8000/chat
+📊 Dashboard: http://localhost:8000/dashboard
+✨ Features:
+  - Enhanced chat with model selection & collapsible controls
+  - Multiple OpenAI models (GPT-4, GPT-3.5)
+  - Prompt management with validation
+  - Template builder with custom combo boxes
+  - Linkage system for dynamic templates
+  - Clean, modular architecture
+
+🛑 Press Ctrl+C to stop the server
+============================================================
+ * Serving Flask app 'prompt_manager_app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8000
+ * Running on http://192.168.4.81:8000
+Press CTRL+C to quit
+127.0.0.1 - - [12/Oct/2025 16:12:14] "GET /dashboard HTTP/1.1" 200 -

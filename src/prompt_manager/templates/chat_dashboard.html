@@ -681,8 +681,11 @@
 
                 <!-- Conversation Metadata -->
                 <div class="controls-row" style="padding: 12px; background: #f7fafc; border-radius: 8px; margin-top: 8px;">
-                    <div style="display: flex; gap: 20px; font-size: 13px; color: #4a5568;">
-                        <span title="Total messages in this conversation">💬 <strong id="msg-count">0</strong> messages</span>
+                    <div style="display: flex; gap: 15px; font-size: 12px; color: #4a5568; flex-wrap: wrap;">
+                        <span title="Total messages in this conversation">💬 <strong id="msg-count">0</strong> msgs</span>
+                        <span title="Current AI model being used">🤖 <strong id="model-name">-</strong></span>
+                        <span title="Conversation start time">🕐 <strong id="conv-time">-</strong></span>
+                        <span title="Last message timestamp">📅 <strong id="last-msg-time">-</strong></span>
                         <span title="Estimated cost based on token usage" id="cost-estimate" style="display: none;">💰 ~$<strong id="cost-value">0.00</strong></span>
                     </div>
                 </div>
@@ -865,6 +868,11 @@
             document.getElementById('max-tokens').addEventListener('input', function() {
                 document.getElementById('tokens-value').textContent = this.value;
             });
+            
+            // Model selection change
+            document.getElementById('model-select').addEventListener('change', function() {
+                updateConversationMetadata();
+            });
 
             // Input handling
             const chatInput = document.getElementById('chat-input');
@@ -1015,11 +1023,9 @@
 
             messages.push({ type, content, time: new Date().toISOString() });
             
-            // Update regenerate button state
+            // Update regenerate button state and all metadata
             updateRegenerateButton();
-            
-            // Update message count
-            updateMessageCount();
+            updateConversationMetadata();
         }
 
         function escapeHtml(text) {
@@ -1587,6 +1593,29 @@ Created: ${prompt.created_at ? new Date(prompt.created_at).toLocaleString() : 'U
         function updateMessageCount() {
             const count = messages.filter(m => m.type !== 'system').length;
             document.getElementById('msg-count').textContent = count;
+        }
+        
+        function updateConversationMetadata() {
+            // Update message count
+            updateMessageCount();
+            
+            // Update model name
+            const modelSelect = document.getElementById('model-select');
+            const modelOption = modelSelect.options[modelSelect.selectedIndex];
+            document.getElementById('model-name').textContent = modelOption.text.split(' (')[0]; // Get just the name
+            
+            // Update conversation time (when conversation started)
+            if (!window.conversationStartTime) {
+                window.conversationStartTime = new Date();
+            }
+            const elapsed = Math.floor((new Date() - window.conversationStartTime) / 60000); // minutes
+            document.getElementById('conv-time').textContent = elapsed > 0 ? `${elapsed}m` : 'Just now';
+            
+            // Update last message time
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('last-msg-time').textContent = `${hours}:${mins}`;
         }
 
         // Save Conversation Modal Functions

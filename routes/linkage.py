@@ -787,3 +787,22 @@ def template_exists(template_name):
             "success": False,
             "error": f"Unexpected error: {str(e)}"
         }), 500
+
+# Template Builder API Routes - Restored from Episode 5
+@linkage_bp.route('/template/parse', methods=['POST'])
+def parse_template():
+    """Parse template text and extract bracketed variables."""
+    try:
+        data = request.get_json()
+        template_text = data.get('template', '')
+        
+        # Extract variables in brackets [variable]
+        import re
+        variables = re.findall(r'\[([^\]]+)\]', template_text)
+        
+        return json.dumps({
+            'variables': variables,
+            'template': template_text
+        }), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500, {'Content-Type': 'application/json'}

@@ -18,638 +18,936 @@ TEMPLATE_BUILDER_HTML = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Template Builder - Prompt Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        .version-info {
-            color: #666;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-        .template-input {
-            width: 100%;
-            height: 120px;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: 'Courier New', monospace;
-            margin-bottom: 20px;
-            resize: vertical;
-        }
-        .template-input:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
-        }
-        .controls {
+        .template-builder-container {
+            height: 100vh;
             display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
+            flex-direction: column;
         }
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
+        .top-panel {
+            flex: 1;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            padding: 20px;
+            overflow-y: auto;
         }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-        .btn-success {
-            background-color: #28a745;
-            color: white;
-        }
-        .btn-success:hover {
-            background-color: #1e7e34;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background-color: #545b62;
+        .bottom-panel {
+            flex: 0 0 200px;
+            background-color: #ffffff;
+            border-top: 2px solid #dee2e6;
+            padding: 20px;
         }
         .dropdown-container {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        .dropdown-wrapper {
-            flex: 1;
-            min-width: 200px;
+            margin-bottom: 15px;
         }
         .dropdown-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
-        }
-        .custom-combo-box {
-            position: relative;
-            width: 100%;
-        }
-        .combo-input {
-            width: 100%;
-            padding: 12px 40px 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: white;
-            cursor: pointer;
-        }
-        .combo-input:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
-        }
-        .combo-arrow {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            color: #666;
-        }
-        .combo-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 2px solid #ddd;
-            border-top: none;
-            border-radius: 0 0 6px 6px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-        .combo-option {
-            padding: 12px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .combo-option:hover {
-            background-color: #f8f9fa;
-        }
-        .combo-option:last-child {
-            border-bottom: none;
-        }
-        .combo-option.add-new {
-            background-color: #e3f2fd;
-            color: #1976d2;
-            font-weight: 500;
-        }
-        .combo-option.add-new:hover {
-            background-color: #bbdefb;
-        }
-        .generated-prompt {
-            background-color: #f8f9fa;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 30px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-        .generated-prompt h4 {
-            margin-top: 0;
-            color: #495057;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        .save-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #e0e0e0;
-        }
-        .save-form {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        .save-input {
-            flex: 1;
-            min-width: 200px;
-            padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .save-input:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
-        }
-        .status-message {
-            padding: 12px 20px;
-            border-radius: 6px;
-            margin-top: 15px;
-            font-weight: 500;
-        }
-        .status-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .status-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .load-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-        }
-        .template-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .template-item {
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .template-item:hover {
-            border-color: #007bff;
-            background-color: #f8f9fa;
-        }
-        .template-name {
             font-weight: 600;
-            color: #333;
             margin-bottom: 5px;
+            color: #495057;
         }
-        .template-description {
-            color: #666;
-            font-size: 14px;
+        .edit-mode-active {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+        }
+        .final-prompt {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎯 Template Builder</h1>
-            <p>Create dynamic prompts with custom combo boxes and linkages</p>
-            <div class="version-info">ComboBox v2.5 | LinkageManager v3.1</div>
-        </div>
-
-        <div>
-            <label for="templateInput" style="display: block; margin-bottom: 10px; font-weight: 500;">
-                Template Text (use [variable] for dynamic content):
-            </label>
-            <textarea 
-                id="templateInput" 
-                class="template-input" 
-                placeholder="Enter your template here, e.g.: As a [role], I want to [what] so that [why]."
-            >As a [role], I want to [what] so that [why].</textarea>
-        </div>
-
-        <div class="controls">
-            <button class="btn btn-primary" onclick="parseTemplate()">Parse Template</button>
-            <button class="btn btn-success" onclick="generateTemplate()">Generate Template</button>
-            <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
-        </div>
-
-        <div id="dropdownContainer" class="dropdown-container">
-            <!-- Dynamic dropdowns will be generated here -->
-        </div>
-
-        <div id="generatedPrompt" class="generated-prompt" style="display: none;">
-            <h4>Generated Prompt:</h4>
-            <div id="promptContent"></div>
-        </div>
-
-        <div class="save-section">
-            <h3>💾 Save Template</h3>
-            <div class="save-form">
-                <input type="text" id="templateName" class="save-input" placeholder="Template name" required>
-                <input type="text" id="templateDescription" class="save-input" placeholder="Template description" required>
-                <button class="btn btn-success" onclick="saveTemplate()">Save Template</button>
+    <div class="template-builder-container">
+        <!-- Header -->
+        <div class="bg-primary text-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0"><i class="fas fa-puzzle-piece me-2"></i>Template Builder</h1>
+                <div class="alert alert-info mb-0">
+                    <strong>Custom Combo Box Version:</strong> <span id="combo-box-version">Loading...</span>
+                </div>
+                <div>
+                <button id="saveTemplateBtn" class="btn btn-outline-light me-2">
+                    <i class="fas fa-save me-1"></i>Save Template
+                </button>
+                <button id="saveAsTemplateBtn" class="btn btn-outline-light me-2">
+                    <i class="fas fa-save me-1"></i>Save As...
+                </button>
+                <button id="loadTemplateBtn" class="btn btn-outline-light me-2">
+                    <i class="fas fa-folder-open me-1"></i>Load Template
+                </button>
+                    <button id="testModeBtn" class="btn btn-outline-light me-2">
+                        <i class="fas fa-vial me-1"></i>Test Mode
+                    </button>
+                    <button id="editModeBtn" class="btn btn-outline-light me-2">
+                        <i class="fas fa-edit me-1"></i>Edit Mode
+                    </button>
+                    <a href="/" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Prompts
+                    </a>
+                </div>
             </div>
-            <div id="saveStatus"></div>
         </div>
 
-        <div class="load-section">
-            <h3>📂 Load Template</h3>
-            <button class="btn btn-secondary" onclick="loadTemplates()">Refresh Template List</button>
-            <div id="templateList" class="template-list">
-                <!-- Saved templates will be loaded here -->
+        <!-- Test Panel (Hidden by default) -->
+        <div id="testPanel" class="bg-warning text-dark p-3" style="display: none;">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <h5 class="mb-3"><i class="fas fa-vial me-2"></i>Test Panel</h5>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button id="addSampleDataBtn" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-plus me-1"></i>Add Sample Data
+                            </button>
+                            <button id="resetComboBoxesBtn" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-undo me-1"></i>Reset
+                            </button>
+                            <button id="runTestsBtn" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-play me-1"></i>Run Tests
+                            </button>
+                            <button id="testLinkagesBtn" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-link me-1"></i>Test Linkages
+                            </button>
+                        </div>
+                        <div id="testResults" class="mt-3" style="display: none;">
+                            <h6>Test Results:</h6>
+                            <div id="testOutput" class="bg-light p-2 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Panel - Dropdowns Area -->
+        <div class="top-panel">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <h4 class="mb-3"><i class="fas fa-list me-2"></i>Template Variables</h4>
+                        <div id="combo-boxes-container">
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-arrow-down fa-2x mb-3"></i>
+                                <p>Enter a template below and click "Generate" to create combo boxes</p>
+                            </div>
+                        </div>
+                        <div id="finalPromptArea" class="final-prompt" style="display: none;">
+                            <h5><i class="fas fa-file-alt me-2"></i>Final Prompt</h5>
+                            <div id="finalPromptText"></div>
+                            <button id="savePromptBtn" class="btn btn-success btn-sm mt-2">
+                                <i class="fas fa-save me-1"></i>Save as Prompt
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Panel - Template Input -->
+        <div class="bottom-panel">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1 me-3">
+                                <label for="templateInput" class="form-label">
+                                    <i class="fas fa-edit me-1"></i>Template Text
+                                </label>
+                                <textarea id="templateInput" class="form-control" rows="3" 
+                                    placeholder="Enter template with variables in brackets, e.g., 'As a [role], I want to [what], so that I can [why]'"></textarea>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <button id="generateBtn" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-magic me-1"></i>Generate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript files with cache busting -->
-    <script src="/static/js/custom-combo-box-working.js?v=2.5&t=20241220&cache=bust"></script>
-    <script src="/static/js/linkage-manager-v3.js?v=3.1&t=20241220&cache=bust"></script>
+    <!-- Include Custom Combo Box Component -->
+    <link rel="stylesheet" href="/static/css/custom-combo-box.css">
+    <script src="/static/js/custom-combo-box-working.js?v=2.5&t=1734567910&cache=bust"></script>
+    <script src="/static/js/template-storage.js"></script>
+        <script src="/static/js/linkage-manager-v3.js?v=3.1&t=1734567908&cache=bust"></script>
     
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Display version information
+        document.getElementById('combo-box-version').textContent = 'ComboBox v2.5 | LinkageManager v3.1';
+        
+        // Template Builder State - Old Layout with CustomComboBox
+        let currentTemplate = "";
+        let customComboBoxes = [];
+        window.customComboBoxes = customComboBoxes;  // Make globally accessible
+        let isEditMode = false;
+        let templateManager = new TemplateDataManager();
+        
+        // Dynamic Linkage Data Structure
+        window.linkageData = {};  // Will be populated dynamically as user creates linkages
+        
+        // Track current selections for linkage creation
+        window.currentSelections = {};  // Maps combo box tag to currently selected value
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+        });
+        
+        // Debug function to test template loading manually
+        window.debugLoadTemplate = function(templateName) {
+            console.log('=== MANUAL DEBUG LOAD ===');
+            console.log('Loading template:', templateName);
+            
+            fetch(`/api/templates/load/${encodeURIComponent(templateName)}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('API Response:', data);
+                if (data.success) {
+                    const template = data.template;
+                    console.log('Template data:', template);
+                    
+                    // Test combo box generation
+                    document.getElementById('templateInput').value = template.template_text;
+                    generateCustomComboBoxes();
+                    
+                    setTimeout(() => {
+                        console.log('=== AFTER COMBO BOX GENERATION ===');
+                        console.log('customComboBoxes:', window.customComboBoxes);
+                        console.log('customComboBoxes length:', window.customComboBoxes ? window.customComboBoxes.length : 'undefined');
+                        
+                        if (window.customComboBoxes) {
+                            window.customComboBoxes.forEach((combo, index) => {
+                                console.log(`Combo ${index}:`, combo);
+                                console.log(`Combo ${index} tag:`, combo.tag);
+                                console.log(`Combo ${index} options:`, combo.options);
+                                console.log(`Combo ${index} dropdown HTML:`, combo.dropdown.innerHTML);
+                            });
+                        }
+                        
+                        // Now test the actual loading logic
+                        console.log('=== TESTING LOADING LOGIC ===');
+                        console.log('template.combo_box_values:', template.combo_box_values);
+                        
+                        if (window.customComboBoxes && template.combo_box_values) {
+                            window.customComboBoxes.forEach(combo => {
+                                console.log('Processing combo box for tag:', combo.tag);
+                                if (combo.tag && template.combo_box_values[combo.tag]) {
+                                    const values = template.combo_box_values[combo.tag];
+                                    console.log('Values for', combo.tag, ':', values);
+                                    
+                                    // Simply add saved options to existing combo box
+                                    values.forEach(value => {
+                                        console.log('Adding value:', value);
+                                        // Check if option already exists to avoid duplicates
+                                        const existingOption = combo.dropdown.querySelector(`[data-value="${value}"]`);
+                                        if (!existingOption) {
+                                            console.log('Option does not exist, adding:', value);
+                                            combo.addOption(value, false, false); // Add without selecting, skip callback
+                                        } else {
+                                            console.log('Option already exists:', value);
+                                        }
+                                    });
+                                } else {
+                                    console.log('No values found for tag:', combo.tag);
+                                }
+                            });
+                        } else {
+                            console.log('Missing customComboBoxes or combo_box_values');
+                        }
+                    }, 1000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        };
+
+        // Global variable to track current template name
+        let currentTemplateName = null;
+        
+        function setupEventListeners() {
+            // Template persistence
+            document.getElementById('saveTemplateBtn').addEventListener('click', saveTemplate);
+            document.getElementById('saveAsTemplateBtn').addEventListener('click', saveAsTemplate);
+            document.getElementById('loadTemplateBtn').addEventListener('click', loadTemplate);
+            
+            // Edit mode toggle
+            document.getElementById('editModeBtn').addEventListener('click', toggleEditMode);
+            
+            // Test mode toggle
+            document.getElementById('testModeBtn').addEventListener('click', toggleTestMode);
+            
+            // Generate combo boxes
+            document.getElementById('generateBtn').addEventListener('click', generateCustomComboBoxes);
+            
+            // Test panel buttons
+            document.getElementById('addSampleDataBtn').addEventListener('click', addSampleData);
+            document.getElementById('resetComboBoxesBtn').addEventListener('click', resetComboBoxes);
+            document.getElementById('runTestsBtn').addEventListener('click', runBasicTests);
+            document.getElementById('testLinkagesBtn').addEventListener('click', testLinkages);
+        }
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            updateEditModeButton();
+            
+            // Update all custom combo boxes to new mode
+            customComboBoxes.forEach(comboBox => {
+                comboBox.setMode(isEditMode ? 'edit' : 'display');
+            });
+        }
+
+        function updateEditModeButton() {
+            const button = document.getElementById('editModeBtn');
+            if (isEditMode) {
+                button.innerHTML = '<i class="fas fa-check me-1"></i>Edit Mode Active';
+                button.classList.remove('btn-outline-light');
+                button.classList.add('btn-warning');
+                document.getElementById('combo-boxes-container').classList.add('edit-mode-active');
+            } else {
+                button.innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode';
+                button.classList.remove('btn-warning');
+                button.classList.add('btn-outline-light');
+                document.getElementById('combo-boxes-container').classList.remove('edit-mode-active');
+            }
+        }
+
+        function generateCustomComboBoxes() {
+            const template = document.getElementById('templateInput').value.trim();
+            
+            if (!template) {
+                alert('Please enter a template');
+                return;
+            }
+            
+            try {
+                // Initialize template data
+                const templateData = templateManager.initializeTemplate(template);
+                const tags = templateManager.extractTags(template);
+                
+                // Clear existing combo boxes
+                customComboBoxes = [];
+                window.customComboBoxes = customComboBoxes;  // Update global reference
+                
+                // Create custom combo boxes
+                const container = document.getElementById('combo-boxes-container');
+                container.innerHTML = '';
+                
+                tags.forEach((tag, index) => {
+                    // Create combo box container
+                    const comboBoxContainer = document.createElement('div');
+                    comboBoxContainer.className = 'mb-4';
+                    comboBoxContainer.innerHTML = `
+                        <div class="dropdown-label mb-2">${tag.charAt(0).toUpperCase() + tag.slice(1)}</div>
+                        <div id="combo-box-${tag}" class="combo-box-container">
+                            <input type="text" class="combo-box-input" placeholder="Type to add...">
+                            <div class="combo-box-arrow"></div>
+                            <div class="combo-box-dropdown">
+                                <div class="combo-box-option" data-value="Select item...">Select item...</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(comboBoxContainer);
+                    
+                    // Create CustomComboBox instance (after HTML is in DOM)
+                    console.log('Creating CustomComboBox for tag:', tag);
+                    const comboBox = new CustomComboBox(`combo-box-${tag}`);
+                    console.log('CustomComboBox created:', comboBox);
+                    
+                    // Set the tag name for this combo box
+                    comboBox.tag = tag;
+                    
+                    // Set the initial mode
+                    comboBox.setMode(isEditMode ? 'edit' : 'display');
+                    
+                    customComboBoxes.push(comboBox);
+                });
+                
+                // Set up linkages between combo boxes using working August 20th implementation
+                console.log('About to call setupLinkages()');
+                setupLinkages();
+                console.log('setupLinkages() completed');
+                
+            } catch (error) {
+                console.error('Error in generateCustomComboBoxes:', error);
+                alert('Error: ' + error.message);
+                return;
+            }
+        }
+
+        // Global LinkageManager instance
         let linkageManager = null;
         let currentTemplateId = null;
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Template Builder initialized');
-            setupLinkages();
-        });
-
         function setupLinkages() {
-            console.log('=== SETTING UP LINKAGES (LinkageManager v3.1) ===');
+            console.log('=== SETTING UP LINKAGES (LinkageManager v3.0) ===');
+            console.log('Number of combo boxes:', customComboBoxes.length);
+            
+            // Get template text and tags
+            const templateText = document.getElementById('templateInput').value;
+            const tags = customComboBoxes.map(combo => combo.tag);
             
             // Initialize LinkageManager
             linkageManager = new LinkageManager();
+            window.linkageManager = linkageManager; // Make it globally accessible
+            currentTemplateId = linkageManager.initializeTemplate(templateText, tags);
+            console.log('Initialized template with ID:', currentTemplateId);
             
-            // Make it globally accessible
-            window.linkageManager = linkageManager;
+            // Create combo boxes object with tag as key
+            const comboBoxesByTag = {};
+            customComboBoxes.forEach(combo => {
+                comboBoxesByTag[combo.tag] = combo;
+            });
+            
+            // Register combo boxes with LinkageManager
+            linkageManager.registerComboBoxes(currentTemplateId, comboBoxesByTag);
+            
+            // Load existing linkage data if available
+            linkageManager.loadFromTemplateStorage(currentTemplateId);
             
             console.log('LinkageManager setup completed');
         }
 
-        function parseTemplate() {
-            const templateText = document.getElementById('templateInput').value;
-            console.log('Parsing template:', templateText);
+        // Test Panel Functions
+        function toggleTestMode() {
+            const testPanel = document.getElementById('testPanel');
+            const testModeBtn = document.getElementById('testModeBtn');
             
-            // Extract variables in brackets [variable]
-            const variables = templateText.match(/\\[([^\\]]+)\\]/g);
-            if (!variables) {
-                alert('No variables found in template. Use [variable] format.');
+            if (testPanel.style.display === 'none') {
+                testPanel.style.display = 'block';
+                testModeBtn.innerHTML = '<i class="fas fa-vial me-1"></i>Test Mode: ON';
+                testModeBtn.classList.remove('btn-outline-light');
+                testModeBtn.classList.add('btn-warning');
+            } else {
+                testPanel.style.display = 'none';
+                testModeBtn.innerHTML = '<i class="fas fa-vial me-1"></i>Test Mode';
+                testModeBtn.classList.remove('btn-warning');
+                testModeBtn.classList.add('btn-outline-light');
+            }
+        }
+
+        function addSampleData() {
+            if (customComboBoxes.length === 0) {
+                alert('Please generate combo boxes first');
                 return;
             }
             
-            // Clean up variable names
-            const cleanVariables = variables.map(v => v.replace(/[\\[\\]]/g, ''));
-            console.log('Found variables:', cleanVariables);
-            
-            // Generate dropdowns
-            generateDropdowns(cleanVariables);
-        }
-
-        function generateDropdowns(variables) {
-            const container = document.getElementById('dropdownContainer');
-            container.innerHTML = '';
-            
-            // Generate unique template ID
-            currentTemplateId = 'template_' + Date.now();
-            
-            // Initialize template in LinkageManager
-            linkageManager.initializeTemplate(currentTemplateId, variables.length);
-            
-            variables.forEach((variable, index) => {
-                const tag = index + 1; // Use 1-based indexing for tags
-                
-                const dropdownWrapper = document.createElement('div');
-                dropdownWrapper.className = 'dropdown-wrapper';
-                dropdownWrapper.innerHTML = `
-                    <label class="dropdown-label">${variable}</label>
-                    <div class="custom-combo-box" id="combo-${tag}">
-                        <input type="text" class="combo-input" placeholder="Select or add ${variable}..." readonly>
-                        <span class="combo-arrow">▼</span>
-                        <div class="combo-dropdown"></div>
-                    </div>
-                `;
-                
-                container.appendChild(dropdownWrapper);
-                
-                // Initialize CustomComboBox
-                const comboElement = document.getElementById(`combo-${tag}`);
-                const comboBox = new CustomComboBox(comboElement);
-                
-                // Add some default options
-                const defaultOptions = getDefaultOptions(variable);
-                defaultOptions.forEach(option => {
-                    comboBox.addOption(option, option);
-                });
-                
-                console.log(`CustomComboBox created for tag: ${tag}`);
-            });
-            
-            console.log('Dropdowns generated for variables:', variables);
-        }
-
-        function getDefaultOptions(variable) {
-            const optionsMap = {
-                'role': ['Programmer', 'Chef', 'Soccer Coach', 'Teacher', 'Designer'],
-                'what': ['Write code', 'Shop for food', 'Create tests', 'Prepare lunch', 'Plan dinner party'],
-                'why': ['Build better software', 'Cook delicious meals', 'Improve code quality', 'Feed my family', 'Host friends'],
-                'action': ['Write code', 'Create tests', 'Refactor', 'Shop for food', 'Prepare lunch'],
-                'context': ['Web development', 'Mobile app', 'Backend API', 'Kitchen', 'Restaurant']
+            // Add sample data to each combo box
+            const sampleData = {
+                'Role': ['Developer', 'Designer', 'Manager', 'Tester'],
+                'What': ['Fix bugs', 'Add features', 'Improve performance', 'Refactor code'],
+                'Why': ['Save time', 'Improve quality', 'Reduce errors', 'Enhance user experience'],
+                '1': ['Option 1A', 'Option 1B', 'Option 1C'],
+                '2': ['Option 2A', 'Option 2B', 'Option 2C'],
+                '3': ['Option 3A', 'Option 3B', 'Option 3C']
             };
             
-            return optionsMap[variable] || [`Option 1 for ${variable}`, `Option 2 for ${variable}`];
+            customComboBoxes.forEach(comboBox => {
+                const tag = comboBox.tag;
+                const options = sampleData[tag] || ['Sample Option 1', 'Sample Option 2', 'Sample Option 3'];
+                options.forEach(option => {
+                    comboBox.addOption(option);
+                });
+            });
+            
+            showTestResult('Sample data added to all combo boxes');
         }
 
-        function generateTemplate() {
-            if (!currentTemplateId) {
-                alert('Please parse template first to generate dropdowns.');
-                return;
+        function resetComboBoxes() {
+            customComboBoxes.forEach(comboBox => {
+                // Clear all options except the first one (Add item... or Select item...)
+                const options = comboBox.dropdown.querySelectorAll('.combo-box-option');
+                for (let i = options.length - 1; i > 0; i--) {
+                    options[i].remove();
+                }
+                comboBox.selectedIndex = -1;
+                comboBox.selectedOption = null;
+                comboBox.input.value = '';
+            });
+            
+            showTestResult('All combo boxes reset');
+        }
+
+        function runBasicTests() {
+            const results = [];
+            
+            // Test 1: Check if combo boxes exist
+            if (customComboBoxes.length > 0) {
+                results.push('✓ Combo boxes created successfully');
+            } else {
+                results.push('✗ No combo boxes found');
             }
             
-            const templateText = document.getElementById('templateInput').value;
-            const variables = templateText.match(/\\[([^\\]]+)\\]/g);
+            // Test 2: Check Edit/Display mode switching
+            const originalMode = isEditMode;
+            toggleEditMode();
+            const newMode = isEditMode;
+            toggleEditMode(); // Switch back
             
-            if (!variables) {
-                alert('No variables found in template.');
-                return;
+            if (originalMode !== newMode) {
+                results.push('✓ Edit/Display mode switching works');
+            } else {
+                results.push('✗ Edit/Display mode switching failed');
             }
             
-            let generatedText = templateText;
-            
-            // Replace variables with current selections
-            variables.forEach((variable, index) => {
-                const tag = index + 1;
-                const comboElement = document.getElementById(`combo-${tag}`);
-                if (comboElement) {
-                    const comboInput = comboElement.querySelector('.combo-input');
-                    const selectedValue = comboInput.value || `[${variable.replace(/[\\[\\]]/g, '')}]`;
-                    generatedText = generatedText.replace(variable, selectedValue);
+            // Test 3: Check if combo boxes have required elements
+            let allHaveElements = true;
+            customComboBoxes.forEach(comboBox => {
+                if (!comboBox.input || !comboBox.dropdown || !comboBox.arrow) {
+                    allHaveElements = false;
                 }
             });
             
-            // Display generated prompt
-            document.getElementById('promptContent').textContent = generatedText;
-            document.getElementById('generatedPrompt').style.display = 'block';
-        }
-
-        function clearAll() {
-            document.getElementById('templateInput').value = '';
-            document.getElementById('dropdownContainer').innerHTML = '';
-            document.getElementById('generatedPrompt').style.display = 'none';
-            document.getElementById('saveStatus').innerHTML = '';
-            document.getElementById('templateList').innerHTML = '';
-            currentTemplateId = null;
-            linkageManager = null;
-            setupLinkages();
-        }
-
-        function saveTemplate() {
-            const name = document.getElementById('templateName').value.trim();
-            const description = document.getElementById('templateDescription').value.trim();
-            const templateText = document.getElementById('templateInput').value.trim();
+            if (allHaveElements) {
+                results.push('✓ All combo boxes have required elements');
+            } else {
+                results.push('✗ Some combo boxes missing required elements');
+            }
             
-            if (!name || !description || !templateText) {
-                showSaveStatus('Please fill in all fields.', 'error');
+            showTestResult(results.join('<br>'));
+        }
+
+        function testLinkages() {
+            const results = [];
+            
+            // Test 1: Check if we have at least 2 combo boxes for linkage testing
+            if (customComboBoxes.length < 2) {
+                results.push('✗ Need at least 2 combo boxes for linkage testing');
+                showTestResult(results.join('<br>'));
                 return;
             }
             
+            // Test 2: Verify LinkageManager exists
+            if (!linkageManager) {
+                results.push('✗ LinkageManager not found');
+                results.push('🔧 Need to initialize LinkageManager');
+            } else {
+                results.push('✓ LinkageManager exists');
+            }
+            
+            // Test 3: Verify template ID exists
             if (!currentTemplateId) {
-                showSaveStatus('Please generate template first.', 'error');
+                results.push('✗ Template ID not found');
+                results.push('🔧 Need to initialize template');
+            } else {
+                results.push(`✓ Template ID: ${currentTemplateId}`);
+            }
+            
+            // Test 4: Check if combo boxes have linkage setup
+            let linkageSetupCount = 0;
+            customComboBoxes.forEach((comboBox, index) => {
+                if (comboBox.onSelectionChange && typeof comboBox.onSelectionChange === 'function') {
+                    linkageSetupCount++;
+                }
+            });
+            
+            if (linkageSetupCount > 0) {
+                results.push(`✓ ${linkageSetupCount} combo boxes have linkage setup`);
+            } else {
+                results.push('✗ No combo boxes have linkage setup');
+                results.push('🔧 Need to implement onSelectionChange handlers');
+            }
+            
+            // Test 5: Get debug info from LinkageManager
+            if (linkageManager && currentTemplateId) {
+                const debugInfo = linkageManager.getDebugInfo(currentTemplateId);
+                results.push(`✓ Debug Info: ${JSON.stringify(debugInfo, null, 2)}`);
+            }
+            
+            // Test 6: Test actual linkage behavior
+            try {
+                const firstComboBox = customComboBoxes[0];
+                const secondComboBox = customComboBoxes[1];
+                
+                // Simulate selecting an item in the first combo box
+                const testSelection = 'Developer';
+                firstComboBox.selectOption(1); // Select first real option (index 1, after "Add item...")
+                
+                // Check if second combo box options changed
+                const secondOptions = secondComboBox.dropdown.querySelectorAll('.combo-box-option');
+                const secondOptionTexts = Array.from(secondOptions).map(option => option.textContent);
+                
+                if (secondOptionTexts.length > 1) {
+                    results.push('✓ Second combo box has options');
+                    results.push(`📋 Second combo box options: ${secondOptionTexts.slice(1).join(', ')}`);
+                } else {
+                    results.push('✗ Second combo box has no options after selection');
+                    results.push('🔧 Linkage not working - options should update based on selection');
+                }
+                
+            } catch (error) {
+                results.push(`✗ Error testing linkage: ${error.message}`);
+            }
+            
+            showTestResult(results.join('<br>'));
+        }
+
+        function showTestResult(message) {
+            const testResults = document.getElementById('testResults');
+            const testOutput = document.getElementById('testOutput');
+            testOutput.innerHTML = message;
+            testResults.style.display = 'block';
+        }
+
+        // Save Prompt Button
+        document.getElementById('savePromptBtn').addEventListener('click', function() {
+            const finalPrompt = document.getElementById('finalPromptText').textContent;
+            if (!finalPrompt) {
+                alert('No prompt to save');
                 return;
             }
             
+            // Create a name for the prompt
+            const promptName = `Template: ${Object.keys(customComboBoxes.map(cb => cb.tag)).join(' → ')}`;
+            
+            // Save to prompts
+            fetch('/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `name=${encodeURIComponent(promptName)}&text=${encodeURIComponent(finalPrompt)}&category=template`
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Prompt saved successfully!');
+                } else {
+                    alert('Error saving prompt');
+                }
+            })
+            .catch(error => {
+                alert('Error saving prompt: ' + error);
+            });
+        });
+        
+        // Template Persistence Functions
+        function saveAsTemplate() {
+            saveTemplate(true); // true = force new name
+        }
+        
+        function saveTemplate(forceNewName = false) {
             console.log('=== SAVE TEMPLATE FUNCTION CALLED ===');
+            
+            const templateText = document.getElementById('templateInput').value.trim();
             console.log('Template text:', templateText);
-            console.log('Template name:', name);
-            console.log('Template description:', description);
             
-            // Collect combo box values
-            const comboBoxValues = {};
-            const comboBoxes = document.querySelectorAll('.custom-combo-box');
-            comboBoxes.forEach((combo, index) => {
-                const tag = index + 1;
-                const input = combo.querySelector('.combo-input');
-                const dropdown = combo.querySelector('.combo-dropdown');
-                const options = Array.from(dropdown.querySelectorAll('.combo-option')).map(opt => opt.textContent);
+            if (!templateText) {
+                alert('Please enter a template text first');
+                return;
+            }
+            
+            let templateName = currentTemplateName;
+            let templateDescription = '';
+            
+            // If no current template name or forcing new name, prompt for name
+            if (!templateName || forceNewName) {
+                templateName = prompt('Enter a name for this template:');
+                if (!templateName) return;
                 
-                comboBoxValues[tag] = {
-                    value: input.value || '',
-                    options: options
-                };
-            });
+                templateDescription = prompt('Enter a description for this template (optional):') || '';
+            }
             
-            console.log('Found', comboBoxes.length, 'combo boxes');
-            Object.keys(comboBoxValues).forEach(tag => {
-                console.log(`Combo box ${tag} values:`, comboBoxValues[tag].options);
-            });
+            console.log('Template name:', templateName);
+            console.log('Template description:', templateDescription);
             
-            // Collect linkage data
+            // Collect combo box values and linkage data
+            const comboBoxValues = {};
             const linkageData = {};
-            Object.assign(linkageData, window.linkageManager.collectLinkageDataForStorage(currentTemplateId));
             
-            console.log('Linkage data collected:', linkageData);
+            // Get current combo box values
+            if (window.customComboBoxes) {
+                console.log('Found', window.customComboBoxes.length, 'combo boxes');
+                window.customComboBoxes.forEach(combo => {
+                    if (combo.tag) {
+                        const values = combo.options.slice(1).map(option => option.dataset.value);
+                        comboBoxValues[combo.tag] = values;
+                        console.log('Combo box', combo.tag, 'values:', values);
+                    }
+                });
+            } else {
+                console.log('No custom combo boxes found');
+            }
             
+            // Get linkage data if available
+            if (window.linkageManager) {
+                const templateId = window.linkageManager.getCurrentTemplateId();
+                if (templateId) {
+                    Object.assign(linkageData, window.linkageManager.collectLinkageDataForStorage(templateId));
+                    console.log('Linkage data:', linkageData);
+                }
+            } else {
+                console.log('No linkage manager found');
+            }
+            
+            // Save template
             const templateData = {
-                name: name,
-                description: description,
+                name: templateName,
+                description: templateDescription,
                 template_text: templateText,
                 combo_box_values: comboBoxValues,
                 linkage_data: linkageData
             };
             
+            console.log('Sending template data:', templateData);
+            
             fetch('/api/templates/save', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(templateData)
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data);
                 if (data.success) {
-                    showSaveStatus('Template saved successfully!', 'success');
-                    document.getElementById('templateName').value = '';
-                    document.getElementById('templateDescription').value = '';
-                    loadTemplates(); // Refresh template list
+                    // Update current template name
+                    currentTemplateName = templateName;
+                    alert('Template saved successfully!');
                 } else {
-                    showSaveStatus('Error saving template: ' + data.error, 'error');
+                    alert('Error saving template: ' + data.error);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showSaveStatus('Error saving template: ' + error.message, 'error');
+                console.error('Fetch error:', error);
+                alert('Error saving template: ' + error);
             });
         }
-
-        function showSaveStatus(message, type) {
-            const statusDiv = document.getElementById('saveStatus');
-            statusDiv.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
-        }
-
-        function loadTemplates() {
+        
+        function loadTemplate() {
+            // First, get list of available templates
             fetch('/api/templates/list')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    displayTemplates(data.templates);
+                    const templates = data.templates;
+                    const templateNames = Object.keys(templates);
+                    
+                    if (templateNames.length === 0) {
+                        alert('No saved templates found');
+                        return;
+                    }
+                    
+                    // Build template list HTML
+                    let templateListHtml = '';
+                    templateNames.forEach(name => {
+                        const template = templates[name];
+                        const description = template.description || 'No description';
+                        const createdDate = template.created_at ? new Date(template.created_at).toLocaleDateString() : 'Unknown';
+                        templateListHtml += `
+                            <div class="template-item" data-template-name="${name}" style="padding: 10px; border: 1px solid #ddd; margin: 5px 0; cursor: pointer; border-radius: 4px; transition: background-color 0.2s;">
+                                <h6 style="margin: 0; color: #007bff;">${name}</h6>
+                                <small style="color: #666;">${description}</small><br>
+                                <small style="color: #999;">Created: ${createdDate}</small>
+                            </div>
+                        `;
+                    });
+                    
+                    // Show modal with template list
+                    const modalHtml = `
+                        <div class="modal fade" id="loadTemplateModal" tabindex="-1" aria-labelledby="loadTemplateModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="loadTemplateModalLabel">Load Template</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Select a template to load:</p>
+                                        <div id="templateList">
+                                            ${templateListHtml}
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Remove existing modal if any
+                    const existingModal = document.getElementById('loadTemplateModal');
+                    if (existingModal) {
+                        existingModal.remove();
+                    }
+                    
+                    // Add modal to page
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    
+                    // Add click handlers to template items
+                    document.querySelectorAll('.template-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            const templateName = this.getAttribute('data-template-name');
+                            loadSpecificTemplate(templateName);
+                            // Close modal
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('loadTemplateModal'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                        });
+                        
+                        // Add hover effects
+                        item.addEventListener('mouseenter', function() {
+                            this.style.backgroundColor = '#f8f9fa';
+                        });
+                        item.addEventListener('mouseleave', function() {
+                            this.style.backgroundColor = '';
+                        });
+                    });
+                    
+                    // Show modal
+                    const modal = new bootstrap.Modal(document.getElementById('loadTemplateModal'));
+                    modal.show();
                 } else {
-                    console.error('Error loading templates:', data.error);
+                    alert('Error loading templates: ' + data.error);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                alert('Error loading templates: ' + error);
             });
         }
-
-        function displayTemplates(templates) {
-            const container = document.getElementById('templateList');
-            
-            if (!templates || templates.length === 0) {
-                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No saved templates found.</p>';
-                return;
-            }
-            
-            container.innerHTML = templates.map(template => `
-                <div class="template-item" onclick="loadTemplate('${template.name}')">
-                    <div class="template-name">${template.name}</div>
-                    <div class="template-description">${template.description}</div>
-                </div>
-            `).join('');
-        }
-
-        function loadTemplate(templateName) {
+        
+        function loadSpecificTemplate(templateName) {
             fetch(`/api/templates/load/${encodeURIComponent(templateName)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    loadSpecificTemplate(data.template);
+                    const template = data.template;
+                    
+                    // Load template text
+                    document.getElementById('templateInput').value = template.template_text;
+                    
+                    // Generate combo boxes
+                    generateCustomComboBoxes();
+                    
+                    // Wait for combo boxes to be created, then load values
+                    setTimeout(() => {
+                        console.log('=== LOADING TEMPLATE VALUES ===');
+                        console.log('customComboBoxes:', window.customComboBoxes);
+                        console.log('template.combo_box_values:', template.combo_box_values);
+                        
+                        // Load combo box values
+                        if (window.customComboBoxes && template.combo_box_values) {
+                            console.log('=== LOADING COMBO BOX VALUES ===');
+                            console.log('customComboBoxes:', window.customComboBoxes);
+                            console.log('template.combo_box_values:', template.combo_box_values);
+                            
+                            window.customComboBoxes.forEach((combo, index) => {
+                                console.log(`=== Processing combo ${index} ===`);
+                                console.log('combo.tag:', combo.tag);
+                                console.log('template.combo_box_values[combo.tag]:', template.combo_box_values[combo.tag]);
+                                
+                                if (combo.tag && template.combo_box_values[combo.tag]) {
+                                    const values = template.combo_box_values[combo.tag];
+                                    console.log('Values for', combo.tag, ':', values);
+                                    console.log('Values length:', values.length);
+                                    
+                                    // Simply add saved options to existing combo box
+                                    values.forEach((value, valueIndex) => {
+                                        console.log(`Adding value ${valueIndex}:`, value);
+                                        // Check if option already exists to avoid duplicates
+                                        const existingOption = combo.dropdown.querySelector(`[data-value="${value}"]`);
+                                        if (!existingOption) {
+                                            console.log('Option does not exist, adding:', value);
+                                            try {
+                                                combo.addOption(value, true, false); // Add without selecting, skip callback to prevent linkage interference
+                                                console.log('Successfully added option:', value);
+                                                console.log('Dropdown HTML after adding:', combo.dropdown.innerHTML);
+                                                console.log('Options array length:', combo.options.length);
+                                                console.log('Dropdown visible:', combo.dropdown.style.display);
+                                                console.log('Dropdown class list:', combo.dropdown.classList.toString());
+                                            } catch (error) {
+                                                console.error('Error adding option:', value, error);
+                                            }
+                                        } else {
+                                            console.log('Option already exists:', value);
+                                        }
+                                    });
+                                } else {
+                                    console.log('No values found for tag:', combo.tag);
+                                }
+                            });
+                        } else {
+                            console.log('Missing customComboBoxes or combo_box_values');
+                        }
+                        
+                        // Load linkage data if available
+                        if (window.linkageManager && template.linkage_data) {
+                            console.log('=== LOADING LINKAGE DATA ===');
+                            console.log('template.linkage_data:', template.linkage_data);
+                            
+                            // Get the current template ID from LinkageManager
+                            const templateId = window.linkageManager.getCurrentTemplateId();
+                            if (templateId) {
+                                console.log('Restoring linkage data for template ID:', templateId);
+                                
+                                // Restore linkage data to LinkageManager
+                                window.linkageManager.linkageData[templateId] = template.linkage_data;
+                                
+                                console.log('Linkage data restored:', window.linkageManager.linkageData[templateId]);
+                            } else {
+                                console.log('No current template ID found');
+                            }
+                        } else {
+                            console.log('No linkage data to restore or LinkageManager not available');
+                        }
+                        
+        // Final summary of all combo boxes
+        console.log('=== FINAL COMBO BOX SUMMARY ===');
+        window.customComboBoxes.forEach((combo, index) => {
+            console.log(`Combo ${index} (${combo.tag}):`);
+            console.log(`  - Options count: ${combo.options.length}`);
+            console.log(`  - Dropdown HTML: ${combo.dropdown.innerHTML}`);
+            console.log(`  - Dropdown visible: ${combo.dropdown.style.display}`);
+            console.log(`  - Options array:`, combo.options.map(opt => opt.dataset.value));
+        });
+        
+        // Add a test function to manually check dropdown contents
+        window.testDropdown = function(tag) {
+            const combo = window.customComboBoxes.find(c => c.tag === tag);
+            if (combo) {
+                console.log(`=== TESTING DROPDOWN FOR ${tag} ===`);
+                console.log('Options array length:', combo.options.length);
+                console.log('Options array:', combo.options.map(opt => opt.dataset.value));
+                console.log('DOM query result:', Array.from(combo.dropdown.querySelectorAll('.combo-box-option')).map(opt => opt.dataset.value));
+                console.log('Dropdown HTML:', combo.dropdown.innerHTML);
+            } else {
+                console.log('Combo box not found for tag:', tag);
+            }
+        };
+        
+        // Add a function to force refresh options array
+        window.refreshOptions = function(tag) {
+            const combo = window.customComboBoxes.find(c => c.tag === tag);
+            if (combo) {
+                console.log(`=== REFRESHING OPTIONS FOR ${tag} ===`);
+                console.log('Before refresh:', combo.options.map(opt => opt.dataset.value));
+                combo.options = Array.from(combo.dropdown.querySelectorAll('.combo-box-option'));
+                console.log('After refresh:', combo.options.map(opt => opt.dataset.value));
+            }
+        };
+                        
+                        // Note: Linkage data is restored in the main loading section above
+                        
+                        // Update current template name
+                        currentTemplateName = templateName;
+                        
+                        alert('Template loaded successfully!');
+                    }, 500);
                 } else {
                     alert('Error loading template: ' + data.error);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error loading template: ' + error.message);
+                alert('Error loading template: ' + error);
             });
-        }
-
-        function loadSpecificTemplate(template) {
-            console.log('Loading template:', template);
-            
-            // Set template text
-            document.getElementById('templateInput').value = template.template_text || '';
-            
-            // Parse template to generate dropdowns
-            parseTemplate();
-            
-            // Wait a moment for dropdowns to be created, then populate them
-            setTimeout(() => {
-                populateTemplateData(template);
-            }, 100);
-        }
-
-        function populateTemplateData(template) {
-            console.log('Populating template data:', template);
-            
-            // Restore combo box values
-            if (template.combo_box_values) {
-                Object.keys(template.combo_box_values).forEach(tag => {
-                    const comboElement = document.getElementById(`combo-${tag}`);
-                    if (comboElement) {
-                        const comboData = template.combo_box_values[tag];
-                        const input = comboElement.querySelector('.combo-input');
-                        const dropdown = comboElement.querySelector('.combo-dropdown');
-                        
-                        // Clear existing options
-                        dropdown.innerHTML = '';
-                        
-                        // Add options from saved data
-                        if (comboData.options) {
-                            comboData.options.forEach(option => {
-                                const optionElement = document.createElement('div');
-                                optionElement.className = 'combo-option';
-                                optionElement.textContent = option;
-                                optionElement.onclick = () => selectOption(comboElement, option);
-                                dropdown.appendChild(optionElement);
-                            });
-                        }
-                        
-                        // Set selected value
-                        if (comboData.value) {
-                            input.value = comboData.value;
-                        }
-                    }
-                });
-            }
-            
-            // Restore linkage data
-            if (template.linkage_data && window.linkageManager) {
-                window.linkageManager.linkageData[currentTemplateId] = template.linkage_data;
-                console.log('Linkage data restored for template:', currentTemplateId);
-            }
-            
-            // Generate the final prompt
-            generateTemplate();
-        }
-
-        function selectOption(comboElement, value) {
-            const input = comboElement.querySelector('.combo-input');
-            const dropdown = comboElement.querySelector('.combo-dropdown');
-            
-            input.value = value;
-            dropdown.style.display = 'none';
         }
     </script>
 </body>

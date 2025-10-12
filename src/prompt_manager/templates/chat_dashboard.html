@@ -1084,10 +1084,36 @@
             });
         }
 
-        function saveAsPrompt(button) {
+        async function saveAsPrompt(button) {
             const messageText = button.closest('.message-content').querySelector('.message-text').textContent;
-            // TODO: Integrate with prompt library
-            showNotification('Prompt library integration coming soon!', 'success');
+            
+            // Prompt for a name
+            const name = prompt('Enter a name for this prompt:');
+            if (!name) return;
+            
+            try {
+                const response = await fetch('/api/prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        content: messageText,
+                        category: 'chat-saved',
+                        tags: ['chat']
+                    })
+                });
+                
+                if (response.ok) {
+                    showNotification('Prompt saved successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to save: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`Error saving prompt: ${error.message}`, 'error');
+            }
         }
 
         // Prompts Library Modal Functions

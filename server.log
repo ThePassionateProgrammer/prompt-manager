@@ -31,3 +31,4 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:8000
  * Running on http://192.168.4.81:8000
 Press CTRL+C to quit
+127.0.0.1 - - [13/Oct/2025 16:30:37] "GET /dashboard HTTP/1.1" 200 -

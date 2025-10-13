@@ -16,15 +16,42 @@ provider_manager = LLMProviderManager()
 conversation_manager = ConversationManager()
 token_manager = TokenManager()
 
+# Load saved API keys and initialize providers on startup
+def _initialize_providers():
+    """Load saved API keys and initialize providers."""
+    key_manager = SecureKeyManager()
+    saved_keys = key_manager.load_all_keys()
+    
+    # Initialize providers from saved keys
+    for key_name, key_value in saved_keys.items():
+        # Extract provider name from key name (e.g., 'openai_api_key' -> 'openai')
+        if key_name.endswith('_api_key'):
+            provider_name = key_name.replace('_api_key', '')
+            
+            # Create provider based on name
+            if provider_name.lower() == 'openai':
+                provider = OpenAIProvider(api_key=key_value)
+                provider_manager.add_provider('openai', provider)
+                
+                # Set as default if it's the first one
+                if provider_manager.default_provider is None:
+                    provider_manager.set_default_provider('openai')
+            # Add other providers here as we support them (anthropic, google, etc.)
+
+# Initialize providers on module load
+_initialize_providers()
+
 @dashboard_bp.route('/dashboard')
+@dashboard_bp.route('/')
 def dashboard():
-    """Render the main dashboard page."""
-    return render_template('dashboard.html')
+    """Render the main dashboard page (chat interface)."""
+    return render_template('chat_dashboard.html')
 
 @dashboard_bp.route('/chat')
-def chat_dashboard():
-    """Render the enhanced chat dashboard."""
-    return render_template('chat_dashboard.html')
+def chat_redirect():
+    """Redirect /chat to /dashboard for backward compatibility."""
+    from flask import redirect, url_for
+    return redirect(url_for('dashboard.dashboard'))
 
 @dashboard_bp.route('/settings')
 def settings():

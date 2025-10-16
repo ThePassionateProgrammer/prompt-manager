@@ -562,23 +562,23 @@
             
             const data = {
                 name: name,
-                content: text,
+                text: text,  // Changed from 'content' to 'text' to match API
                 category: category,
                 description: description || undefined
             };
             
-            try {
+            try:
                 let response;
                 if (id) {
                     // Update existing
-                    response = await fetch(`/api/prompt/${id}`, {
+                    response = await fetch(`/api/prompts/${id}`, {  // Changed from /api/prompt/ to /api/prompts/
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
                     });
                 } else {
                     // Create new
-                    response = await fetch('/api/prompt', {
+                    response = await fetch('/api/prompts', {  // Changed from /api/prompt to /api/prompts
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
@@ -602,7 +602,7 @@
             if (!confirm('Are you sure you want to delete this prompt?')) return;
             
             try {
-                const response = await fetch(`/api/prompt/${id}`, {
+                const response = await fetch(`/api/prompts/${id}`, {  // Changed from /api/prompt/ to /api/prompts/
                     method: 'DELETE'
                 });
                 

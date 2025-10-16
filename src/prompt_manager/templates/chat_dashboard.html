@@ -909,8 +909,12 @@
         }
 
         async function sendMessage(providedMessage = null) {
+            // If called from button click, providedMessage will be the event object
+            // Only use providedMessage if it's a string
             const input = document.getElementById('chat-input');
-            const message = providedMessage || input.value.trim();
+            const message = (typeof providedMessage === 'string' && providedMessage) 
+                ? providedMessage 
+                : input.value.trim();
             
             if (!message || isLoading) return;
 
@@ -1099,14 +1103,14 @@
             if (!name) return;
             
             try {
-                const response = await fetch('/api/prompt', {
+                const response = await fetch('/api/prompts', {  // Changed from /api/prompt to /api/prompts
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         name: name,
-                        content: messageText,
+                        text: messageText,  // Changed from 'content' to 'text' to match API
                         category: 'chat-saved',
                         tags: ['chat']
                     })
@@ -1303,6 +1307,17 @@ Created: ${prompt.created_at ? new Date(prompt.created_at).toLocaleString() : 'U
             }
         }
 
+        function getContextLimit(model) {
+            /**Get context limit for a model.*/
+            const limits = {
+                'gpt-4-turbo-preview': 128000,
+                'gpt-4': 8192,
+                'gpt-3.5-turbo': 4096,
+                'gpt-3.5-turbo-16k': 16384
+            };
+            return limits[model] || 4096;
+        }
+        
         function updateTokenUsage(tokenUsage) {
             const percentage = tokenUsage.percentage || 0;
             const bar = document.getElementById('token-bar');
@@ -1388,6 +1403,20 @@ Created: ${prompt.created_at ? new Date(prompt.created_at).toLocaleString() : 'U
                     if (conversation.model) {
                         document.getElementById('model-select').value = conversation.model;
                     }
+                    
+                    // Recalculate token usage for loaded conversation
+                    const model = conversation.model || document.getElementById('model-select').value;
+                    const estimatedTokens = messages.reduce((total, msg) => {
+                        return total + Math.ceil(msg.content.length / 4);
+                    }, 0);
+                    
+                    // Update token display
+                    updateTokenUsage({
+                        prompt_tokens: estimatedTokens,
+                        total_tokens: estimatedTokens,
+                        context_limit: getContextLimit(model),
+                        percentage: Math.min(100, (estimatedTokens / getContextLimit(model)) * 100)
+                    });
                     
                     showNotification('Conversation loaded', 'success');
                 }

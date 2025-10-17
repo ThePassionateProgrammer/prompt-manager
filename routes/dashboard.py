@@ -160,6 +160,45 @@ def test_provider():
 # Default system prompt
 DEFAULT_SYSTEM_PROMPT = "You are a helpful, knowledgeable, and friendly AI assistant. Provide clear, accurate, and concise responses."
 
+def _build_message_array(message, history, system_prompt):
+    """Build message array for LLM with system prompt, history, and new message.
+    
+    This is pure domain logic - no dependencies on Flask or infrastructure.
+    """
+    messages = []
+    
+    # Add system prompt
+    messages.append({
+        'role': 'system',
+        'content': system_prompt
+    })
+    
+    # Add history
+    messages.extend(history)
+    
+    # Add new user message
+    messages.append({
+        'role': 'user',
+        'content': message
+    })
+    
+    return messages
+
+def _auto_trim_if_needed(messages, model, auto_trim, token_manager):
+    """Automatically trim messages if they approach context limit.
+    
+    This is domain logic about context window management.
+    Returns (messages, trimmed_count) tuple.
+    """
+    trimmed_count = 0
+    
+    if auto_trim:
+        prompt_tokens = token_manager.calculate_message_tokens(messages)
+        if token_manager.should_trim(prompt_tokens, model, threshold=0.9):
+            messages, trimmed_count = token_manager.trim_messages(messages, keep_count=5)
+    
+    return messages, trimmed_count
+
 @dashboard_bp.route('/api/chat/send', methods=['POST'])
 def send_chat_message():
     """Send a chat message to a provider with history and context management."""
@@ -183,29 +222,10 @@ def send_chat_message():
             return jsonify({'error': f'Provider {provider_name} not found. Please add your API key in Settings.'}), 404
         
         # Build messages array: system + history + new message
-        messages = []
-        
-        # Add system prompt
-        messages.append({
-            'role': 'system',
-            'content': system_prompt
-        })
-        
-        # Add history
-        messages.extend(history)
-        
-        # Add new user message
-        messages.append({
-            'role': 'user',
-            'content': message
-        })
+        messages = _build_message_array(message, history, system_prompt)
         
         # Auto-trim if needed
-        trimmed_count = 0
-        if auto_trim:
-            prompt_tokens = token_manager.calculate_message_tokens(messages)
-            if token_manager.should_trim(prompt_tokens, model, threshold=0.9):
-                messages, trimmed_count = token_manager.trim_messages(messages, keep_count=5)
+        messages, trimmed_count = _auto_trim_if_needed(messages, model, auto_trim, token_manager)
         
         # Calculate token usage before sending
         token_usage = token_manager.calculate_token_usage(messages, model)

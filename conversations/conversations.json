@@ -184,8 +184,8 @@
     "model": "gpt-3.5-turbo",
     "system_prompt": "You are helpful",
     "title": "Test Conversation",
-    "created_at": "2025-10-17T17:55:17.389651",
-    "updated_at": "2025-10-17T17:55:17.389668"
+    "created_at": "2025-10-17T18:05:27.672689",
+    "updated_at": "2025-10-17T18:05:27.672708"
   },
   "conv-456": {
     "id": "conv-456",
@@ -196,29 +196,29 @@
       }
     ],
     "title": "Loaded Conversation",
-    "created_at": "2025-10-17T17:55:17.400169",
-    "updated_at": "2025-10-17T17:55:17.400184"
+    "created_at": "2025-10-17T18:05:27.738184",
+    "updated_at": "2025-10-17T18:05:27.738215"
   },
   "conv-0": {
     "id": "conv-0",
     "messages": [],
     "title": "Conversation 0",
-    "created_at": "2025-10-17T17:55:17.426182",
-    "updated_at": "2025-10-17T17:55:17.426195"
+    "created_at": "2025-10-17T18:05:27.915930",
+    "updated_at": "2025-10-17T18:05:27.915952"
   },
   "conv-1": {
     "id": "conv-1",
     "messages": [],
     "title": "Conversation 1",
-    "created_at": "2025-10-17T17:55:17.428159",
-    "updated_at": "2025-10-17T17:55:17.428174"
+    "created_at": "2025-10-17T18:05:27.924125",
+    "updated_at": "2025-10-17T18:05:27.924145"
   },
   "conv-2": {
     "id": "conv-2",
     "messages": [],
     "title": "Conversation 2",
-    "created_at": "2025-10-17T17:55:17.429912",
-    "updated_at": "2025-10-17T17:55:17.429923"
+    "created_at": "2025-10-17T18:05:27.932629",
+    "updated_at": "2025-10-17T18:05:27.932645"
   },
   "conv-0e8f9ce44c75": {
     "messages": [
@@ -253,8 +253,8 @@
       }
     ],
     "title": "Original",
-    "created_at": "2025-10-17T17:55:17.495237",
-    "updated_at": "2025-10-17T17:55:17.495251"
+    "created_at": "2025-10-17T18:05:28.066393",
+    "updated_at": "2025-10-17T18:05:28.066411"
   },
   "conv-3021e1db13b9": {
     "messages": [],
@@ -549,5 +549,67 @@
     "id": "conv-c7f1194b9d20",
     "created_at": "2025-10-17T17:55:17.796439",
     "updated_at": "2025-10-17T17:55:17.796463"
+  },
+  "conv-46f800dff6ff": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-46f800dff6ff",
+    "title": "What is Python?",
+    "created_at": "2025-10-17T18:05:28.014604",
+    "updated_at": "2025-10-17T18:05:28.014625"
+  },
+  "conv-cdd202fb6f19": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-cdd202fb6f19",
+    "created_at": "2025-10-17T18:05:28.091258",
+    "updated_at": "2025-10-17T18:05:28.091294"
+  },
+  "conv-c5f89ab38575": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-c5f89ab38575",
+    "title": "Test message",
+    "created_at": "2025-10-17T18:05:28.116314",
+    "updated_at": "2025-10-17T18:05:28.116332"
+  },
+  "conv-56a184556868": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-56a184556868",
+    "created_at": "2025-10-17T18:05:28.147944",
+    "updated_at": "2025-10-17T18:05:28.147965"
+  },
+  "conv-5c721eb6ba76": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-5c721eb6ba76",
+    "created_at": "2025-10-17T18:05:28.204580",
+    "updated_at": "2025-10-17T18:05:28.204599"
   }
 }

@@ -12,19 +12,20 @@
 
 ## ACT 1: THE PROBLEM (Screen + Voiceover - 1 minute)
 
-**Show:** `routes/dashboard.py` open, scroll to line 163
+**Show:** `routes/dashboard.py` open, scroll to **line 163** (the `send_chat_message` function)
 
 **You say:**
 > "Here's our chat endpoint - 78 lines doing six different things. Let me trace through it..."
 
 **Scroll slowly through the function, pausing at:**
 
-- **Lines 168-175:** "HTTP parsing - getting data from the request"
-- **Lines 177-178:** "Validation"  
+- **Lines 167-175:** "HTTP parsing - getting data from the request"
+- **Lines 177-183:** "Validation and provider lookup"  
 - **Lines 185-201:** "Message array building - this is domain logic hiding in a route"
-- **Lines 203-209:** "Token management - more domain logic"
-- **Lines 211-218:** "LLM API call"
-- **Lines 220-222:** "Token calculation again"
+- **Lines 203-208:** "Token trimming - more domain logic"
+- **Lines 210-211:** "Token calculation"
+- **Lines 213-219:** "LLM API call"
+- **Line 222:** "Token update"
 
 **You say:**
 > "Six responsibilities in one function. Can't test the message building without mocking Flask, the LLM provider, and the database. Let's fix it."
@@ -39,13 +40,13 @@
 
 **NARRATION CUES:**
 
-**When you see GREEN lines (new function added):**
+**When you see GREEN lines (new function added around line 163):**
 > "I'm extracting the message building into its own function. Notice - no Flask dependencies, no HTTP, just pure business logic. Takes three inputs, returns an array."
 
-**Point out the new function (lines 163-185):**
-- Line 164: "Clear docstring explaining what it does"
-- Line 167: "Pure domain logic"
-- Lines 169-184: "Simple, focused, testable"
+**Point out the new function:**
+- "Clear docstring explaining what it does"
+- "'Pure domain logic' - no Flask, no infrastructure"
+- "Simple, focused, testable - just builds the message array"
 
 **When you see RED lines (old code removed) and GREEN line (replacement):**
 > "Now the main function just calls our extracted method. 16 lines became 1 line. The function is shorter and its intent is clearer."
@@ -77,9 +78,9 @@
 > "Same pattern. Extract the token trimming logic - it's another domain concept about context window management."
 
 **Point out:**
-- Line 187: "Takes messages and model as input"
-- Line 192: "Returns messages and trimmed count"
-- Line 195-198: "Domain logic - when to trim, how much to keep"
+- "Takes messages, model, and auto_trim flag as input"
+- "Returns messages and trimmed_count as a tuple"
+- "Domain logic - when to trim (90% of context), how much to keep (5 messages)"
 
 **When you see RED/GREEN replacement:**
 > "Five lines become one. The function gets even clearer."
@@ -118,18 +119,19 @@
 **When you see GREEN lines (new DI code at top of function):**
 > "Three lines. Get managers from Flask's app config. If tests inject mocks, we use those. Otherwise, fall back to the globals. Backward compatible."
 
-**Point out lines 206-208:**
+**Point out the pattern:**
 - "provider_mgr = current_app.config.get('PROVIDER_MANAGER', provider_manager)"
+- "First parameter: what tests will inject. Second parameter: fallback to global."
 
 **You say:**
-> "First parameter is the injected version, second is the fallback. Now look what changes..."
+> "Now look what changes in the function body..."
 
 **When you see RED/GREEN replacements throughout function:**
 > "Every place we used the global, we now use the injected version. provider_manager becomes provider_mgr. token_manager becomes token_mgr."
 
-**Point out the pattern - show 2-3 examples:**
-- Line 226: `provider_mgr.get_provider()` instead of `provider_manager.get_provider()`
-- Line 234: `token_mgr.calculate_token_usage()` instead of `token_manager.calculate_token_usage()`
+**Point out the pattern - show 2-3 examples as you scroll:**
+- "provider_mgr.get_provider() instead of provider_manager.get_provider()"
+- "token_mgr.calculate_token_usage() instead of token_manager.calculate_token_usage()"
 
 **Accept the changes.**
 

@@ -1,6 +1,18 @@
-# Prompt Manager
+# Prompt Manager V1.0
 
-A modern web-based prompt management system with AI chat capabilities, template building, and secure API key management.
+A production-ready prompt management system with AI chat capabilities, template building, and domain-driven architecture.
+
+[![Tests](https://img.shields.io/badge/tests-447%20passing-brightgreen)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage->90%25-brightgreen)](#)
+[![Python](https://img.shields.io/badge/python-3.11-blue)](#)
+[![Architecture](https://img.shields.io/badge/architecture-clean-blue)](#)
+
+**V1.0 Highlights:**
+- 🏗️ Clean Architecture (Routes → Business → Domain)
+- 🎯 Domain-Driven Design with pure domain models
+- ✅ 447 comprehensive tests (all passing)
+- 🔒 Encrypted API key storage
+- 🚀 Production-ready code quality
 
 ## 🌟 Features
 
@@ -220,6 +232,33 @@ See `TESTING_GUIDE.md` for detailed testing documentation.
 
 ## 🏗️ Architecture
 
+**V1.0 features a clean, three-layer architecture:**
+
+```
+┌─────────────────────────────────────┐
+│     Routes (HTTP Layer)             │
+│   • Thin orchestration              │
+│   • No business logic               │
+└──────────────┬──────────────────────┘
+               │ uses
+               ▼
+┌─────────────────────────────────────┐
+│  Business Layer (Services)          │
+│   • LLMProviderManager              │
+│   • ConversationManager             │
+│   • TokenManager                    │
+└──────────────┬──────────────────────┘
+               │ uses
+               ▼
+┌─────────────────────────────────────┐
+│   Domain Layer (Pure Logic)         │
+│   • ConversationBuilder             │
+│   • ContextWindowManager            │
+│   • LinkageManager                  │
+│   ✅ Zero dependencies               │
+└─────────────────────────────────────┘
+```
+
 ### **Project Structure**
 ```
 prompt-manager/
@@ -229,10 +268,14 @@ prompt-manager/
 │   ├── linkage.py                 # Template builder routes
 │   └── static.py                  # Static file serving
 ├── src/prompt_manager/
-│   ├── business/                  # Business logic (testable)
+│   ├── domain/                    # Pure business logic (NEW in V1.0)
+│   │   ├── conversation.py        # ConversationBuilder & ContextWindowManager
+│   │   └── linkage_manager.py    # Template linkage rules
+│   ├── business/                  # Business services
 │   │   ├── llm_provider_manager.py
 │   │   ├── llm_provider.py
 │   │   ├── conversation_manager.py
+│   │   ├── token_manager.py
 │   │   ├── key_loader.py
 │   │   └── ...
 │   ├── templates/                 # Jinja2 HTML templates
@@ -250,20 +293,32 @@ prompt-manager/
 ```
 
 ### **Clean Architecture Principles**
-- **Business Logic**: Isolated, testable manager classes
-- **Routes**: Thin HTTP handlers, no business logic
+- **Domain Layer**: Pure business logic, zero dependencies (NEW in V1.0)
+- **Business Layer**: Services orchestrating domain and infrastructure
+- **Routes**: Thin HTTP handlers, dependency injection pattern
 - **Templates**: Presentation only, no logic
-- **Tests**: 100% coverage for business logic
+- **Tests**: 447 tests covering all layers, 16 pure domain tests
+
+### **Domain Models (Pure Business Logic)**
+- **ConversationBuilder**: Message array construction rules
+- **ContextWindowManager**: Token trimming and context limits
+- **LinkageManager**: Template variable linkage system
+
+✅ **No Flask dependencies** - Portable to CLI, desktop, or mobile apps!
 
 ## 🚀 Roadmap
 
-### **Version 1.0** (Current)
+### **Version 1.0** ✅ COMPLETE
 - ✅ Multi-model chat interface
-- ✅ Token tracking and management
+- ✅ Token tracking and auto-trimming
 - ✅ Conversation persistence
-- ✅ Secure API key storage
+- ✅ Secure API key storage (encrypted)
 - ✅ System prompt customization
-- ⏳ Code refactoring (in progress)
+- ✅ Template builder with linkages
+- ✅ Clean architecture refactoring
+- ✅ Domain-driven design
+- ✅ 447 comprehensive tests
+- ✅ Dependency injection pattern
 
 ### **Version 2.0** (Planned)
 - 🔮 Claude and Gemini integration
@@ -275,10 +330,21 @@ prompt-manager/
 
 ## 📝 Documentation
 
+### **V1.0 Documentation**
+- **V1_FINAL_REPORT.md**: Complete V1.0 metrics and achievements
+- **V1_COMPLETION_PLAN.md**: Refactoring strategy and execution
+- **EPISODE_8A_NARRATION_SCRIPT.md**: Safe refactoring guide
+- **EPISODE_9_DOMAIN_MODELS_SCRIPT.md**: Domain extraction guide
+- **.cursorrules**: AI collaboration partnership charter
+
+### **Technical Documentation**
 - **TESTING_GUIDE.md**: Comprehensive testing documentation
-- **REFACTORING_PLAN.md**: Code cleanup roadmap
+- **ARCHITECTURE.md**: System design and patterns (coming soon)
 - **CHAT_IMPLEMENTATION.md**: Chat feature technical details
-- **YOUTUBE_SCRIPT_EP6.md**: Video content for this build
+
+### **Video Series**
+- 📹 **Episode 8A**: Safe Refactoring (Extract Method, Dependency Injection)
+- 📹 **Episode 9**: Domain Models (What they are & why they matter)
 
 ## 🤝 Contributing
 

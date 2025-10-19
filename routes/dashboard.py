@@ -8,6 +8,7 @@ from src.prompt_manager.business.llm_provider import OpenAIProvider
 from src.prompt_manager.business.key_loader import SecureKeyManager
 from src.prompt_manager.business.conversation_manager import ConversationManager
 from src.prompt_manager.business.token_manager import TokenManager
+from src.prompt_manager.domain.conversation import ConversationBuilder, ContextWindowManager
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -160,10 +161,35 @@ def test_provider():
 # Default system prompt
 DEFAULT_SYSTEM_PROMPT = "You are a helpful, knowledgeable, and friendly AI assistant. Provide clear, accurate, and concise responses."
 
+
+def _auto_trim_if_needed(messages, model, auto_trim, token_manager):
+    """Automatically trim messages if they approach context limit.
+    
+    Uses ContextWindowManager domain model for trimming logic.
+    Returns (messages, trimmed_count) tuple.
+    """
+    trimmed_count = 0
+    
+    if auto_trim:
+        prompt_tokens = token_manager.calculate_message_tokens(messages)
+        if token_manager.should_trim(prompt_tokens, model, threshold=0.9):
+            # Use domain model for business rule: how many messages to keep?
+            context_mgr = ContextWindowManager()
+            keep_count = context_mgr.calculate_keep_count(len(messages), keep_recent=5)
+            messages, trimmed_count = token_manager.trim_messages(messages, keep_count=keep_count)
+    
+    return messages, trimmed_count
+
 @dashboard_bp.route('/api/chat/send', methods=['POST'])
 def send_chat_message():
     """Send a chat message to a provider with history and context management."""
     try:
+        # Dependency Injection - get managers from app config instead of globals
+        from flask import current_app
+        provider_mgr = current_app.config.get('PROVIDER_MANAGER', provider_manager)
+        token_mgr = current_app.config.get('TOKEN_MANAGER', token_manager)
+        conversation_mgr = current_app.config.get('CONVERSATION_MANAGER', conversation_manager)
+        
         data = request.get_json()
         message = data.get('message')
         provider_name = data.get('provider', 'openai')
@@ -178,37 +204,19 @@ def send_chat_message():
             return jsonify({'error': 'Message is required'}), 400
         
         # Get the provider
-        provider = provider_manager.get_provider(provider_name)
+        provider = provider_mgr.get_provider(provider_name)
         if not provider:
             return jsonify({'error': f'Provider {provider_name} not found. Please add your API key in Settings.'}), 404
         
         # Build messages array: system + history + new message
-        messages = []
-        
-        # Add system prompt
-        messages.append({
-            'role': 'system',
-            'content': system_prompt
-        })
-        
-        # Add history
-        messages.extend(history)
-        
-        # Add new user message
-        messages.append({
-            'role': 'user',
-            'content': message
-        })
+        conversation_builder = ConversationBuilder()
+        messages = conversation_builder.build_messages(message, history, system_prompt)
         
         # Auto-trim if needed
-        trimmed_count = 0
-        if auto_trim:
-            prompt_tokens = token_manager.calculate_message_tokens(messages)
-            if token_manager.should_trim(prompt_tokens, model, threshold=0.9):
-                messages, trimmed_count = token_manager.trim_messages(messages, keep_count=5)
+        messages, trimmed_count = _auto_trim_if_needed(messages, model, auto_trim, token_mgr)
         
         # Calculate token usage before sending
-        token_usage = token_manager.calculate_token_usage(messages, model)
+        token_usage = token_mgr.calculate_token_usage(messages, model)
         
         # Generate response using messages
         response = provider.generate(
@@ -219,7 +227,7 @@ def send_chat_message():
         )
         
         # Update token usage with completion
-        token_usage = token_manager.update_with_completion(token_usage, response)
+        token_usage = token_mgr.update_with_completion(token_usage, response)
         
         result = {
             'response': response,

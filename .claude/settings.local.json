@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(printf:*)",
+      "Bash(git credential-osxkeychain:*)",
+      "Bash(echo:*)",
+      "Bash(claude:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

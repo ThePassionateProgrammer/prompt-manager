@@ -90,23 +90,49 @@ This installs:
 Run the test suite to ensure everything is working:
 
 ```bash
-python -m pytest tests/ -v
+./venv/bin/python -m pytest tests/ -v
 ```
 
 You should see all tests passing:
 ```
-==================== 26 passed in 0.15s ====================
+==================== 42 passed in 0.17s ====================
 ```
 
 ## Running the Application
 
-### Option 1: Chat Interface (Coming Soon - Phase 2+)
+### Current Development Status
+
+**Phases 1 & 2 Complete (42 tests passing)**:
+- ✅ Domain models (ChatMessage, Conversation)
+- ✅ Ollama integration with streaming support
+- ⏳ Web interface coming in Phase 5+
+
+To test the current implementation:
+
+```bash
+# Activate virtual environment
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Ensure Ollama is running
+ollama list  # Should show gemma3:4b
+
+# Run all tests to see domain models and Ollama provider in action
+./venv/bin/python -m pytest tests/ -v
+
+# Run specific domain tests
+./venv/bin/python -m pytest tests/test_conversation.py -v
+
+# Run Ollama integration tests (uses mocks, no server needed)
+./venv/bin/python -m pytest tests/test_ollama_provider.py -v
+```
+
+### Option 1: Chat Interface (Coming in Phase 5+)
 
 ```bash
 # Activate virtual environment
 source venv/bin/activate
 
-# Start the unified server
+# Start the unified server (not yet implemented)
 python -m src.prompt_manager.app
 
 # Open browser to http://localhost:8000/chat
@@ -250,12 +276,13 @@ Feel free to:
 ### Phase 1: Domain Models ✅
 - [x] ChatMessage entity
 - [x] Conversation aggregate root
-- [x] Comprehensive test coverage
+- [x] Comprehensive test coverage (26 tests)
 
-### Phase 2: Ollama Integration (In Progress)
-- [ ] OllamaProvider implementation
-- [ ] Streaming response support
-- [ ] Health checks and error handling
+### Phase 2: Ollama Integration ✅
+- [x] OllamaProvider implementation
+- [x] Streaming response support
+- [x] Health checks and error handling
+- [x] Complete test coverage (16 tests)
 
 ### Phase 3: Persistence
 - [ ] ConversationStorage

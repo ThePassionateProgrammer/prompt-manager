@@ -1,197 +1,292 @@
 # Prompt Manager
 
-A simple command-line tool for managing prompts with JSON persistence.
+An educational AI collaboration playground with chat interface, prompt library, and local LLM support. Built test-first using domain-driven design principles.
+
+## Vision
+
+Prompt Manager is designed to help you:
+- **Learn to prompt effectively** through experimentation and prompt reuse
+- **Chat with local AI models** (currently Gemma3 via Ollama)
+- **Manage and share prompts** with an organized library
+- **Explore different AI interfaces** as we build new interaction patterns
+
+This is both a learning tool for AI collaboration and a useful chat client, with an emphasis on clean architecture and extensibility.
 
 ## Features
 
-- **GUID-based identification**: Each prompt has a unique GUID for reliable identification
-- **JSON persistence**: Prompts are stored in JSON format in the current working directory
-- **CLI interface**: Full command-line interface for all operations
-- **Search functionality**: Search prompts by name or content
-- **Category organization**: Organize prompts by categories
-- **Error handling**: Graceful error handling for all operations
+### Current (v1.0 - In Development)
+- **Chat Interface**: Real-time streaming chat with Ember (Gemma3:4b)
+- **Conversation Persistence**: Save and resume chat sessions
+- **Prompt Library**: Organize, search, and reuse prompts
+- **Local LLM Support**: Run entirely offline with Ollama
+- **Domain-Driven Design**: Clean, testable, extensible architecture
+- **Test Coverage**: Comprehensive test suite (26+ tests and growing)
+
+### Legacy Features (Available in Advanced Mode)
+- Template Builder with cascading dependencies
+- Prompt Builder with reusable components
+- Category organization
+- Search functionality
+
+## Prerequisites
+
+- **Python 3.11+**
+- **Ollama** (for local LLM support)
+- **Git** (for cloning the repository)
+
+### Installing Ollama
+
+Ollama is required to run local AI models:
+
+```bash
+# macOS/Linux
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Or download from https://ollama.com/download
+```
+
+After installing Ollama, pull the Gemma3 model:
+
+```bash
+ollama pull gemma3:4b
+```
+
+Verify it's working:
+
+```bash
+ollama list  # Should show gemma3:4b
+```
 
 ## Installation
 
-1. Clone the repository
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install pytest
-   ```
-
-## Usage
-
-### Demo Script
-
-The easiest way to see the prompt manager in action is to run the demo script:
+### 1. Clone the Repository
 
 ```bash
-# Activate virtual environment
-source venv/bin/activate
-
-# Run the demo script
-python demo_script.py
+git clone https://github.com/ThePassionateProgrammer/prompt-manager.git
+cd prompt-manager
 ```
 
-This will:
-1. Add two sample prompts (a greeting and farewell)
-2. List all prompts in storage
-3. Retrieve and display the first prompt in both human-readable and JSON formats
-
-### CLI Commands
-
-The prompt manager provides a full CLI interface:
+### 2. Create Virtual Environment
 
 ```bash
-# Add a prompt with text
-python prompt_manager.py add "My Prompt" --text "This is my prompt text"
-
-# Add a prompt by reading from stdin
-echo "This is my prompt text" | python prompt_manager.py add "My Prompt"
-
-# List all prompts
-python prompt_manager.py list
-
-# List prompts by category
-python prompt_manager.py list --category greeting
-
-# Get a specific prompt by ID or name
-python prompt_manager.py get "prompt-id-or-name"
-
-# Delete a prompt by ID or name
-python prompt_manager.py delete "prompt-id-or-name"
-
-# Search prompts
-python prompt_manager.py search "search term"
-
-# Use a custom storage file
-python prompt_manager.py --storage my_prompts.json add "My Prompt" --text "Text"
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### Web Interface
-
-The prompt manager includes a web interface for easy interaction:
+### 3. Install Dependencies
 
 ```bash
-# Activate virtual environment
-source venv/bin/activate
-
-# Start the web server
-python enhanced_simple_server.py
+pip install -r requirements.txt
 ```
 
-This will:
-1. Start a Flask web server (usually on port 8000)
-2. Open your browser to `http://localhost:8000`
-3. Provide a web interface for:
-   - Adding new prompts
-   - Viewing existing prompts
-   - Searching prompts
-   - Deleting prompts
-   - Template builder for data-driven prompts
+This installs:
+- Flask (web framework)
+- Ollama Python client
+- pytest (testing framework)
+- Other utilities
 
-**Features of the Web Interface:**
-- **Bootstrap UI**: Modern, responsive design
-- **Real-time search**: Instant search results as you type
-- **Template Builder**: Interactive prompt template system with cascading dependencies
-- **Port Management**: Automatically handles port conflicts
-- **Flash Messages**: Clear feedback for all operations
+### 4. Verify Installation
 
-**Template Builder:**
-The web interface includes an advanced template builder that allows you to:
-- Create prompt templates with dynamic slots
-- Define cascading dependencies between variables
-- Build prompts interactively with dropdown selections
-- Save and reuse templates
+Run the test suite to ensure everything is working:
 
-### Programmatic Usage
-
-You can also use the prompt manager programmatically:
-
-```python
-from src.prompt_manager.prompt_manager import PromptManager
-
-# Initialize with custom storage file
-manager = PromptManager("my_prompts.json")
-
-# Add a prompt
-prompt_id = manager.add_prompt("My Prompt", "This is my prompt text", "category")
-
-# Get a prompt
-prompt = manager.get_prompt(prompt_id)
-
-# List all prompts
-prompts = manager.list_prompts()
-
-# Search prompts
-results = manager.search_prompts("search term")
-```
-
-## Storage
-
-Prompts are stored in JSON format in the current working directory. The default file is `prompts.json`, but you can specify a custom path using the `--storage` option.
-
-Example storage file structure:
-```json
-{
-  "prompts": {
-    "uuid-1": {
-      "id": "uuid-1",
-      "name": "Greeting Prompt",
-      "text": "Hello! How can I assist you today?",
-      "category": "greeting",
-      "created_at": "2025-07-26T10:39:39.738929",
-      "modified_at": "2025-07-26T10:39:39.738929"
-    }
-  }
-}
-```
-
-## Testing
-
-Run all tests:
 ```bash
 python -m pytest tests/ -v
 ```
 
-Run specific test files:
-```bash
-python -m pytest tests/test_prompt_manager.py -v
-python -m pytest tests/test_cli.py -v
-python -m pytest tests/test_demo_script.py -v
+You should see all tests passing:
+```
+==================== 26 passed in 0.15s ====================
 ```
 
-## Project Structure
+## Running the Application
+
+### Option 1: Chat Interface (Coming Soon - Phase 2+)
+
+```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Start the unified server
+python -m src.prompt_manager.app
+
+# Open browser to http://localhost:8000/chat
+```
+
+### Option 2: Legacy Web Interface
+
+```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Start the legacy server
+python enhanced_simple_server.py
+
+# Open browser to http://localhost:8000
+```
+
+### Option 3: CLI (Prompt Library Only)
+
+```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# List all prompts
+python prompt_manager.py list
+
+# Add a prompt
+python prompt_manager.py add "My Prompt" --text "Your prompt text here"
+
+# Search prompts
+python prompt_manager.py search "keyword"
+```
+
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+./venv/bin/python -m pytest tests/ -v
+
+# Run specific test file
+./venv/bin/python -m pytest tests/test_chat_message.py -v
+
+# Run with coverage
+./venv/bin/python -m pytest tests/ --cov=src/prompt_manager --cov-report=html
+```
+
+### Project Structure
 
 ```
 prompt-manager/
 ├── src/prompt_manager/
-│   ├── __init__.py
-│   ├── prompt.py              # Prompt class
-│   ├── prompt_manager.py      # Main manager class
-│   ├── storage.py             # JSON persistence
-│   └── cli.py                 # Command-line interface
+│   ├── domain/                   # Pure domain models (NEW)
+│   │   ├── chat_message.py       # Message entity
+│   │   └── conversation.py       # Conversation aggregate
+│   ├── business/                 # Business logic services
+│   │   ├── llm_provider.py       # LLM abstraction (OpenAI, Ollama)
+│   │   ├── chat_service.py       # Chat orchestration (COMING)
+│   │   ├── conversation_storage.py  # Persistence (COMING)
+│   │   └── [other services]
+│   ├── prompt.py                 # Prompt entity (legacy)
+│   ├── prompt_manager.py         # Prompt CRUD (legacy)
+│   └── storage.py                # JSON persistence
 ├── tests/
-│   ├── test_prompt.py
-│   ├── test_prompt_manager.py
-│   ├── test_storage.py
-│   ├── test_cli.py
-│   └── test_demo_script.py
-├── demo_script.py             # Demo script
-├── prompt_manager.py          # CLI entry point
+│   ├── test_chat_message.py     # Domain tests (NEW)
+│   ├── test_conversation.py     # Domain tests (NEW)
+│   └── [other tests]
+├── requirements.txt              # Python dependencies
+├── CLAUDE.md                     # Development partnership charter
 └── README.md
 ```
 
-## Future Enhancements
+### Architecture Principles
 
-- GUI interface
-- Export/import functionality
-- Version history
-- Template variables
-- Usage statistics
-- Backup/restore functionality 
+We follow **Clean Architecture** and **Domain-Driven Design**:
+
+1. **Domain Layer** (pure business logic, zero dependencies)
+   - ChatMessage, Conversation entities
+   - Business rules and validation
+   - Framework-agnostic
+
+2. **Business Layer** (application services)
+   - Orchestrates domain objects
+   - Handles persistence
+   - LLM provider abstraction
+
+3. **Presentation Layer** (Flask web/API)
+   - Routes and controllers
+   - JSON serialization
+   - User interface
+
+4. **Test-First Development**
+   - Write tests before implementation
+   - High test coverage (currently 26 tests)
+   - Fast feedback loop
+
+## Configuration
+
+### Ollama Settings
+
+By default, the app connects to Ollama at `http://localhost:11434` and uses the `gemma3:4b` model (Ember).
+
+To use a different model:
+
+```python
+# In your code or configuration
+chat_service = ChatService(
+    llm_provider=OllamaProvider(
+        base_url="http://localhost:11434",
+        default_model="gemma3:12b"  # or any other model
+    )
+)
+```
+
+### Storage
+
+Data is stored in JSON files in the project directory:
+- `prompts.json` - Prompt library
+- `conversations.json` - Chat conversations (COMING)
+- `templates.json` - Template definitions (legacy)
+
+These files are git-ignored and safe to delete for a fresh start.
+
+## Contributing
+
+This project is built as an educational collaboration between David (human) and Claude (AI). We document our learnings and design decisions in:
+
+- `CLAUDE.md` - Partnership charter and principles
+- `knowledge-base/` - ADRs, spike reports, technical notes
+- Git commit messages - Detailed context for each change
+
+Feel free to:
+- Report issues
+- Suggest features
+- Learn from the code
+- Fork for your own experiments
+
+## Roadmap
+
+### Phase 1: Domain Models ✅
+- [x] ChatMessage entity
+- [x] Conversation aggregate root
+- [x] Comprehensive test coverage
+
+### Phase 2: Ollama Integration (In Progress)
+- [ ] OllamaProvider implementation
+- [ ] Streaming response support
+- [ ] Health checks and error handling
+
+### Phase 3: Persistence
+- [ ] ConversationStorage
+- [ ] Save/load conversations
+- [ ] Conversation listing
+
+### Phase 4: Chat Service
+- [ ] ChatService orchestration
+- [ ] Message handling
+- [ ] LLM integration
+
+### Phase 5+: Web Interface
+- [ ] Streaming chat UI
+- [ ] Conversation management
+- [ ] Prompt library integration
+- [ ] Advanced features exploration
+
+### Future Vision
+- Enhanced context management
+- Multiple interface experiments
+- RAG-style knowledge integration
+- Prompt sharing and collaboration
+
+## License
+
+This project is open source and available for educational use.
+
+## Acknowledgments
+
+Built with test-first, domain-driven principles as a collaboration between:
+- **David** - Vision, architecture, domain expertise
+- **Claude Sonnet 4.5** - Implementation, testing, documentation
+
+*Generated with [Claude Code](https://claude.com/claude-code)*

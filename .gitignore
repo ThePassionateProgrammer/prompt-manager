@@ -4,3 +4,23 @@ __pycache__/
 venv/
 .env
 .DS_Store
+
+# Test outputs
+.pytest_cache/
+htmlcov/
+.coverage
+*.approved.txt
+*.received.txt
+*.output.txt
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+
+# Data files (for local development)
+prompts.json
+demo_prompts.json
+templates.json
+
+# Logs
+*.log

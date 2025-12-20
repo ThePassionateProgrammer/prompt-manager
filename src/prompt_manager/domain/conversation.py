@@ -56,21 +56,33 @@ class Conversation:
         # Update conversation timestamp
         self.updated_at = datetime.now()
 
-        # Auto-generate title from first user message
-        # Check if this is the first user message (regardless of position)
-        if role == 'user' and self.title == "New Conversation":
-            # Check if there are any previous user messages
-            has_previous_user_messages = any(
-                msg.role == 'user' for msg in self.messages[:-1]  # Exclude the current message
-            )
-            if not has_previous_user_messages:
-                # This is the first user message, auto-generate title
-                if len(content) > 50:
-                    self.title = content[:50] + '...'
-                else:
-                    self.title = content
+        # Auto-generate title if this is the first user message
+        self._auto_generate_title_if_needed(role, content)
 
         return message
+
+    def _auto_generate_title_if_needed(self, role: str, content: str) -> None:
+        """
+        Auto-generate conversation title from first user message.
+
+        Business rule: If conversation has default title and this is the first
+        user message, use the message content as the title (truncated to 50 chars).
+
+        Args:
+            role: Message role
+            content: Message content
+        """
+        if role != 'user' or self.title != "New Conversation":
+            return
+
+        # Check if there are any previous user messages (excluding current)
+        has_previous_user_messages = any(
+            msg.role == 'user' for msg in self.messages[:-1]
+        )
+
+        if not has_previous_user_messages:
+            # This is the first user message - generate title
+            self.title = content[:50] + '...' if len(content) > 50 else content
 
     def get_messages_for_llm(self) -> List[dict]:
         """

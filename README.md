@@ -95,16 +95,18 @@ Run the test suite to ensure everything is working:
 
 You should see all tests passing:
 ```
-==================== 42 passed in 0.17s ====================
+==================== 90 passed in 0.30s ====================
 ```
 
 ## Running the Application
 
 ### Current Development Status
 
-**Phases 1 & 2 Complete (42 tests passing)**:
+**Phases 1-4 Complete (90 tests passing)**:
 - ✅ Domain models (ChatMessage, Conversation)
 - ✅ Ollama integration with streaming support
+- ✅ Conversation persistence and text export
+- ✅ ChatService orchestration layer
 - ⏳ Web interface coming in Phase 5+
 
 To test the current implementation:
@@ -252,7 +254,7 @@ chat_service = ChatService(
 
 Data is stored in JSON files in the project directory:
 - `prompts.json` - Prompt library
-- `conversations.json` - Chat conversations (COMING)
+- `conversations.json` - Chat conversations (Phase 3 complete)
 - `templates.json` - Template definitions (legacy)
 
 These files are git-ignored and safe to delete for a fresh start.
@@ -284,15 +286,19 @@ Feel free to:
 - [x] Health checks and error handling
 - [x] Complete test coverage (16 tests)
 
-### Phase 3: Persistence
-- [ ] ConversationStorage
-- [ ] Save/load conversations
-- [ ] Conversation listing
+### Phase 3: Persistence ✅
+- [x] ConversationStorage implementation
+- [x] Save/load conversations to JSON
+- [x] Conversation listing (sorted by updated_at)
+- [x] Text export utility for human-readable logs
+- [x] Complete test coverage (27 tests)
 
-### Phase 4: Chat Service
-- [ ] ChatService orchestration
-- [ ] Message handling
-- [ ] LLM integration
+### Phase 4: Chat Service ✅
+- [x] ChatService orchestration layer
+- [x] Message handling with streaming
+- [x] LLM integration with auto-save
+- [x] In-memory caching with storage sync
+- [x] Complete test coverage (21 tests)
 
 ### Phase 5+: Web Interface
 - [ ] Streaming chat UI

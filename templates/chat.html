@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <!-- Left Sidebar: Conversation List -->
+    <div class="col-md-3 bg-light border-end" style="height: calc(100vh - 56px); overflow-y: auto;">
+      <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+        <h5 class="mb-0">Conversations</h5>
+        <button class="btn btn-sm btn-primary" onclick="createNewConversation()">
+          <i class="bi bi-plus"></i> New
+        </button>
+      </div>
+      <div id="conversation-list" class="list-group list-group-flush">
+        <!-- Conversations will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="col-md-9">
+      <div class="d-flex flex-column" style="height: calc(100vh - 56px);">
+        <!-- Top Bar -->
+        <div class="border-bottom p-3 bg-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h4 id="conversation-title" class="mb-0">Select or create a conversation</h4>
+              <small id="conversation-model" class="text-muted"></small>
+            </div>
+            <div>
+              <button class="btn btn-sm btn-outline-danger" id="delete-btn" onclick="deleteCurrentConversation()" style="display:none;">
+                <i class="bi bi-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="messages" class="flex-grow-1 p-3" style="overflow-y: auto;">
+          <div id="no-conversation" class="text-center text-muted mt-5">
+            <p>Select a conversation from the sidebar or create a new one to start chatting with Ember.</p>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="border-top p-3 bg-white">
+          <form id="message-form" onsubmit="sendMessage(event)">
+            <div class="input-group">
+              <textarea
+                id="message-input"
+                class="form-control"
+                placeholder="Message Ember..."
+                rows="2"
+                disabled
+              ></textarea>
+              <button class="btn btn-primary" type="submit" id="send-btn" disabled>
+                <i class="bi bi-send"></i> Send
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Global state
+let currentConversationId = null;
+let isStreaming = false;
+
+// Load conversations on page load
+document.addEventListener('DOMContentLoaded', function() {
+  loadConversations();
+});
+
+// Load all conversations
+async function loadConversations() {
+  try {
+    const response = await fetch('/api/chat/conversations');
+    const data = await response.json();
+    renderConversationList(data.conversations);
+  } catch (error) {
+    console.error('Failed to load conversations:', error);
+  }
+}
+
+// Render conversation list in sidebar
+function renderConversationList(conversations) {
+  const listEl = document.getElementById('conversation-list');
+  listEl.innerHTML = '';
+
+  if (conversations.length === 0) {
+    listEl.innerHTML = '<div class="p-3 text-muted text-center">No conversations yet</div>';
+    return;
+  }
+
+  conversations.forEach(conv => {
+    const item = document.createElement('a');
+    item.href = '#';
+    item.className = 'list-group-item list-group-item-action';
+    if (conv.id === currentConversationId) {
+      item.classList.add('active');
+    }
+    item.onclick = (e) => {
+      e.preventDefault();
+      loadConversation(conv.id);
+    };
+
+    item.innerHTML = `
+      <div class="d-flex w-100 justify-content-between">
+        <h6 class="mb-1">${escapeHtml(conv.title)}</h6>
+        <small>${new Date(conv.updated_at).toLocaleDateString()}</small>
+      </div>
+      <small>${conv.message_count} messages · ${conv.model}</small>
+    `;
+
+    listEl.appendChild(item);
+  });
+}
+
+// Load a specific conversation
+async function loadConversation(conversationId) {
+  try {
+    const response = await fetch(`/api/chat/conversations/${conversationId}`);
+    const conv = await response.json();
+
+    currentConversationId = conversationId;
+    document.getElementById('conversation-title').textContent = conv.title;
+    document.getElementById('conversation-model').textContent = `Model: ${conv.model}`;
+    document.getElementById('delete-btn').style.display = 'inline-block';
+    document.getElementById('no-conversation').style.display = 'none';
+    document.getElementById('message-input').disabled = false;
+    document.getElementById('send-btn').disabled = false;
+
+    // Render messages
+    const messagesEl = document.getElementById('messages');
+    messagesEl.innerHTML = '';
+    conv.messages.forEach(msg => {
+      appendMessage(msg.role, msg.content, false);
+    });
+
+    // Scroll to bottom
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    // Update sidebar selection
+    loadConversations();
+  } catch (error) {
+    console.error('Failed to load conversation:', error);
+  }
+}
+
+// Create new conversation
+async function createNewConversation() {
+  try {
+    const response = await fetch('/api/chat/conversations', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({})
+    });
+    const conv = await response.json();
+    await loadConversations();
+    loadConversation(conv.id);
+  } catch (error) {
+    console.error('Failed to create conversation:', error);
+  }
+}
+
+// Delete current conversation
+async function deleteCurrentConversation() {
+  if (!currentConversationId) return;
+  if (!confirm('Delete this conversation?')) return;
+
+  try {
+    await fetch(`/api/chat/conversations/${currentConversationId}`, {
+      method: 'DELETE'
+    });
+
+    currentConversationId = null;
+    document.getElementById('conversation-title').textContent = 'Select or create a conversation';
+    document.getElementById('conversation-model').textContent = '';
+    document.getElementById('delete-btn').style.display = 'none';
+    document.getElementById('no-conversation').style.display = 'block';
+    document.getElementById('messages').innerHTML = '<div id="no-conversation" class="text-center text-muted mt-5"><p>Select a conversation from the sidebar or create a new one.</p></div>';
+    document.getElementById('message-input').disabled = true;
+    document.getElementById('send-btn').disabled = true;
+
+    loadConversations();
+  } catch (error) {
+    console.error('Failed to delete conversation:', error);
+  }
+}
+
+// Send message with SSE streaming
+async function sendMessage(event) {
+  event.preventDefault();
+
+  if (!currentConversationId || isStreaming) return;
+
+  const input = document.getElementById('message-input');
+  const message = input.value.trim();
+  if (!message) return;
+
+  // Clear input and disable
+  input.value = '';
+  input.disabled = true;
+  document.getElementById('send-btn').disabled = true;
+  isStreaming = true;
+
+  // Append user message
+  appendMessage('user', message, false);
+
+  // Start SSE stream for assistant response
+  const assistantDiv = appendMessage('assistant', '', true);
+
+  try {
+    const response = await fetch(`/api/chat/conversations/${currentConversationId}/messages`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: message})
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const {value, done} = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, {stream: true});
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // Keep incomplete line
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = JSON.parse(line.slice(6));
+
+          if (data.chunk) {
+            appendToMessage(assistantDiv, data.chunk);
+          } else if (data.done) {
+            break;
+          } else if (data.error) {
+            appendToMessage(assistantDiv, `\n[Error: ${data.error}]`);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    appendToMessage(assistantDiv, `\n[Error: ${error.message}]`);
+  } finally {
+    isStreaming = false;
+    input.disabled = false;
+    document.getElementById('send-btn').disabled = false;
+    input.focus();
+
+    // Reload conversation to update title if it was auto-generated
+    loadConversation(currentConversationId);
+  }
+}
+
+// Append a message to the chat
+function appendMessage(role, content, streaming) {
+  const messagesEl = document.getElementById('messages');
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `mb-3 ${role === 'user' ? 'text-end' : 'text-start'}`;
+
+  const badge = document.createElement('span');
+  badge.className = `badge bg-${role === 'user' ? 'primary' : 'secondary'} me-2`;
+  badge.textContent = role === 'user' ? 'You' : 'Ember';
+
+  const contentSpan = document.createElement('span');
+  contentSpan.textContent = content;
+  contentSpan.style.whiteSpace = 'pre-wrap';
+
+  if (streaming) {
+    const cursor = document.createElement('span');
+    cursor.className = 'streaming-cursor';
+    cursor.textContent = '▋';
+    contentSpan.appendChild(cursor);
+  }
+
+  messageDiv.appendChild(badge);
+  messageDiv.appendChild(contentSpan);
+  messagesEl.appendChild(messageDiv);
+
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return contentSpan;
+}
+
+// Append text to existing message (for streaming)
+function appendToMessage(element, text) {
+  // Remove cursor if present
+  const cursor = element.querySelector('.streaming-cursor');
+  if (cursor) cursor.remove();
+
+  // Append text
+  element.textContent += text;
+
+  // Re-add cursor
+  const newCursor = document.createElement('span');
+  newCursor.className = 'streaming-cursor';
+  newCursor.textContent = '▋';
+  element.appendChild(newCursor);
+
+  // Auto-scroll
+  const messagesEl = document.getElementById('messages');
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+// Utility: Escape HTML
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+</script>
+
+<style>
+.streaming-cursor {
+  animation: blink 1s step-start infinite;
+  color: #0d6efd;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+#message-input:disabled {
+  background-color: #e9ecef;
+  opacity: 0.6;
+}
+</style>
+{% endblock %}

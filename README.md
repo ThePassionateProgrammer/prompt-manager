@@ -102,12 +102,12 @@ You should see all tests passing:
 
 ### Current Development Status
 
-**Phases 1-4 Complete (90 tests passing)**:
+**Phases 1-5 Complete (90 tests passing)**:
 - ✅ Domain models (ChatMessage, Conversation)
 - ✅ Ollama integration with streaming support
 - ✅ Conversation persistence and text export
 - ✅ ChatService orchestration layer
-- ⏳ Web interface coming in Phase 5+
+- ✅ **NEW:** Chat interface with real-time SSE streaming
 
 To test the current implementation:
 
@@ -128,29 +128,36 @@ ollama list  # Should show gemma3:4b
 ./venv/bin/python -m pytest tests/test_ollama_provider.py -v
 ```
 
-### Option 1: Chat Interface (Coming in Phase 5+)
+### Start the Server
 
 ```bash
 # Activate virtual environment
 source venv/bin/activate
 
-# Start the unified server (not yet implemented)
-python -m src.prompt_manager.app
-
-# Open browser to http://localhost:8000/chat
-```
-
-### Option 2: Legacy Web Interface
-
-```bash
-# Activate virtual environment
-source venv/bin/activate
-
-# Start the legacy server
+# Start the server (includes both chat and prompt library)
 python enhanced_simple_server.py
 
-# Open browser to http://localhost:8000
+# The server will automatically handle port conflicts
+# Default: http://localhost:8000
 ```
+
+### Using the Application
+
+Once the server is running, you can access:
+
+- **Chat Interface**: [http://localhost:8000/chat](http://localhost:8000/chat)
+  - Real-time streaming chat with Ember (Gemma3:4b)
+  - Persistent conversations with auto-generated titles
+  - Sidebar showing all conversations sorted by most recent
+
+- **Prompt Library**: [http://localhost:8000/](http://localhost:8000/)
+  - Browse and search prompts
+  - Create, edit, and delete prompts
+  - Import/export functionality
+
+- **Template Builder**: [http://localhost:8000/template-builder](http://localhost:8000/template-builder)
+  - Advanced prompt template creation
+  - Context-aware cascading dropdowns
 
 ### Option 3: CLI (Prompt Library Only)
 
@@ -300,11 +307,20 @@ Feel free to:
 - [x] In-memory caching with storage sync
 - [x] Complete test coverage (21 tests)
 
-### Phase 5+: Web Interface
-- [ ] Streaming chat UI
-- [ ] Conversation management
-- [ ] Prompt library integration
-- [ ] Advanced features exploration
+### Phase 5: Web Interface ✅
+- [x] Integrated chat routes into enhanced_simple_server.py
+- [x] Real-time SSE streaming chat UI
+- [x] Conversation management (create, list, view, delete)
+- [x] Auto-generated conversation titles from first message
+- [x] Sidebar with conversation history
+- [x] All existing Prompt Manager v1 functionality preserved
+
+### Phase 6+: Future Enhancements
+- [ ] Prompt library integration into chat (quick-insert prompts)
+- [ ] Navigation updates (Chat as primary, Template Builder in Advanced menu)
+- [ ] Multiple model support (switch between Ollama models)
+- [ ] Enhanced context management (attach files/docs)
+- [ ] Conversation export and sharing
 
 ### Future Vision
 - Enhanced context management

@@ -35,3 +35,9 @@ class TestOllamaModelValidation:
         # Arrange & Act & Assert
         with pytest.raises(ValueError, match="Model name cannot be empty"):
             OllamaModel("")
+
+    def test_whitespace_only_model_name_raises_error(self):
+        """Whitespace-only model name should raise ValueError."""
+        # Arrange & Act & Assert
+        with pytest.raises(ValueError, match="Model name cannot be empty"):
+            OllamaModel("   ")

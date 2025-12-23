@@ -44,6 +44,29 @@ class OllamaProvider(LLMProvider):
             return False
 
     def generate(self, prompt: str = None, messages: list = None, **kwargs) -> str:
-        """Generate text from a prompt or messages array."""
-        # TODO: Implement generation
-        raise NotImplementedError("Generation not yet implemented")
+        """Generate text from a prompt or messages array.
+
+        Args:
+            prompt: Single prompt string (legacy)
+            messages: Array of message dicts with role and content (preferred)
+            **kwargs: Additional parameters (model)
+
+        Returns:
+            Generated text response
+        """
+        # Support both prompt string and messages array
+        if messages:
+            msg_array = messages
+        elif prompt:
+            msg_array = [{"role": "user", "content": prompt}]
+        else:
+            raise ValueError("Either prompt or messages must be provided")
+
+        # Get model from kwargs or use default
+        model = kwargs.get('model', self.default_model)
+
+        # Generate response using Ollama
+        client = ollama.Client(host=self.base_url)
+        response = client.chat(model=model, messages=msg_array)
+
+        return response['message']['content']

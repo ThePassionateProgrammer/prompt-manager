@@ -67,3 +67,78 @@ class TestOllamaProviderAvailability:
 
         # Assert
         assert available is False
+
+
+class TestOllamaProviderGeneration:
+    """Test text generation with Ollama."""
+
+    @patch('ollama.Client')
+    def test_generate_with_messages(self, mock_client_class):
+        """Provider should generate text from messages array."""
+        # Arrange
+        mock_client = Mock()
+        mock_response = {
+            'message': {
+                'content': 'Hello! How can I help you?'
+            }
+        }
+        mock_client.chat.return_value = mock_response
+        mock_client_class.return_value = mock_client
+
+        provider = OllamaProvider()
+        messages = [{'role': 'user', 'content': 'Hello'}]
+
+        # Act
+        response = provider.generate(messages=messages)
+
+        # Assert
+        assert response == 'Hello! How can I help you?'
+        mock_client.chat.assert_called_once_with(
+            model='gemma3:4b',
+            messages=messages
+        )
+
+    @patch('ollama.Client')
+    def test_generate_with_prompt_string(self, mock_client_class):
+        """Provider should generate text from simple prompt string (legacy)."""
+        # Arrange
+        mock_client = Mock()
+        mock_response = {
+            'message': {
+                'content': 'Paris is the capital of France.'
+            }
+        }
+        mock_client.chat.return_value = mock_response
+        mock_client_class.return_value = mock_client
+
+        provider = OllamaProvider()
+
+        # Act
+        response = provider.generate(prompt='What is the capital of France?')
+
+        # Assert
+        assert response == 'Paris is the capital of France.'
+        mock_client.chat.assert_called_once_with(
+            model='gemma3:4b',
+            messages=[{'role': 'user', 'content': 'What is the capital of France?'}]
+        )
+
+    @patch('ollama.Client')
+    def test_generate_with_custom_model(self, mock_client_class):
+        """Provider should use custom model when specified."""
+        # Arrange
+        mock_client = Mock()
+        mock_response = {'message': {'content': 'Response'}}
+        mock_client.chat.return_value = mock_response
+        mock_client_class.return_value = mock_client
+
+        provider = OllamaProvider()
+
+        # Act
+        response = provider.generate(prompt='Test', model='llama3:8b')
+
+        # Assert
+        mock_client.chat.assert_called_once_with(
+            model='llama3:8b',
+            messages=[{'role': 'user', 'content': 'Test'}]
+        )

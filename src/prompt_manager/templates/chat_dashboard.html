@@ -651,12 +651,16 @@
                 <!-- Primary Controls -->
                 <div class="controls-row">
                     <div class="control-group">
+                        <label class="control-label">Provider</label>
+                        <select class="model-select" id="provider-select">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
                         <label class="control-label">Model</label>
                         <select class="model-select" id="model-select">
-                            <option value="gpt-4-turbo-preview">GPT-4 Turbo (Recommended)</option>
-                            <option value="gpt-4">GPT-4 (Most Capable)</option>
-                            <option value="gpt-3.5-turbo" selected>GPT-3.5 Turbo (Fast & Efficient)</option>
-                            <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16K (Long Context)</option>
+                            <option value="">Select provider first...</option>
                         </select>
                     </div>
 
@@ -854,6 +858,7 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
+            loadProviders();  // Load provider dropdown
             updateWelcomeTime();
             loadSystemPrompt();
             loadChatHistory();
@@ -869,6 +874,11 @@
                 document.getElementById('tokens-value').textContent = this.value;
             });
             
+            // Provider selection change
+            document.getElementById('provider-select').addEventListener('change', function() {
+                loadModelsForProvider(this.value);
+            });
+
             // Model selection change
             document.getElementById('model-select').addEventListener('change', function() {
                 updateConversationMetadata();
@@ -895,12 +905,72 @@
             document.getElementById('save-prompt-btn').addEventListener('click', openSaveConvModal);
         }
 
+        // Load available providers
+        async function loadProviders() {
+            try {
+                const response = await fetch('/api/providers/list');
+                const data = await response.json();
+
+                const providerSelect = document.getElementById('provider-select');
+                providerSelect.innerHTML = '';
+
+                // Add providers
+                for (const [key, provider] of Object.entries(data.providers)) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = provider.name.charAt(0).toUpperCase() + provider.name.slice(1);
+                    if (key === data.default_provider) {
+                        option.selected = true;
+                    }
+                    providerSelect.appendChild(option);
+                }
+
+                // Load models for default provider
+                if (data.default_provider) {
+                    await loadModelsForProvider(data.default_provider);
+                }
+            } catch (error) {
+                console.error('Error loading providers:', error);
+                showNotification('Failed to load providers', 'error');
+            }
+        }
+
+        // Load models for selected provider
+        async function loadModelsForProvider(providerName) {
+            if (!providerName) return;
+
+            try {
+                const response = await fetch(`/api/providers/${providerName}/models`);
+                const data = await response.json();
+
+                const modelSelect = document.getElementById('model-select');
+                modelSelect.innerHTML = '';
+
+                // Add models
+                data.models.forEach((model, index) => {
+                    const option = document.createElement('option');
+                    option.value = model.id;
+                    option.textContent = model.name;
+                    if (index === 0) {
+                        option.selected = true;
+                    }
+                    modelSelect.appendChild(option);
+                });
+
+                // Update conversation metadata
+                updateConversationMetadata();
+            } catch (error) {
+                console.error('Error loading models:', error);
+                showNotification('Failed to load models for ' + providerName, 'error');
+            }
+        }
+
         function togglePanel() {
             const panel = document.getElementById('control-panel');
             const btn = document.getElementById('toggle-panel-btn');
-            
+
             panel.classList.toggle('collapsed');
-            
+
             if (panel.classList.contains('collapsed')) {
                 btn.textContent = '▼ Show Controls';
             } else {

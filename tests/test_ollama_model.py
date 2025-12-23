@@ -41,3 +41,39 @@ class TestOllamaModelValidation:
         # Arrange & Act & Assert
         with pytest.raises(ValueError, match="Model name cannot be empty"):
             OllamaModel("   ")
+
+
+class TestOllamaModelSerialization:
+    """Test model serialization for persistence."""
+
+    def test_to_dict_with_tag(self):
+        """Model with tag should serialize correctly."""
+        # Arrange
+        model = OllamaModel("gemma3:4b")
+
+        # Act
+        data = model.to_dict()
+
+        # Assert
+        assert data == {
+            'name': 'gemma3',
+            'tag': '4b',
+            'full_name': 'gemma3:4b'
+        }
+
+    def test_from_dict_with_tag(self):
+        """Model should deserialize correctly from dictionary."""
+        # Arrange
+        data = {
+            'name': 'gemma3',
+            'tag': '4b',
+            'full_name': 'gemma3:4b'
+        }
+
+        # Act
+        model = OllamaModel.from_dict(data)
+
+        # Assert
+        assert model.name == 'gemma3'
+        assert model.tag == '4b'
+        assert model.full_name == 'gemma3:4b'

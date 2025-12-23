@@ -28,3 +28,27 @@ class OllamaModel:
         self.name = parts[0]
         self.tag = parts[1] if len(parts) > 1 else 'latest'
         self.full_name = full_name
+
+    def to_dict(self) -> dict:
+        """Serialize model to dictionary for persistence.
+
+        Returns:
+            Dictionary with model name, tag, and full_name
+        """
+        return {
+            'name': self.name,
+            'tag': self.tag,
+            'full_name': self.full_name
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'OllamaModel':
+        """Deserialize model from dictionary.
+
+        Args:
+            data: Dictionary with model data (must have 'full_name' key)
+
+        Returns:
+            OllamaModel instance
+        """
+        return cls(data['full_name'])

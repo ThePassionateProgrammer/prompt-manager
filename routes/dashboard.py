@@ -5,6 +5,7 @@ Dashboard routes for the Prompt Manager application.
 from flask import Blueprint, request, jsonify, render_template
 from src.prompt_manager.business.llm_provider_manager import LLMProviderManager
 from src.prompt_manager.business.llm_provider import OpenAIProvider
+from src.prompt_manager.business.ollama_provider import OllamaProvider
 from src.prompt_manager.business.key_loader import SecureKeyManager
 from src.prompt_manager.business.conversation_manager import ConversationManager
 from src.prompt_manager.business.token_manager import TokenManager
@@ -22,22 +23,30 @@ def _initialize_providers():
     """Load saved API keys and initialize providers."""
     key_manager = SecureKeyManager()
     saved_keys = key_manager.load_all_keys()
-    
+
     # Initialize providers from saved keys
     for key_name, key_value in saved_keys.items():
         # Extract provider name from key name (e.g., 'openai_api_key' -> 'openai')
         if key_name.endswith('_api_key'):
             provider_name = key_name.replace('_api_key', '')
-            
+
             # Create provider based on name
             if provider_name.lower() == 'openai':
                 provider = OpenAIProvider(api_key=key_value)
                 provider_manager.add_provider('openai', provider)
-                
+
                 # Set as default if it's the first one
                 if provider_manager.default_provider is None:
                     provider_manager.set_default_provider('openai')
             # Add other providers here as we support them (anthropic, google, etc.)
+
+    # Always initialize Ollama provider (no API key needed for local)
+    ollama_provider = OllamaProvider()
+    if ollama_provider.is_available():
+        provider_manager.add_provider('ollama', ollama_provider)
+        # Set as default if no online provider configured
+        if provider_manager.default_provider is None:
+            provider_manager.set_default_provider('ollama')
 
 # Initialize providers on module load
 _initialize_providers()

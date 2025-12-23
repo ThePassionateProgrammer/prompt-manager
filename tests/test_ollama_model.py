@@ -29,3 +29,9 @@ class TestOllamaModelValidation:
         assert model.name == "llama3"
         assert model.tag == "latest"
         assert model.full_name == "llama3"
+
+    def test_empty_model_name_raises_error(self):
+        """Empty model name should raise ValueError."""
+        # Arrange & Act & Assert
+        with pytest.raises(ValueError, match="Model name cannot be empty"):
+            OllamaModel("")

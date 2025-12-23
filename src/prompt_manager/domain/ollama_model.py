@@ -17,7 +17,13 @@ class OllamaModel:
 
         Args:
             full_name: Full model identifier (e.g., "gemma3:4b")
+
+        Raises:
+            ValueError: If model name is empty or invalid
         """
+        if not full_name or not full_name.strip():
+            raise ValueError("Model name cannot be empty")
+
         parts = full_name.split(':')
         self.name = parts[0]
         self.tag = parts[1] if len(parts) > 1 else 'latest'

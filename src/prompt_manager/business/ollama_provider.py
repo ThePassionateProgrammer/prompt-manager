@@ -4,6 +4,7 @@ Ollama LLM Provider.
 Provides integration with local Ollama models.
 """
 from typing import Optional
+import ollama
 from .llm_provider import LLMProvider
 
 
@@ -30,9 +31,17 @@ class OllamaProvider(LLMProvider):
         return self._name
 
     def is_available(self) -> bool:
-        """Check if Ollama server is available."""
-        # TODO: Implement health check
-        return False
+        """Check if Ollama server is available.
+
+        Returns:
+            True if Ollama server responds, False otherwise
+        """
+        try:
+            client = ollama.Client(host=self.base_url)
+            client.list()
+            return True
+        except Exception:
+            return False
 
     def generate(self, prompt: str = None, messages: list = None, **kwargs) -> str:
         """Generate text from a prompt or messages array."""

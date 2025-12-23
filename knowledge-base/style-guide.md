@@ -146,4 +146,46 @@ class TestOrder:
 
 ---
 
+## Git Commits
+
+**Arlo Belshee Commit Notation**
+
+We use Arlo Belshee's notation to communicate commit intent and risk level:
+
+- **`f`** = Feature (new functionality added)
+- **`r`** = Refactoring (code structure improved, no behavior change)
+- **`t`** = Test (test added/updated, no production code change)
+- **`d`** = Documentation (docs only)
+- **`!`** = Risk indicator (integration concerns, breaking changes possible)
+- **`!!`** = High risk indicator (significant architectural changes)
+
+**Examples:**
+- `f Add OllamaProvider for local LLM support`
+- `r Extract model catalog to domain layer`
+- `f! Fix broken OpenAI chat by correcting method name` (feature fix with integration risk)
+- `r!! Migrate to new provider architecture` (high-risk refactoring)
+
+**Commit Message Structure:**
+```
+<notation> <short summary>
+
+What Changed:
+- Bullet list of changes
+
+Why:
+- Explanation of motivation
+
+Test Results: (if applicable)
+- Before/after test counts
+- Which tests were fixed/added
+```
+
+**Commit Discipline:**
+- Commit after each successful red-green-refactor cycle
+- One logical change per commit
+- All tests must pass before committing (run full suite)
+- Include test results in commit message when fixing bugs
+
+---
+
 *These are our conventions for Python development. Consistency across the codebase makes collaboration easier.*

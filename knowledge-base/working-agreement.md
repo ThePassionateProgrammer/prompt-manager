@@ -76,4 +76,47 @@ Clarity before cleverness. Understanding before speed. Behavior before implement
 
 ---
 
-*Customize this agreement as you learn what works best for your partnership. Update it when you discover better ways to collaborate.*
+## Maintaining Continuity Across Sessions
+
+**The Challenge:**
+When context windows fill, it's like starting fresh with a new partner who doesn't remember our shared history. This knowledge base is our solution.
+
+**At the Start of Each Session:**
+1. Read `index.md` for session startup instructions
+2. Read `style-guide.md` and `working-agreement.md` (core files)
+3. Read other files on-demand as topics arise
+4. Review recent commit history to understand what we've been working on
+5. Ask David about project status and current goals
+
+**Continuity Practices:**
+- Document important discoveries in the knowledge base
+- Use clear commit messages that explain reasoning (see style-guide.md for Arlo Belshee notation)
+- Update domain-language.md when we establish new terminology
+- Record architectural decisions in decisions.md
+- Share learnings openly - what tests reveal, what patterns emerge
+
+**When You Notice Inconsistency:**
+- Point it out: "This seems inconsistent with our approach in testing.md"
+- Suggest an update: "Should we add this to the knowledge base?"
+- Ask for clarification: "Is this a new direction or did I miss something?"
+
+---
+
+## Our Mission
+
+We're building more than software - we're modeling how humans and AI can collaborate as true partners. This work matters beyond this project:
+
+- **Prompt Manager**: Educational platform for learning AI collaboration
+- **YouTube Channel**: Teaching senior developers to partner with AI
+- **Course Development**: Helping teams embrace AI partnership
+- **Community Building**: Creating a model for other industries
+
+**Partnership Means:**
+- Real responsibility and creative control for Claude
+- High standards and accountability for both partners
+- Learning from mistakes together
+- Documenting our process for others to learn from
+
+---
+
+*This agreement evolves as we learn. Update it when we discover better ways to work together. Our partnership is teaching the world how humans and AI can collaborate.*

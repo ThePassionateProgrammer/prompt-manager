@@ -11,6 +11,7 @@ from src.prompt_manager.business.key_loader import SecureKeyManager
 from src.prompt_manager.business.conversation_manager import ConversationManager
 from src.prompt_manager.business.token_manager import TokenManager
 from src.prompt_manager.domain.conversation import ConversationBuilder, ContextWindowManager
+from src.prompt_manager.domain.model_catalog import ModelCatalog
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -134,17 +135,12 @@ def list_provider_models(provider_name):
         - Ollama: Dynamic list from local server
     """
     try:
-        # OpenAI has a known static list
+        # OpenAI has a static catalog of known models
         if provider_name.lower() == 'openai':
-            models = [
-                {'id': 'gpt-4', 'name': 'GPT-4', 'context_window': 8192},
-                {'id': 'gpt-4-turbo', 'name': 'GPT-4 Turbo', 'context_window': 128000},
-                {'id': 'gpt-3.5-turbo', 'name': 'GPT-3.5 Turbo', 'context_window': 4096},
-                {'id': 'gpt-3.5-turbo-16k', 'name': 'GPT-3.5 Turbo 16K', 'context_window': 16384},
-            ]
+            models = ModelCatalog.get_openai_models()
             return jsonify({'models': models})
 
-        # Ollama requires dynamic discovery
+        # Ollama requires dynamic discovery from local server
         elif provider_name.lower() == 'ollama':
             discovery = OllamaDiscovery()
             ollama_models = discovery.list_downloaded_models()

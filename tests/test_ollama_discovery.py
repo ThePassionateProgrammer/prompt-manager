@@ -1,0 +1,37 @@
+"""
+Tests for Ollama model discovery service.
+
+Test-first development: Write one test at a time, make it pass, refactor.
+"""
+import pytest
+from unittest.mock import Mock, patch
+from src.prompt_manager.business.ollama_discovery import OllamaDiscovery
+from src.prompt_manager.domain.ollama_model import OllamaModel
+
+
+class TestOllamaDiscoveryListModels:
+    """Test listing downloaded Ollama models."""
+
+    @patch('ollama.Client')
+    def test_list_downloaded_models_returns_model_objects(self, mock_client_class):
+        """Should return list of OllamaModel objects for downloaded models."""
+        # Arrange
+        mock_client = Mock()
+        mock_client.list.return_value = {
+            'models': [
+                {'name': 'gemma3:4b'},
+                {'name': 'llama3:8b'},
+            ]
+        }
+        mock_client_class.return_value = mock_client
+
+        discovery = OllamaDiscovery()
+
+        # Act
+        models = discovery.list_downloaded_models()
+
+        # Assert
+        assert len(models) == 2
+        assert isinstance(models[0], OllamaModel)
+        assert models[0].full_name == 'gemma3:4b'
+        assert models[1].full_name == 'llama3:8b'

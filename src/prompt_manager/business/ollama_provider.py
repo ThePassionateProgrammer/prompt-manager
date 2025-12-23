@@ -24,6 +24,19 @@ class OllamaProvider(LLMProvider):
         self._name = "ollama"
         self.base_url = base_url
         self.default_model = model
+        self.client = None
+        self._initialized = False
+
+    def _get_client(self) -> ollama.Client:
+        """Get or create Ollama client (lazy initialization).
+
+        Returns:
+            Configured Ollama client
+        """
+        if not self._initialized:
+            self.client = ollama.Client(host=self.base_url)
+            self._initialized = True
+        return self.client
 
     @property
     def name(self) -> str:
@@ -37,7 +50,7 @@ class OllamaProvider(LLMProvider):
             True if Ollama server responds, False otherwise
         """
         try:
-            client = ollama.Client(host=self.base_url)
+            client = self._get_client()
             client.list()
             return True
         except Exception:
@@ -66,7 +79,7 @@ class OllamaProvider(LLMProvider):
         model = kwargs.get('model', self.default_model)
 
         # Generate response using Ollama
-        client = ollama.Client(host=self.base_url)
+        client = self._get_client()
         response = client.chat(model=model, messages=msg_array)
 
         return response['message']['content']

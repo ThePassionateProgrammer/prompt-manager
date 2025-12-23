@@ -367,7 +367,7 @@ def test_llm_chat_success(client):
          patch('prompt_manager.api.load_openai_api_key') as mock_key_loader:
         mock_key_loader.return_value = 'sk-test'
         mock_instance = mock_provider.return_value
-        mock_instance.send_prompt.return_value = 'LLM response'
+        mock_instance.generate.return_value = 'LLM response'
         response = client.post('/api/llm/chat', json={"prompt": "Hello"})
         assert response.status_code == 200
         assert response.json == {"response": "LLM response"}
@@ -386,7 +386,7 @@ def test_llm_chat_provider_error(client):
          patch('prompt_manager.api.load_openai_api_key') as mock_key_loader:
         mock_key_loader.return_value = 'sk-test'
         mock_instance = mock_provider.return_value
-        mock_instance.send_prompt.side_effect = Exception('Provider error')
+        mock_instance.generate.side_effect = Exception('Provider error')
         response = client.post('/api/llm/chat', json={"prompt": "Hello"})
         assert response.status_code == 500
         assert 'error' in response.json 

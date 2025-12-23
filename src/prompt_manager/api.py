@@ -229,20 +229,23 @@ class PromptManagerAPI:
                 data = request.get_json()
                 if not data:
                     return jsonify({'error': 'No data provided'}), 400
-                
+
                 prompt = data.get('prompt', '').strip()
                 if not prompt:
                     return jsonify({'error': 'Prompt is required'}), 400
-                
+
                 # Load API key
-                api_key = load_openai_api_key(ENV_PATH)
-                if not api_key:
-                    return jsonify({'error': 'OpenAI API key not configured'}), 400
-                
+                try:
+                    api_key = load_openai_api_key(ENV_PATH)
+                    if not api_key:
+                        return jsonify({'error': 'OpenAI API key not configured'}), 400
+                except ValueError as e:
+                    return jsonify({'error': str(e)}), 400
+
                 # Initialize provider and send message
                 provider = OpenAIProvider(api_key)
-                response = provider.send_message(prompt)
-                
+                response = provider.generate(prompt)
+
                 return jsonify({'response': response}), 200
             except Exception as e:
                 return jsonify({'error': str(e)}), 500

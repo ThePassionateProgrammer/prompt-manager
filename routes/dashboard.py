@@ -6,6 +6,7 @@ from flask import Blueprint, request, jsonify, render_template
 from src.prompt_manager.business.llm_provider_manager import LLMProviderManager
 from src.prompt_manager.business.llm_provider import OpenAIProvider
 from src.prompt_manager.business.ollama_provider import OllamaProvider
+from src.prompt_manager.business.ollama_discovery import OllamaDiscovery
 from src.prompt_manager.business.key_loader import SecureKeyManager
 from src.prompt_manager.business.conversation_manager import ConversationManager
 from src.prompt_manager.business.token_manager import TokenManager
@@ -120,6 +121,46 @@ def list_providers():
             'default_provider': provider_manager.default_provider
         })
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/providers/<provider_name>/models', methods=['GET'])
+def list_provider_models(provider_name):
+    """List available models for a specific provider.
+
+    Returns:
+        JSON with models list. Format differs by provider:
+        - OpenAI: Static list of known models
+        - Ollama: Dynamic list from local server
+    """
+    try:
+        # OpenAI has a known static list
+        if provider_name.lower() == 'openai':
+            models = [
+                {'id': 'gpt-4', 'name': 'GPT-4', 'context_window': 8192},
+                {'id': 'gpt-4-turbo', 'name': 'GPT-4 Turbo', 'context_window': 128000},
+                {'id': 'gpt-3.5-turbo', 'name': 'GPT-3.5 Turbo', 'context_window': 4096},
+                {'id': 'gpt-3.5-turbo-16k', 'name': 'GPT-3.5 Turbo 16K', 'context_window': 16384},
+            ]
+            return jsonify({'models': models})
+
+        # Ollama requires dynamic discovery
+        elif provider_name.lower() == 'ollama':
+            discovery = OllamaDiscovery()
+            ollama_models = discovery.list_downloaded_models()
+            models = [
+                {
+                    'id': model.full_name,
+                    'name': model.full_name,
+                    'tag': model.tag
+                }
+                for model in ollama_models
+            ]
+            return jsonify({'models': models})
+
+        else:
+            return jsonify({'error': f'Provider {provider_name} not supported'}), 404
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

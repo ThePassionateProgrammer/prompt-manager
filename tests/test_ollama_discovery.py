@@ -35,3 +35,19 @@ class TestOllamaDiscoveryListModels:
         assert isinstance(models[0], OllamaModel)
         assert models[0].full_name == 'gemma3:4b'
         assert models[1].full_name == 'llama3:8b'
+
+    @patch('ollama.Client')
+    def test_list_downloaded_models_when_none_exist(self, mock_client_class):
+        """Should return empty list when no models downloaded."""
+        # Arrange
+        mock_client = Mock()
+        mock_client.list.return_value = {'models': []}
+        mock_client_class.return_value = mock_client
+
+        discovery = OllamaDiscovery()
+
+        # Act
+        models = discovery.list_downloaded_models()
+
+        # Assert
+        assert models == []

@@ -32,8 +32,9 @@ class OllamaDiscovery:
         response = client.list()
 
         models = []
-        for model_data in response.get('models', []):
-            model = OllamaModel(model_data['name'])
+        # Ollama client returns ListResponse object with .models attribute
+        for model_obj in response.models:
+            model = OllamaModel(model_obj.model)
             models.append(model)
 
         return models

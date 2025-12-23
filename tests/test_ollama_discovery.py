@@ -17,12 +17,15 @@ class TestOllamaDiscoveryListModels:
         """Should return list of OllamaModel objects for downloaded models."""
         # Arrange
         mock_client = Mock()
-        mock_client.list.return_value = {
-            'models': [
-                {'name': 'gemma3:4b'},
-                {'name': 'llama3:8b'},
-            ]
-        }
+        # Ollama client returns ListResponse object with .models attribute
+        mock_model1 = Mock()
+        mock_model1.model = 'gemma3:4b'
+        mock_model2 = Mock()
+        mock_model2.model = 'llama3:8b'
+
+        mock_response = Mock()
+        mock_response.models = [mock_model1, mock_model2]
+        mock_client.list.return_value = mock_response
         mock_client_class.return_value = mock_client
 
         discovery = OllamaDiscovery()
@@ -41,7 +44,9 @@ class TestOllamaDiscoveryListModels:
         """Should return empty list when no models downloaded."""
         # Arrange
         mock_client = Mock()
-        mock_client.list.return_value = {'models': []}
+        mock_response = Mock()
+        mock_response.models = []
+        mock_client.list.return_value = mock_response
         mock_client_class.return_value = mock_client
 
         discovery = OllamaDiscovery()

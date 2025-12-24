@@ -876,6 +876,7 @@
             
             // Provider selection change
             document.getElementById('provider-select').addEventListener('change', function() {
+                currentProvider = this.value;  // Update current provider
                 loadModelsForProvider(this.value);
             });
 
@@ -914,20 +915,29 @@
                 const providerSelect = document.getElementById('provider-select');
                 providerSelect.innerHTML = '';
 
+                // Add "Select Provider" placeholder as first option
+                const placeholderOption = document.createElement('option');
+                placeholderOption.value = '';
+                placeholderOption.textContent = 'Select Provider...';
+                placeholderOption.disabled = true;
+                providerSelect.appendChild(placeholderOption);
+
                 // Add providers
                 for (const [key, provider] of Object.entries(data.providers)) {
                     const option = document.createElement('option');
                     option.value = key;
                     option.textContent = provider.name.charAt(0).toUpperCase() + provider.name.slice(1);
-                    if (key === data.default_provider) {
-                        option.selected = true;
-                    }
                     providerSelect.appendChild(option);
                 }
 
-                // Load models for default provider
+                // Select default provider if one exists
                 if (data.default_provider) {
+                    providerSelect.value = data.default_provider;
+                    currentProvider = data.default_provider;
                     await loadModelsForProvider(data.default_provider);
+                } else {
+                    // No default - show placeholder
+                    providerSelect.value = '';
                 }
             } catch (error) {
                 console.error('Error loading providers:', error);
@@ -1012,6 +1022,12 @@
             document.getElementById('send-btn').disabled = true;
 
             try {
+                // Get provider from dropdown to ensure it's current
+                const providerSelect = document.getElementById('provider-select');
+                const selectedProvider = providerSelect.value || currentProvider;
+
+                console.log('Sending message with provider:', selectedProvider, 'model:', model);
+
                 const response = await fetch('/api/chat/send', {
                     method: 'POST',
                     headers: {
@@ -1019,7 +1035,7 @@
                     },
                     body: JSON.stringify({
                         message: message,
-                        provider: currentProvider,
+                        provider: selectedProvider,
                         model: model,
                         temperature: temperature,
                         max_tokens: maxTokens,

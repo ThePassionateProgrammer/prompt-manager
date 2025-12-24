@@ -250,12 +250,18 @@ def send_chat_message():
         history = data.get('history', [])
         system_prompt = data.get('system_prompt', DEFAULT_SYSTEM_PROMPT)
         auto_trim = data.get('auto_trim', False)
-        
+
+        # Debug logging
+        print(f"[CHAT] Received request - Provider: {provider_name}, Model: {model}")
+        print(f"[CHAT] Available providers: {list(provider_mgr.providers.keys())}")
+
         if not message:
             return jsonify({'error': 'Message is required'}), 400
-        
+
         # Get the provider
         provider = provider_mgr.get_provider(provider_name)
+        print(f"[CHAT] Retrieved provider: {provider.__class__.__name__ if provider else None}")
+
         if not provider:
             return jsonify({'error': f'Provider {provider_name} not found. Please add your API key in Settings.'}), 404
         

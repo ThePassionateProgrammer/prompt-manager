@@ -1,0 +1,35 @@
+{
+  "c51ed495-88d8-4ad2-8451-029eb9182034": {
+    "id": "c51ed495-88d8-4ad2-8451-029eb9182034",
+    "title": "Test Conversation",
+    "model": "gemma3:4b",
+    "messages": [
+      {
+        "id": 0,
+        "role": "user",
+        "content": "test",
+        "timestamp": "2025-12-19T21:44:20.395819"
+      },
+      {
+        "id": 1,
+        "role": "assistant",
+        "content": "Okay! I see you'",
+        "timestamp": "2025-12-19T21:44:26.779061"
+      },
+      {
+        "id": 2,
+        "role": "user",
+        "content": "Please introduce yourself briefly",
+        "timestamp": "2025-12-19T21:44:41.274070"
+      },
+      {
+        "id": 3,
+        "role": "assistant",
+        "content": "Hello there! I'm Gemma, a large language model created by the Gemma team at Google DeepMind.",
+        "timestamp": "2025-12-19T21:44:43.497632"
+      }
+    ],
+    "created_at": "2025-12-19T21:43:50.307279",
+    "updated_at": "2025-12-19T21:44:43.497650"
+  }
+}

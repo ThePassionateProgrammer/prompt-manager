@@ -184,8 +184,8 @@
     "model": "gpt-3.5-turbo",
     "system_prompt": "You are helpful",
     "title": "Test Conversation",
-    "created_at": "2025-10-17T18:05:27.672689",
-    "updated_at": "2025-10-17T18:05:27.672708"
+    "created_at": "2025-12-24T15:25:57.554502",
+    "updated_at": "2025-12-24T15:25:57.554505"
   },
   "conv-456": {
     "id": "conv-456",
@@ -196,29 +196,29 @@
       }
     ],
     "title": "Loaded Conversation",
-    "created_at": "2025-10-17T18:05:27.738184",
-    "updated_at": "2025-10-17T18:05:27.738215"
+    "created_at": "2025-12-24T15:25:57.560532",
+    "updated_at": "2025-12-24T15:25:57.560541"
   },
   "conv-0": {
     "id": "conv-0",
     "messages": [],
     "title": "Conversation 0",
-    "created_at": "2025-10-17T18:05:27.915930",
-    "updated_at": "2025-10-17T18:05:27.915952"
+    "created_at": "2025-12-24T15:25:57.578970",
+    "updated_at": "2025-12-24T15:25:57.578976"
   },
   "conv-1": {
     "id": "conv-1",
     "messages": [],
     "title": "Conversation 1",
-    "created_at": "2025-10-17T18:05:27.924125",
-    "updated_at": "2025-10-17T18:05:27.924145"
+    "created_at": "2025-12-24T15:25:57.580429",
+    "updated_at": "2025-12-24T15:25:57.580431"
   },
   "conv-2": {
     "id": "conv-2",
     "messages": [],
     "title": "Conversation 2",
-    "created_at": "2025-10-17T18:05:27.932629",
-    "updated_at": "2025-10-17T18:05:27.932645"
+    "created_at": "2025-12-24T15:25:57.581776",
+    "updated_at": "2025-12-24T15:25:57.581778"
   },
   "conv-0e8f9ce44c75": {
     "messages": [
@@ -253,8 +253,8 @@
       }
     ],
     "title": "Original",
-    "created_at": "2025-10-17T18:05:28.066393",
-    "updated_at": "2025-10-17T18:05:28.066411"
+    "created_at": "2025-12-24T15:25:57.606158",
+    "updated_at": "2025-12-24T15:25:57.606160"
   },
   "conv-3021e1db13b9": {
     "messages": [],
@@ -611,5 +611,663 @@
     "id": "conv-5c721eb6ba76",
     "created_at": "2025-10-17T18:05:28.204580",
     "updated_at": "2025-10-17T18:05:28.204599"
+  },
+  "conv-dd16658f0fee": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-dd16658f0fee",
+    "title": "What is Python?",
+    "created_at": "2025-12-22T18:04:44.606468",
+    "updated_at": "2025-12-22T18:04:44.606470"
+  },
+  "conv-2905ec696a63": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-2905ec696a63",
+    "created_at": "2025-12-22T18:04:44.617654",
+    "updated_at": "2025-12-22T18:04:44.617656"
+  },
+  "conv-b4edc3dd875a": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-b4edc3dd875a",
+    "title": "Test message",
+    "created_at": "2025-12-22T18:04:44.622695",
+    "updated_at": "2025-12-22T18:04:44.622697"
+  },
+  "conv-20d632aa2b47": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-20d632aa2b47",
+    "title": "What is Python?",
+    "created_at": "2025-12-22T21:16:21.057484",
+    "updated_at": "2025-12-22T21:16:21.057487"
+  },
+  "conv-18551464fcd4": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-18551464fcd4",
+    "created_at": "2025-12-22T21:16:21.070360",
+    "updated_at": "2025-12-22T21:16:21.070362"
+  },
+  "conv-76d7808d8ca9": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-76d7808d8ca9",
+    "title": "Test message",
+    "created_at": "2025-12-22T21:16:21.075486",
+    "updated_at": "2025-12-22T21:16:21.075488"
+  },
+  "conv-247dc6f9a3ea": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-247dc6f9a3ea",
+    "created_at": "2025-12-22T21:16:21.080754",
+    "updated_at": "2025-12-22T21:16:21.080757"
+  },
+  "conv-091ddfa038c0": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-091ddfa038c0",
+    "created_at": "2025-12-22T21:16:21.091328",
+    "updated_at": "2025-12-22T21:16:21.091331"
+  },
+  "conv-4e6932439cc6": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-4e6932439cc6",
+    "title": "What is Python?",
+    "created_at": "2025-12-22T21:16:32.355220",
+    "updated_at": "2025-12-22T21:16:32.355223"
+  },
+  "conv-c5f182f282c7": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-c5f182f282c7",
+    "created_at": "2025-12-22T21:16:32.367505",
+    "updated_at": "2025-12-22T21:16:32.367511"
+  },
+  "conv-64ab5578b62b": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-64ab5578b62b",
+    "title": "Test message",
+    "created_at": "2025-12-22T21:16:32.374669",
+    "updated_at": "2025-12-22T21:16:32.374674"
+  },
+  "conv-0d827b557e0e": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-0d827b557e0e",
+    "created_at": "2025-12-22T21:16:32.380439",
+    "updated_at": "2025-12-22T21:16:32.380442"
+  },
+  "conv-2cccc5e2a913": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-2cccc5e2a913",
+    "created_at": "2025-12-22T21:16:32.391878",
+    "updated_at": "2025-12-22T21:16:32.391885"
+  },
+  "conv-8914fed8ea62": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-8914fed8ea62",
+    "title": "What is Python?",
+    "created_at": "2025-12-22T21:18:54.255631",
+    "updated_at": "2025-12-22T21:18:54.255634"
+  },
+  "conv-b912f26eed7d": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-b912f26eed7d",
+    "created_at": "2025-12-22T21:18:54.269497",
+    "updated_at": "2025-12-22T21:18:54.269500"
+  },
+  "conv-00813fd8ff2e": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-00813fd8ff2e",
+    "title": "Test message",
+    "created_at": "2025-12-22T21:18:54.274916",
+    "updated_at": "2025-12-22T21:18:54.274918"
+  },
+  "conv-13ab951511d9": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-13ab951511d9",
+    "created_at": "2025-12-22T21:18:54.280404",
+    "updated_at": "2025-12-22T21:18:54.280408"
+  },
+  "conv-7420041fba44": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-7420041fba44",
+    "created_at": "2025-12-22T21:18:54.291266",
+    "updated_at": "2025-12-22T21:18:54.291271"
+  },
+  "conv-c566037bca17": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-c566037bca17",
+    "title": "What is Python?",
+    "created_at": "2025-12-22T21:51:58.899160",
+    "updated_at": "2025-12-22T21:51:58.899163"
+  },
+  "conv-15b526d1ae0d": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-15b526d1ae0d",
+    "created_at": "2025-12-22T21:51:58.911676",
+    "updated_at": "2025-12-22T21:51:58.911679"
+  },
+  "conv-b315d237d3d9": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-b315d237d3d9",
+    "title": "Test message",
+    "created_at": "2025-12-22T21:51:58.917131",
+    "updated_at": "2025-12-22T21:51:58.917133"
+  },
+  "conv-2d046aad992b": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-2d046aad992b",
+    "created_at": "2025-12-22T21:51:58.922624",
+    "updated_at": "2025-12-22T21:51:58.922627"
+  },
+  "conv-2482edceaf9b": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-2482edceaf9b",
+    "created_at": "2025-12-22T21:51:58.933539",
+    "updated_at": "2025-12-22T21:51:58.933542"
+  },
+  "conv-18320cabc3b4": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-18320cabc3b4",
+    "title": "What is Python?",
+    "created_at": "2025-12-22T21:52:30.046545",
+    "updated_at": "2025-12-22T21:52:30.046548"
+  },
+  "conv-ab1ce16e487d": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-ab1ce16e487d",
+    "created_at": "2025-12-22T21:52:30.061063",
+    "updated_at": "2025-12-22T21:52:30.061066"
+  },
+  "conv-6ee82c6d94bc": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-6ee82c6d94bc",
+    "title": "Test message",
+    "created_at": "2025-12-22T21:52:30.066481",
+    "updated_at": "2025-12-22T21:52:30.066483"
+  },
+  "conv-0f59c5ce7e36": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-0f59c5ce7e36",
+    "created_at": "2025-12-22T21:52:30.071993",
+    "updated_at": "2025-12-22T21:52:30.071996"
+  },
+  "conv-c4af58902eae": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-c4af58902eae",
+    "created_at": "2025-12-22T21:52:30.082842",
+    "updated_at": "2025-12-22T21:52:30.082845"
+  },
+  "conv-11f15c293646": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-11f15c293646",
+    "title": "What is Python?",
+    "created_at": "2025-12-22T22:06:55.100802",
+    "updated_at": "2025-12-22T22:06:55.100810"
+  },
+  "conv-1a630092e657": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-1a630092e657",
+    "created_at": "2025-12-22T22:06:55.115372",
+    "updated_at": "2025-12-22T22:06:55.115374"
+  },
+  "conv-bafc1a1cc592": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-bafc1a1cc592",
+    "title": "Test message",
+    "created_at": "2025-12-22T22:06:55.120875",
+    "updated_at": "2025-12-22T22:06:55.120877"
+  },
+  "conv-db1a9a2786f3": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-db1a9a2786f3",
+    "created_at": "2025-12-22T22:06:55.126280",
+    "updated_at": "2025-12-22T22:06:55.126282"
+  },
+  "conv-d8f1583d31e4": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-d8f1583d31e4",
+    "created_at": "2025-12-22T22:06:55.137168",
+    "updated_at": "2025-12-22T22:06:55.137171"
+  },
+  "conv-8e7a4655f63c": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-8e7a4655f63c",
+    "title": "What is Python?",
+    "created_at": "2025-12-22T23:13:28.421821",
+    "updated_at": "2025-12-22T23:13:28.421828"
+  },
+  "conv-47d1659ab3b0": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-47d1659ab3b0",
+    "created_at": "2025-12-22T23:13:28.436683",
+    "updated_at": "2025-12-22T23:13:28.436687"
+  },
+  "conv-f77ecfc00065": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-f77ecfc00065",
+    "title": "Test message",
+    "created_at": "2025-12-22T23:13:28.442208",
+    "updated_at": "2025-12-22T23:13:28.442210"
+  },
+  "conv-e2cb710f2a40": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-e2cb710f2a40",
+    "created_at": "2025-12-22T23:13:28.448001",
+    "updated_at": "2025-12-22T23:13:28.448004"
+  },
+  "conv-ee99541eaae1": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-ee99541eaae1",
+    "created_at": "2025-12-22T23:13:28.459175",
+    "updated_at": "2025-12-22T23:13:28.459177"
+  },
+  "conv-b5d8600b2f32": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-b5d8600b2f32",
+    "title": "What is Python?",
+    "created_at": "2025-12-24T15:23:03.926601",
+    "updated_at": "2025-12-24T15:23:03.926603"
+  },
+  "conv-811f83ff5337": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-811f83ff5337",
+    "created_at": "2025-12-24T15:23:03.940591",
+    "updated_at": "2025-12-24T15:23:03.940595"
+  },
+  "conv-379802296b1c": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-379802296b1c",
+    "title": "Test message",
+    "created_at": "2025-12-24T15:23:03.946267",
+    "updated_at": "2025-12-24T15:23:03.946270"
+  },
+  "conv-59644a795e35": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-59644a795e35",
+    "created_at": "2025-12-24T15:23:03.951758",
+    "updated_at": "2025-12-24T15:23:03.951760"
+  },
+  "conv-7d463bef3626": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-7d463bef3626",
+    "created_at": "2025-12-24T15:23:03.962635",
+    "updated_at": "2025-12-24T15:23:03.962638"
+  },
+  "conv-6211b3301020": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-6211b3301020",
+    "title": "What is Python?",
+    "created_at": "2025-12-24T15:23:24.949904",
+    "updated_at": "2025-12-24T15:23:24.949906"
+  },
+  "conv-704d1b85cce2": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-704d1b85cce2",
+    "created_at": "2025-12-24T15:23:24.964321",
+    "updated_at": "2025-12-24T15:23:24.964324"
+  },
+  "conv-5e27f3e282c5": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-5e27f3e282c5",
+    "title": "Test message",
+    "created_at": "2025-12-24T15:23:24.970005",
+    "updated_at": "2025-12-24T15:23:24.970007"
+  },
+  "conv-2792c568c4b7": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-2792c568c4b7",
+    "created_at": "2025-12-24T15:23:24.975618",
+    "updated_at": "2025-12-24T15:23:24.975621"
+  },
+  "conv-4c36114c2a6f": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-4c36114c2a6f",
+    "created_at": "2025-12-24T15:23:24.987259",
+    "updated_at": "2025-12-24T15:23:24.987265"
+  },
+  "conv-b8fd3af73cbe": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-b8fd3af73cbe",
+    "title": "What is Python?",
+    "created_at": "2025-12-24T15:25:57.598866",
+    "updated_at": "2025-12-24T15:25:57.598872"
+  },
+  "conv-96bc30494b21": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-96bc30494b21",
+    "created_at": "2025-12-24T15:25:57.613124",
+    "updated_at": "2025-12-24T15:25:57.613132"
+  },
+  "conv-da5652888552": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-da5652888552",
+    "title": "Test message",
+    "created_at": "2025-12-24T15:25:57.619891",
+    "updated_at": "2025-12-24T15:25:57.619895"
+  },
+  "conv-856dfbf5ba8e": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-856dfbf5ba8e",
+    "created_at": "2025-12-24T15:25:57.626518",
+    "updated_at": "2025-12-24T15:25:57.626522"
+  },
+  "conv-d01cdb3b6059": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-d01cdb3b6059",
+    "created_at": "2025-12-24T15:25:57.638363",
+    "updated_at": "2025-12-24T15:25:57.638367"
   }
 }

@@ -34,7 +34,17 @@ class OllamaDiscovery:
         models = []
         # Ollama client returns ListResponse object with .models attribute
         for model_obj in response.models:
-            model = OllamaModel(model_obj.model)
+            # Extract metadata from Ollama API response
+            size_bytes = getattr(model_obj, 'size', 0)
+            family = getattr(model_obj.details, 'family', '') if hasattr(model_obj, 'details') else ''
+            parameter_size = getattr(model_obj.details, 'parameter_size', '') if hasattr(model_obj, 'details') else ''
+
+            model = OllamaModel(
+                model_obj.model,
+                size_bytes=size_bytes,
+                family=family,
+                parameter_size=parameter_size
+            )
             models.append(model)
 
         return models

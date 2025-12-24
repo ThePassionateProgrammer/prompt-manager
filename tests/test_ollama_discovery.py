@@ -56,3 +56,36 @@ class TestOllamaDiscoveryListModels:
 
         # Assert
         assert models == []
+
+    @patch('ollama.Client')
+    def test_list_downloaded_models_includes_metadata(self, mock_client_class):
+        """Should extract size, family, and parameter info from Ollama API."""
+        # Arrange
+        mock_client = Mock()
+
+        # Ollama API returns detailed model information
+        mock_model = Mock()
+        mock_model.model = 'gemma3:4b'
+        mock_model.size = 3338801804
+        mock_model.details = Mock()
+        mock_model.details.family = 'gemma3'
+        mock_model.details.parameter_size = '4.3B'
+
+        mock_response = Mock()
+        mock_response.models = [mock_model]
+        mock_client.list.return_value = mock_response
+        mock_client_class.return_value = mock_client
+
+        discovery = OllamaDiscovery()
+
+        # Act
+        models = discovery.list_downloaded_models()
+
+        # Assert
+        assert len(models) == 1
+        model = models[0]
+        assert model.full_name == 'gemma3:4b'
+        assert model.size_bytes == 3338801804
+        assert model.family == 'gemma3'
+        assert model.parameter_size == '4.3B'
+        assert model.size_display() == '3.1 GB'

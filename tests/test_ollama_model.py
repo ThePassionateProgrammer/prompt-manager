@@ -55,11 +55,13 @@ class TestOllamaModelSerialization:
         data = model.to_dict()
 
         # Assert
-        assert data == {
-            'name': 'gemma3',
-            'tag': '4b',
-            'full_name': 'gemma3:4b'
-        }
+        assert data['name'] == 'gemma3'
+        assert data['tag'] == '4b'
+        assert data['full_name'] == 'gemma3:4b'
+        # Metadata fields present with defaults
+        assert 'size_bytes' in data
+        assert 'family' in data
+        assert 'parameter_size' in data
 
     def test_from_dict_with_tag(self):
         """Model should deserialize correctly from dictionary."""
@@ -77,3 +79,60 @@ class TestOllamaModelSerialization:
         assert model.name == 'gemma3'
         assert model.tag == '4b'
         assert model.full_name == 'gemma3:4b'
+
+
+class TestOllamaModelMetadata:
+    """Test model metadata (size, family, parameters)."""
+
+    def test_model_with_size_displays_gb(self):
+        """Model with size_bytes should display size in GB."""
+        # Arrange & Act
+        model = OllamaModel("gemma3:4b", size_bytes=3338801804)
+
+        # Assert
+        assert model.size_gb() == 3.1
+        assert model.size_display() == "3.1 GB"
+
+    def test_model_with_family_and_parameters(self):
+        """Model should store family and parameter information."""
+        # Arrange & Act
+        model = OllamaModel(
+            "gemma3:4b",
+            size_bytes=3338801804,
+            family="gemma3",
+            parameter_size="4.3B"
+        )
+
+        # Assert
+        assert model.family == "gemma3"
+        assert model.parameter_size == "4.3B"
+
+    def test_lightweight_model_classification(self):
+        """Models under 5GB should be classified as lightweight."""
+        # Arrange & Act
+        lightweight = OllamaModel("gemma3:4b", size_bytes=3338801804)
+        heavy = OllamaModel("gemma3:27b", size_bytes=17396936941)
+
+        # Assert
+        assert lightweight.is_lightweight() is True
+        assert heavy.is_lightweight() is False
+
+    def test_metadata_included_in_serialization(self):
+        """Model serialization should include size and metadata."""
+        # Arrange
+        model = OllamaModel(
+            "gemma3:4b",
+            size_bytes=3338801804,
+            family="gemma3",
+            parameter_size="4.3B"
+        )
+
+        # Act
+        data = model.to_dict()
+
+        # Assert
+        assert data['size_bytes'] == 3338801804
+        assert data['size_display'] == "3.1 GB"
+        assert data['family'] == "gemma3"
+        assert data['parameter_size'] == "4.3B"
+        assert data['is_lightweight'] is True

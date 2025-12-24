@@ -147,8 +147,13 @@ def list_provider_models(provider_name):
             models = [
                 {
                     'id': model.full_name,
-                    'name': model.full_name,
-                    'tag': model.tag
+                    'name': f"{model.full_name} ({model.size_display()})",
+                    'tag': model.tag,
+                    'size_display': model.size_display(),
+                    'size_bytes': model.size_bytes,
+                    'family': model.family,
+                    'parameter_size': model.parameter_size,
+                    'is_lightweight': model.is_lightweight()
                 }
                 for model in ollama_models
             ]

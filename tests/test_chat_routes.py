@@ -94,14 +94,20 @@ class TestSettingsRoute:
 class TestChatSendAPI:
     """Test chat message sending API."""
     
-    @patch('routes.dashboard.provider_manager')
-    def test_send_message_success(self, mock_manager, client):
+    @patch('routes.dashboard.chat_service')
+    def test_send_message_success(self, mock_service, client):
         """Test successful message sending."""
-        # Setup mock
-        mock_provider = Mock()
-        mock_provider.generate.return_value = "Test response from LLM"
-        mock_manager.get_provider.return_value = mock_provider
-        
+        # Setup mock service
+        mock_service.send_message.return_value = {
+            'response': 'Test response from LLM',
+            'provider': 'openai',
+            'model': 'gpt-3.5-turbo',
+            'temperature': 0.7,
+            'max_tokens': 2048,
+            'token_usage': {'prompt_tokens': 10, 'completion_tokens': 5},
+            'metadata': {'message_count': 1, 'has_history': False}
+        }
+
         # Send request
         response = client.post('/api/chat/send',
                               json={
@@ -111,33 +117,38 @@ class TestChatSendAPI:
                                   'temperature': 0.7,
                                   'max_tokens': 2048
                               })
-        
+
         # Assertions
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['response'] == "Test response from LLM"
         assert data['model'] == 'gpt-3.5-turbo'
         assert data['temperature'] == 0.7
-        
-        # Verify provider was called with messages array
-        call_kwargs = mock_provider.generate.call_args[1]
-        assert 'messages' in call_kwargs
+
+        # Verify service was called correctly
+        mock_service.send_message.assert_called_once()
+        call_kwargs = mock_service.send_message.call_args[1]
+        assert call_kwargs['message'] == 'Test message'
+        assert call_kwargs['provider_name'] == 'openai'
         assert call_kwargs['model'] == 'gpt-3.5-turbo'
         assert call_kwargs['temperature'] == 0.7
         assert call_kwargs['max_tokens'] == 2048
-    
-    @patch('routes.dashboard.provider_manager')
-    def test_send_message_missing_provider(self, mock_manager, client):
+
+    @patch('routes.dashboard.chat_service')
+    def test_send_message_missing_provider(self, mock_service, client):
         """Test sending message when provider not found."""
-        mock_manager.get_provider.return_value = None
-        
+        # Mock service raises ValueError for missing provider
+        mock_service.send_message.side_effect = ValueError(
+            'Provider nonexistent not found. Please add your API key in Settings.'
+        )
+
         response = client.post('/api/chat/send',
                               json={
                                   'message': 'Test message',
                                   'provider': 'nonexistent'
                               })
-        
-        assert response.status_code == 404
+
+        assert response.status_code == 400
         data = json.loads(response.data)
         assert 'error' in data
         assert 'not found' in data['error'].lower()
@@ -154,33 +165,37 @@ class TestChatSendAPI:
         assert 'error' in data
         assert 'required' in data['error'].lower()
     
-    @patch('routes.dashboard.provider_manager')
-    def test_send_message_with_defaults(self, mock_manager, client):
+    @patch('routes.dashboard.chat_service')
+    def test_send_message_with_defaults(self, mock_service, client):
         """Test that defaults are applied when not provided."""
-        mock_provider = Mock()
-        mock_provider.generate.return_value = "Response"
-        mock_manager.get_provider.return_value = mock_provider
-        
+        mock_service.send_message.return_value = {
+            'response': 'Response',
+            'provider': 'openai',
+            'model': 'gpt-3.5-turbo',
+            'temperature': 0.7,
+            'max_tokens': 2048,
+            'token_usage': {},
+            'metadata': {}
+        }
+
         response = client.post('/api/chat/send',
                               json={'message': 'Test'})
-        
+
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['provider'] == 'openai'  # default
         assert data['model'] == 'gpt-3.5-turbo'  # default
         assert data['temperature'] == 0.7  # default
         assert data['max_tokens'] == 2048  # default
-    
-    @patch('routes.dashboard.provider_manager')
-    def test_send_message_provider_error(self, mock_manager, client):
+
+    @patch('routes.dashboard.chat_service')
+    def test_send_message_provider_error(self, mock_service, client):
         """Test handling of provider errors."""
-        mock_provider = Mock()
-        mock_provider.generate.side_effect = Exception("API Error")
-        mock_manager.get_provider.return_value = mock_provider
-        
+        mock_service.send_message.side_effect = Exception("API Error")
+
         response = client.post('/api/chat/send',
                               json={'message': 'Test'})
-        
+
         assert response.status_code == 500
         data = json.loads(response.data)
         assert 'error' in data
@@ -344,15 +359,32 @@ class TestProvidersAPI:
 
 class TestChatIntegration:
     """Integration tests for chat functionality."""
-    
-    @patch('routes.dashboard.provider_manager')
-    def test_full_chat_workflow(self, mock_manager, client):
+
+    @patch('routes.dashboard.chat_service')
+    def test_full_chat_workflow(self, mock_service, client):
         """Test complete chat workflow."""
-        # Setup
-        mock_provider = Mock()
-        mock_provider.generate.return_value = "Hello! How can I help?"
-        mock_manager.get_provider.return_value = mock_provider
-        
+        # Setup mock responses
+        mock_service.send_message.side_effect = [
+            {
+                'response': 'Hello! How can I help?',
+                'provider': 'openai',
+                'model': 'gpt-4',
+                'temperature': 0.7,
+                'max_tokens': 2048,
+                'token_usage': {},
+                'metadata': {}
+            },
+            {
+                'response': 'I can help with that!',
+                'provider': 'openai',
+                'model': 'gpt-4',
+                'temperature': 0.7,
+                'max_tokens': 2048,
+                'token_usage': {},
+                'metadata': {}
+            }
+        ]
+
         # 1. Send first message
         response1 = client.post('/api/chat/send',
                                json={
@@ -360,36 +392,41 @@ class TestChatIntegration:
                                    'model': 'gpt-4'
                                })
         assert response1.status_code == 200
-        
+
         # 2. Send follow-up message
-        mock_provider.generate.return_value = "I can help with that!"
         response2 = client.post('/api/chat/send',
                                json={
                                    'message': 'Can you help me?',
                                    'model': 'gpt-4'
                                })
         assert response2.status_code == 200
-        
+
         # Verify both calls were made
-        assert mock_provider.generate.call_count == 2
-    
-    @patch('routes.dashboard.provider_manager')
-    def test_model_switching(self, mock_manager, client):
+        assert mock_service.send_message.call_count == 2
+
+    @patch('routes.dashboard.chat_service')
+    def test_model_switching(self, mock_service, client):
         """Test switching between models."""
-        mock_provider = Mock()
-        mock_provider.generate.return_value = "Response"
-        mock_manager.get_provider.return_value = mock_provider
-        
+        mock_service.send_message.return_value = {
+            'response': 'Response',
+            'provider': 'openai',
+            'model': 'gpt-3.5-turbo',
+            'temperature': 0.7,
+            'max_tokens': 2048,
+            'token_usage': {},
+            'metadata': {}
+        }
+
         # Send with GPT-3.5
         client.post('/api/chat/send',
                    json={'message': 'Test', 'model': 'gpt-3.5-turbo'})
-        
+
         # Send with GPT-4
         client.post('/api/chat/send',
                    json={'message': 'Test', 'model': 'gpt-4'})
-        
+
         # Verify different models were used
-        calls = mock_provider.generate.call_args_list
+        calls = mock_service.send_message.call_args_list
         assert calls[0][1]['model'] == 'gpt-3.5-turbo'
         assert calls[1][1]['model'] == 'gpt-4'
 

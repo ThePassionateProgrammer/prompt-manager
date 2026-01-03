@@ -10,6 +10,8 @@ from src.prompt_manager.business.ollama_discovery import OllamaDiscovery
 from src.prompt_manager.business.key_loader import SecureKeyManager
 from src.prompt_manager.business.conversation_manager import ConversationManager
 from src.prompt_manager.business.token_manager import TokenManager
+from src.prompt_manager.business.user_settings_manager import UserSettingsManager
+from src.prompt_manager.business.chat_service import ChatService
 from src.prompt_manager.domain.conversation import ConversationBuilder, ContextWindowManager
 from src.prompt_manager.domain.model_catalog import ModelCatalog
 
@@ -19,6 +21,8 @@ dashboard_bp = Blueprint('dashboard', __name__)
 provider_manager = LLMProviderManager()
 conversation_manager = ConversationManager()
 token_manager = TokenManager()
+settings_manager = UserSettingsManager()
+chat_service = ChatService(provider_manager, token_manager)
 
 # Load saved API keys and initialize providers on startup
 def _initialize_providers():
@@ -213,34 +217,14 @@ def test_provider():
 DEFAULT_SYSTEM_PROMPT = "You are a helpful, knowledgeable, and friendly AI assistant. Provide clear, accurate, and concise responses."
 
 
-def _auto_trim_if_needed(messages, model, auto_trim, token_manager):
-    """Automatically trim messages if they approach context limit.
-    
-    Uses ContextWindowManager domain model for trimming logic.
-    Returns (messages, trimmed_count) tuple.
-    """
-    trimmed_count = 0
-    
-    if auto_trim:
-        prompt_tokens = token_manager.calculate_message_tokens(messages)
-        if token_manager.should_trim(prompt_tokens, model, threshold=0.9):
-            # Use domain model for business rule: how many messages to keep?
-            context_mgr = ContextWindowManager()
-            keep_count = context_mgr.calculate_keep_count(len(messages), keep_recent=5)
-            messages, trimmed_count = token_manager.trim_messages(messages, keep_count=keep_count)
-    
-    return messages, trimmed_count
-
 @dashboard_bp.route('/api/chat/send', methods=['POST'])
 def send_chat_message():
     """Send a chat message to a provider with history and context management."""
     try:
-        # Dependency Injection - get managers from app config instead of globals
+        # Dependency Injection - get service from app config instead of global
         from flask import current_app
-        provider_mgr = current_app.config.get('PROVIDER_MANAGER', provider_manager)
-        token_mgr = current_app.config.get('TOKEN_MANAGER', token_manager)
-        conversation_mgr = current_app.config.get('CONVERSATION_MANAGER', conversation_manager)
-        
+        service = current_app.config.get('CHAT_SERVICE', chat_service)
+
         data = request.get_json()
         message = data.get('message')
         provider_name = data.get('provider', 'openai')
@@ -253,58 +237,29 @@ def send_chat_message():
 
         # Debug logging
         print(f"[CHAT] Received request - Provider: {provider_name}, Model: {model}")
-        print(f"[CHAT] Available providers: {list(provider_mgr.providers.keys())}")
 
         if not message:
             return jsonify({'error': 'Message is required'}), 400
 
-        # Get the provider
-        provider = provider_mgr.get_provider(provider_name)
-        print(f"[CHAT] Retrieved provider: {provider.__class__.__name__ if provider else None}")
-
-        if not provider:
-            return jsonify({'error': f'Provider {provider_name} not found. Please add your API key in Settings.'}), 404
-        
-        # Build messages array: system + history + new message
-        conversation_builder = ConversationBuilder()
-        messages = conversation_builder.build_messages(message, history, system_prompt)
-        
-        # Auto-trim if needed
-        messages, trimmed_count = _auto_trim_if_needed(messages, model, auto_trim, token_mgr)
-        
-        # Calculate token usage before sending
-        token_usage = token_mgr.calculate_token_usage(messages, model)
-        
-        # Generate response using messages
-        response = provider.generate(
-            messages=messages,
+        # Use ChatService to handle business logic
+        result = service.send_message(
+            message=message,
+            provider_name=provider_name,
             model=model,
             temperature=temperature,
-            max_tokens=max_tokens
+            max_tokens=max_tokens,
+            history=history,
+            system_prompt=system_prompt,
+            auto_trim=auto_trim
         )
-        
-        # Update token usage with completion
-        token_usage = token_mgr.update_with_completion(token_usage, response)
-        
-        result = {
-            'response': response,
-            'provider': provider_name,
-            'model': model,
-            'temperature': temperature,
-            'max_tokens': max_tokens,
-            'token_usage': token_usage,
-            'metadata': {
-                'message_count': len(messages) - 1,  # Exclude system prompt
-                'has_history': len(history) > 0
-            }
-        }
-        
-        if trimmed_count > 0:
-            result['trimmed'] = trimmed_count
-        
+
         return jsonify(result)
-        
+
+    except ValueError as e:
+        # Business rule violations
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
+        # Unexpected errors
         return jsonify({'error': str(e)}), 500
 
 @dashboard_bp.route('/api/providers/set-default', methods=['POST'])
@@ -369,21 +324,45 @@ def get_context_limits():
 def system_prompt():
     """Get or set the system prompt."""
     if request.method == 'GET':
-        # For now, return default. In future, load from user settings
-        return jsonify({'prompt': DEFAULT_SYSTEM_PROMPT})
+        prompt = settings_manager.get_system_prompt()
+        return jsonify({'prompt': prompt})
     else:
         data = request.get_json()
         prompt = data.get('prompt')
         if not prompt:
             return jsonify({'error': 'Prompt is required'}), 400
-        
-        # TODO: Save to user settings/database
+
+        settings_manager.set_system_prompt(prompt)
         return jsonify({'message': 'System prompt saved successfully', 'prompt': prompt})
 
 @dashboard_bp.route('/api/settings/system-prompt/default', methods=['GET'])
 def get_default_system_prompt():
     """Get the default system prompt."""
     return jsonify({'prompt': DEFAULT_SYSTEM_PROMPT})
+
+@dashboard_bp.route('/api/settings/dashboard', methods=['GET', 'POST'])
+def dashboard_settings():
+    """Get or set dashboard preferences (provider, model, temperature, max_tokens)."""
+    if request.method == 'GET':
+        return jsonify({
+            'provider': settings_manager.get_default_provider(),
+            'model': settings_manager.get_default_model(),
+            'temperature': settings_manager.get_temperature(),
+            'max_tokens': settings_manager.get_max_tokens()
+        })
+    else:
+        data = request.get_json()
+
+        if 'provider' in data:
+            settings_manager.set_default_provider(data['provider'])
+        if 'model' in data:
+            settings_manager.set_default_model(data['model'])
+        if 'temperature' in data:
+            settings_manager.set_temperature(float(data['temperature']))
+        if 'max_tokens' in data:
+            settings_manager.set_max_tokens(int(data['max_tokens']))
+
+        return jsonify({'message': 'Dashboard settings saved successfully'})
 
 @dashboard_bp.route('/api/chat/estimate-tokens', methods=['POST'])
 def estimate_tokens_endpoint():

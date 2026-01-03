@@ -5,9 +5,16 @@ let isLoading = false;
 let currentConversationId = null;
 let systemPrompt = null;
 
+// Voice interaction state
+let voiceRecognition = null;
+let voiceSynthesis = window.speechSynthesis;
+let isListening = false;
+let isSpeaking = false;
+
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
+    initializeVoiceRecognition();
     loadDashboardSettings();  // Load saved dashboard settings
     loadProviders();  // Load provider dropdown
     updateWelcomeTime();
@@ -48,6 +55,7 @@ function setupEventListeners() {
 
     // Button handlers
     document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('voice-btn').addEventListener('click', toggleVoiceInput);
     document.getElementById('clear-btn').addEventListener('click', clearChat);
     document.getElementById('export-btn').addEventListener('click', exportChat);
     document.getElementById('prompts-btn').addEventListener('click', openPromptLibrary);
@@ -312,6 +320,7 @@ function addMessage(type, content) {
             ${type !== 'system' ? `
             <div class="message-actions">
                 <button class="btn-msg-action" onclick="copyMessage(this)">📋 Copy</button>
+                ${type === 'assistant' ? `<button class="btn-play" onclick="playMessage(this)">▶️ Play</button>` : ''}
                 <button class="btn-msg-action" onclick="saveAsPrompt(this)">💾 Save as Prompt</button>
             </div>
             ` : ''}
@@ -1010,4 +1019,185 @@ async function saveConversationWithTitle() {
     } catch (error) {
         showNotification('Error saving conversation', 'error');
     }
+}
+
+// Voice Interaction Functions
+
+function initializeVoiceRecognition() {
+    // Check if browser supports Web Speech API
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        console.warn('Speech recognition not supported in this browser');
+        const voiceBtn = document.getElementById('voice-btn');
+        if (voiceBtn) {
+            voiceBtn.disabled = true;
+            voiceBtn.title = 'Voice input not supported in this browser';
+            voiceBtn.style.opacity = '0.3';
+        }
+        return;
+    }
+
+    voiceRecognition = new SpeechRecognition();
+    voiceRecognition.continuous = false;
+    voiceRecognition.interimResults = false;
+    voiceRecognition.lang = 'en-US';
+
+    voiceRecognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        const chatInput = document.getElementById('chat-input');
+
+        // Append transcript to existing text or set as new text
+        if (chatInput.value.trim()) {
+            chatInput.value += ' ' + transcript;
+        } else {
+            chatInput.value = transcript;
+        }
+
+        // Trigger input event to resize textarea
+        chatInput.dispatchEvent(new Event('input'));
+        chatInput.focus();
+    };
+
+    voiceRecognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        stopListening();
+
+        if (event.error === 'no-speech') {
+            showNotification('No speech detected. Please try again.', 'warning');
+        } else if (event.error === 'not-allowed') {
+            showNotification('Microphone access denied. Please enable microphone permissions.', 'error');
+        } else {
+            showNotification(`Voice input error: ${event.error}`, 'error');
+        }
+    };
+
+    voiceRecognition.onend = function() {
+        stopListening();
+    };
+}
+
+function toggleVoiceInput() {
+    if (isListening) {
+        stopListening();
+    } else {
+        startListening();
+    }
+}
+
+function startListening() {
+    if (!voiceRecognition) {
+        showNotification('Voice recognition not available', 'error');
+        return;
+    }
+
+    if (isListening) {
+        return;
+    }
+
+    try {
+        isListening = true;
+        voiceRecognition.start();
+
+        const voiceBtn = document.getElementById('voice-btn');
+        voiceBtn.classList.add('listening');
+        voiceBtn.title = 'Listening... Click to stop';
+
+        showNotification('Listening...', 'info');
+    } catch (error) {
+        console.error('Failed to start voice recognition:', error);
+        isListening = false;
+        showNotification('Failed to start voice input', 'error');
+    }
+}
+
+function stopListening() {
+    if (!isListening) {
+        return;
+    }
+
+    isListening = false;
+
+    if (voiceRecognition) {
+        try {
+            voiceRecognition.stop();
+        } catch (error) {
+            console.error('Error stopping voice recognition:', error);
+        }
+    }
+
+    const voiceBtn = document.getElementById('voice-btn');
+    voiceBtn.classList.remove('listening');
+    voiceBtn.title = 'Voice Input';
+}
+
+function speakText(text, button) {
+    if (!voiceSynthesis) {
+        showNotification('Text-to-speech not supported in this browser', 'error');
+        return;
+    }
+
+    // Stop if already speaking
+    if (isSpeaking) {
+        stopSpeaking(button);
+        return;
+    }
+
+    // Cancel any ongoing speech
+    voiceSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
+
+    utterance.onstart = function() {
+        isSpeaking = true;
+        if (button) {
+            button.classList.add('speaking');
+            button.innerHTML = '⏸️ Stop';
+        }
+    };
+
+    utterance.onend = function() {
+        isSpeaking = false;
+        if (button) {
+            button.classList.remove('speaking');
+            button.innerHTML = '▶️ Play';
+        }
+    };
+
+    utterance.onerror = function(event) {
+        console.error('Speech synthesis error:', event);
+        isSpeaking = false;
+        if (button) {
+            button.classList.remove('speaking');
+            button.innerHTML = '▶️ Play';
+        }
+        showNotification('Text-to-speech error', 'error');
+    };
+
+    voiceSynthesis.speak(utterance);
+}
+
+function stopSpeaking(button) {
+    if (voiceSynthesis) {
+        voiceSynthesis.cancel();
+    }
+
+    isSpeaking = false;
+
+    if (button) {
+        button.classList.remove('speaking');
+        button.innerHTML = '▶️ Play';
+    }
+}
+
+function playMessage(button) {
+    // Get the message text from the message div
+    const messageDiv = button.closest('.message');
+    const messageText = messageDiv.querySelector('.message-text').textContent;
+
+    speakText(messageText, button);
 }

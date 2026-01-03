@@ -254,6 +254,17 @@
             transform: translateY(-1px);
         }
 
+        .btn-action.active {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border-color: #48bb78;
+        }
+
+        .btn-action.active:hover {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            border-color: #38a169;
+        }
+
         /* Toggle Button */
         .toggle-panel-btn {
             width: 100%;
@@ -762,6 +773,10 @@
                         <button class="btn-action" id="regenerate-btn" disabled>
                             <span>🔄</span>
                             <span>Regenerate</span>
+                        </button>
+                        <button class="btn-action" id="conversation-mode-btn">
+                            <span>🎙️</span>
+                            <span>Conversation Mode</span>
                         </button>
                         <button class="btn-action" id="save-prompt-btn">
                             <span>💾</span>

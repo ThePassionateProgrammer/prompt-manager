@@ -11,6 +11,69 @@ let voiceSynthesis = window.speechSynthesis;
 let isListening = false;
 let isSpeaking = false;
 
+// Conversation mode state machine (JavaScript implementation of domain model)
+let conversationMode = {
+    state: 'IDLE',
+    isActive: false,
+
+    activate() {
+        if (this.isActive) throw new Error('Already active');
+        this.isActive = true;
+        this.state = 'LISTENING';
+    },
+
+    deactivate() {
+        this.isActive = false;
+        this.state = 'IDLE';
+    },
+
+    sendMessage() {
+        if (!this.isActive) throw new Error('Not active');
+        if (this.state === 'SENDING') throw new Error('Already sending');
+        if (this.state === 'PLAYING') throw new Error('Cannot send while playing');
+        if (this.state === 'LISTENING' || this.state === 'PAUSED') {
+            this.state = 'SENDING';
+        }
+    },
+
+    receiveResponse() {
+        if (this.state !== 'SENDING') throw new Error('Not waiting for response');
+        this.state = 'PLAYING';
+    },
+
+    finishPlayback() {
+        if (this.state !== 'PLAYING') throw new Error('Not playing');
+        this.state = 'LISTENING';
+    },
+
+    pauseListening() {
+        if (this.state !== 'LISTENING') throw new Error('Cannot pause');
+        this.state = 'PAUSED';
+    },
+
+    resumeListening() {
+        if (this.state !== 'PAUSED') throw new Error('Not paused');
+        this.state = 'LISTENING';
+    },
+
+    interruptPlayback() {
+        if (this.state !== 'PLAYING') throw new Error('Not playing');
+        this.state = 'LISTENING';
+    },
+
+    shouldBeListening() {
+        return this.state === 'LISTENING';
+    },
+
+    shouldAutoPlay() {
+        return this.isActive && this.state === 'SENDING';
+    },
+
+    shouldAutoRestart() {
+        return this.isActive && this.state === 'PLAYING';
+    }
+};
+
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
@@ -56,6 +119,7 @@ function setupEventListeners() {
     // Button handlers
     document.getElementById('send-btn').addEventListener('click', sendMessage);
     document.getElementById('voice-btn').addEventListener('click', toggleVoiceInput);
+    document.getElementById('conversation-mode-btn').addEventListener('click', toggleConversationMode);
     document.getElementById('clear-btn').addEventListener('click', clearChat);
     document.getElementById('export-btn').addEventListener('click', exportChat);
     document.getElementById('prompts-btn').addEventListener('click', openPromptLibrary);
@@ -216,6 +280,22 @@ async function sendMessage(providedMessage = null) {
 
     if (!message || isLoading) return;
 
+    // Stop listening when sending (for both manual and conversation mode)
+    if (isListening) {
+        stopListening();
+    }
+
+    // Conversation mode: transition to SENDING state
+    if (conversationMode.isActive) {
+        try {
+            conversationMode.sendMessage();
+        } catch (e) {
+            console.error('Conversation mode error:', e);
+            showNotification(e.message, 'error');
+            return;
+        }
+    }
+
     // Add user message
     addMessage('user', message);
     input.value = '';
@@ -266,6 +346,13 @@ async function sendMessage(providedMessage = null) {
         if (response.ok) {
             const result = await response.json();
             addMessage('assistant', result.response);
+
+            // Conversation mode: transition to PLAYING and auto-play response
+            if (conversationMode.shouldAutoPlay()) {
+                conversationMode.receiveResponse();
+                // Auto-play the response
+                autoPlayResponse(result.response);
+            }
 
             // Update token usage display
             updateTokenUsage(result.token_usage);
@@ -1078,10 +1165,22 @@ function initializeVoiceRecognition() {
 }
 
 function toggleVoiceInput() {
-    if (isListening) {
-        stopListening();
+    // In conversation mode, mic button pauses/resumes listening
+    if (conversationMode.isActive) {
+        if (isListening) {
+            conversationMode.pauseListening();
+            stopListening();
+        } else if (conversationMode.state === 'PAUSED') {
+            conversationMode.resumeListening();
+            startListening();
+        }
     } else {
-        startListening();
+        // Manual mode
+        if (isListening) {
+            stopListening();
+        } else {
+            startListening();
+        }
     }
 }
 
@@ -1096,6 +1195,9 @@ function startListening() {
     }
 
     try {
+        // Use continuous mode in conversation mode
+        voiceRecognition.continuous = conversationMode.isActive;
+
         isListening = true;
         voiceRecognition.start();
 
@@ -1103,7 +1205,9 @@ function startListening() {
         voiceBtn.classList.add('listening');
         voiceBtn.title = 'Listening... Click to stop';
 
-        showNotification('Listening...', 'info');
+        if (!conversationMode.isActive) {
+            showNotification('Listening...', 'info');
+        }
     } catch (error) {
         console.error('Failed to start voice recognition:', error);
         isListening = false;
@@ -1200,4 +1304,119 @@ function playMessage(button) {
     const messageText = messageDiv.querySelector('.message-text').textContent;
 
     speakText(messageText, button);
+}
+
+// Conversation Mode Functions
+
+function toggleConversationMode() {
+    const btn = document.getElementById('conversation-mode-btn');
+
+    if (conversationMode.isActive) {
+        // Deactivate conversation mode
+        deactivateConversationMode();
+    } else {
+        // Activate conversation mode
+        activateConversationMode();
+    }
+}
+
+function activateConversationMode() {
+    try {
+        conversationMode.activate();
+
+        // Update button UI
+        const btn = document.getElementById('conversation-mode-btn');
+        btn.classList.add('active');
+
+        // Disable standalone mic button (conversation mode controls mic)
+        const voiceBtn = document.getElementById('voice-btn');
+        voiceBtn.disabled = true;
+        voiceBtn.style.opacity = '0.5';
+
+        // Auto-start listening
+        startListening();
+
+        showNotification('Conversation Mode activated - speak naturally!', 'success');
+    } catch (error) {
+        console.error('Failed to activate conversation mode:', error);
+        showNotification('Failed to activate conversation mode', 'error');
+    }
+}
+
+function deactivateConversationMode() {
+    conversationMode.deactivate();
+
+    // Update button UI
+    const btn = document.getElementById('conversation-mode-btn');
+    btn.classList.remove('active');
+
+    // Re-enable standalone mic button
+    const voiceBtn = document.getElementById('voice-btn');
+    voiceBtn.disabled = false;
+    voiceBtn.style.opacity = '1';
+
+    // Stop any active listening or speaking
+    if (isListening) {
+        stopListening();
+    }
+    if (isSpeaking) {
+        voiceSynthesis.cancel();
+        isSpeaking = false;
+    }
+
+    showNotification('Conversation Mode deactivated', 'info');
+}
+
+function autoPlayResponse(text) {
+    // Auto-play response in conversation mode
+    if (!voiceSynthesis) {
+        console.error('Text-to-speech not supported');
+        // Still auto-restart listening even if TTS fails
+        if (conversationMode.shouldAutoRestart()) {
+            conversationMode.finishPlayback();
+            startListening();
+        }
+        return;
+    }
+
+    // Cancel any ongoing speech
+    voiceSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
+
+    utterance.onstart = function() {
+        isSpeaking = true;
+    };
+
+    utterance.onend = function() {
+        isSpeaking = false;
+
+        // Auto-restart listening after playback finishes
+        if (conversationMode.shouldAutoRestart()) {
+            conversationMode.finishPlayback();
+            // Small delay before restarting listening
+            setTimeout(() => {
+                if (conversationMode.shouldBeListening()) {
+                    startListening();
+                }
+            }, 500);
+        }
+    };
+
+    utterance.onerror = function(event) {
+        console.error('Speech synthesis error:', event);
+        isSpeaking = false;
+
+        // Still auto-restart listening even if playback fails
+        if (conversationMode.shouldAutoRestart()) {
+            conversationMode.finishPlayback();
+            startListening();
+        }
+    };
+
+    voiceSynthesis.speak(utterance);
 }

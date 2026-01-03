@@ -1,5 +1,6 @@
-// Import voice interaction module
+// Import modules
 import * as VoiceInteraction from './modules/voice_interaction.js';
+import * as ConversationMode from './modules/conversation_mode.js';
 
 // State management
 let messages = [];
@@ -8,72 +9,18 @@ let isLoading = false;
 let currentConversationId = null;
 let systemPrompt = null;
 
-// Conversation mode state machine (JavaScript implementation of domain model)
-let conversationMode = {
-    state: 'IDLE',
-    isActive: false,
-
-    activate() {
-        if (this.isActive) throw new Error('Already active');
-        this.isActive = true;
-        this.state = 'LISTENING';
-    },
-
-    deactivate() {
-        this.isActive = false;
-        this.state = 'IDLE';
-    },
-
-    sendMessage() {
-        if (!this.isActive) throw new Error('Not active');
-        if (this.state === 'SENDING') throw new Error('Already sending');
-        if (this.state === 'PLAYING') throw new Error('Cannot send while playing');
-        if (this.state === 'LISTENING' || this.state === 'PAUSED') {
-            this.state = 'SENDING';
-        }
-    },
-
-    receiveResponse() {
-        if (this.state !== 'SENDING') throw new Error('Not waiting for response');
-        this.state = 'PLAYING';
-    },
-
-    finishPlayback() {
-        if (this.state !== 'PLAYING') throw new Error('Not playing');
-        this.state = 'LISTENING';
-    },
-
-    pauseListening() {
-        if (this.state !== 'LISTENING') throw new Error('Cannot pause');
-        this.state = 'PAUSED';
-    },
-
-    resumeListening() {
-        if (this.state !== 'PAUSED') throw new Error('Not paused');
-        this.state = 'LISTENING';
-    },
-
-    interruptPlayback() {
-        if (this.state !== 'PLAYING') throw new Error('Not playing');
-        this.state = 'LISTENING';
-    },
-
-    shouldBeListening() {
-        return this.state === 'LISTENING';
-    },
-
-    shouldAutoPlay() {
-        return this.isActive && this.state === 'SENDING';
-    },
-
-    shouldAutoRestart() {
-        return this.isActive && this.state === 'PLAYING';
-    }
-};
+// Get conversation mode state machine from module
+const conversationMode = ConversationMode.getConversationMode();
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
+
+    // Initialize conversation mode module with dependencies
+    ConversationMode.initializeDependencies({
+        VoiceInteraction: VoiceInteraction,
+        showNotification: showNotification
+    });
 
     // Initialize voice interaction module with dependencies
     VoiceInteraction.initializeDependencies({
@@ -1113,8 +1060,8 @@ async function saveConversationWithTitle() {
     }
 }
 
-// Voice Interaction Wrapper Functions (for HTML onclick handlers)
-// Actual implementations are in modules/voice_interaction.js
+// Module Wrapper Functions (for HTML onclick handlers and event listeners)
+// Actual implementations are in modules/
 
 function toggleVoiceInput() {
     VoiceInteraction.toggleVoiceInput();
@@ -1124,62 +1071,6 @@ function playMessage(button) {
     VoiceInteraction.playMessage(button);
 }
 
-// Conversation Mode Functions
-
 function toggleConversationMode() {
-    const btn = document.getElementById('conversation-mode-btn');
-
-    if (conversationMode.isActive) {
-        // Deactivate conversation mode
-        deactivateConversationMode();
-    } else {
-        // Activate conversation mode
-        activateConversationMode();
-    }
-}
-
-function activateConversationMode() {
-    try {
-        conversationMode.activate();
-
-        // Update button UI
-        const btn = document.getElementById('conversation-mode-btn');
-        btn.classList.add('active');
-
-        // Disable standalone mic button (conversation mode controls mic)
-        const voiceBtn = document.getElementById('voice-btn');
-        voiceBtn.disabled = true;
-        voiceBtn.style.opacity = '0.5';
-
-        // Auto-start listening
-        VoiceInteraction.startListening();
-
-        showNotification('Conversation Mode activated - speak naturally!', 'success');
-    } catch (error) {
-        console.error('Failed to activate conversation mode:', error);
-        showNotification('Failed to activate conversation mode', 'error');
-    }
-}
-
-function deactivateConversationMode() {
-    conversationMode.deactivate();
-
-    // Update button UI
-    const btn = document.getElementById('conversation-mode-btn');
-    btn.classList.remove('active');
-
-    // Re-enable standalone mic button
-    const voiceBtn = document.getElementById('voice-btn');
-    voiceBtn.disabled = false;
-    voiceBtn.style.opacity = '1';
-
-    // Stop any active listening or speaking
-    if (VoiceInteraction.getIsListening()) {
-        VoiceInteraction.stopListening();
-    }
-    if (VoiceInteraction.getIsSpeaking()) {
-        VoiceInteraction.cancelSpeech();
-    }
-
-    showNotification('Conversation Mode deactivated', 'info');
+    ConversationMode.toggleConversationMode();
 }

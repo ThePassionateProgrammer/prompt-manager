@@ -161,6 +161,8 @@ Where do you want memory to live?
 	•	Inside the repo (easy dev, versioned, portable)
 	•	Outside the repo (safer, user-data separated)
 
+DAVID: OUTSIDE THE REPO, PLEASE. 
+
 My recommendation:
 	•	~/.prompt-manager/ (or ~/PromptManagerData/) for real usage
 	•	a sample_data/ folder inside the repo for tests/demo

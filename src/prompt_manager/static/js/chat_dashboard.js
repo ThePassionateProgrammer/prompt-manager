@@ -1160,7 +1160,25 @@ function initializeVoiceRecognition() {
     };
 
     voiceRecognition.onend = function() {
-        stopListening();
+        // In conversation mode, don't auto-stop - let user control with mic/send buttons
+        if (!conversationMode.isActive) {
+            stopListening();
+        } else {
+            // Voice recognition stopped unexpectedly in conversation mode - restart it
+            if (conversationMode.shouldBeListening() && !isLoading) {
+                console.log('Voice recognition ended unexpectedly, restarting...');
+                // Small delay before restarting
+                setTimeout(() => {
+                    if (conversationMode.shouldBeListening() && !isLoading) {
+                        try {
+                            voiceRecognition.start();
+                        } catch (e) {
+                            console.error('Failed to restart voice recognition:', e);
+                        }
+                    }
+                }, 300);
+            }
+        }
     };
 }
 
@@ -1398,12 +1416,12 @@ function autoPlayResponse(text) {
         // Auto-restart listening after playback finishes
         if (conversationMode.shouldAutoRestart()) {
             conversationMode.finishPlayback();
-            // Small delay before restarting listening
+            // Longer delay before restarting to prevent immediate re-trigger
             setTimeout(() => {
-                if (conversationMode.shouldBeListening()) {
+                if (conversationMode.shouldBeListening() && !isLoading) {
                     startListening();
                 }
-            }, 500);
+            }, 1000);
         }
     };
 

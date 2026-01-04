@@ -16,6 +16,7 @@ let voiceRecognition = null;
 let voiceSynthesis = window.speechSynthesis;
 let isListening = false;
 let isSpeaking = false;
+let processedResultIndex = 0;
 
 // Dependencies injected from main dashboard
 let conversationMode = null;
@@ -57,14 +58,26 @@ export function initializeVoiceRecognition() {
     voiceRecognition.lang = 'en-US';
 
     voiceRecognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
         const chatInput = document.getElementById('chat-input');
 
-        // Append transcript to existing text or set as new text
-        if (chatInput.value.trim()) {
-            chatInput.value += ' ' + transcript;
-        } else {
-            chatInput.value = transcript;
+        // Process only NEW results (not previously processed ones)
+        // In continuous mode, event.results accumulates all results from the session
+        for (let i = processedResultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+
+            // Only process final results to avoid duplicates
+            if (result.isFinal) {
+                const transcript = result[0].transcript;
+
+                // Append transcript to existing text or set as new text
+                if (chatInput.value.trim()) {
+                    chatInput.value += ' ' + transcript;
+                } else {
+                    chatInput.value = transcript;
+                }
+
+                processedResultIndex = i + 1;
+            }
         }
 
         // Trigger input event to resize textarea
@@ -150,6 +163,9 @@ export function startListening() {
     try {
         // Use continuous mode in conversation mode
         voiceRecognition.continuous = conversationMode.isActive;
+
+        // Reset processed result index for new session
+        processedResultIndex = 0;
 
         isListening = true;
         voiceRecognition.start();

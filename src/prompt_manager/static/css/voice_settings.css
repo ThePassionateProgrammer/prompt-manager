@@ -1,0 +1,231 @@
+/**
+ * Voice Settings Panel Styles
+ *
+ * Styles for the voice settings configuration panel.
+ */
+
+.voice-settings-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.voice-settings-panel h3 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.voice-settings-panel h4 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.settings-section {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.settings-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.setting-item {
+    margin-bottom: 16px;
+}
+
+.setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.setting-item label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.setting-item input[type="range"] {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e2e8f0;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.setting-item input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #4299e1;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.setting-item input[type="range"]::-webkit-slider-thumb:hover {
+    background: #3182ce;
+}
+
+.setting-item input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #4299e1;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s ease;
+}
+
+.setting-item input[type="range"]::-moz-range-thumb:hover {
+    background: #3182ce;
+}
+
+.setting-item select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #2d3748;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.setting-item select:hover {
+    border-color: #a0aec0;
+}
+
+.setting-item select:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.settings-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.settings-actions button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.btn-primary {
+    background: #4299e1;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3182ce;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(66, 153, 225, 0.3);
+}
+
+.btn-secondary {
+    background: #edf2f7;
+    color: #4a5568;
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+/* Modal overlay for settings panel */
+.voice-settings-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease;
+}
+
+.voice-settings-modal.hidden {
+    display: none;
+}
+
+.voice-settings-modal .voice-settings-panel {
+    position: relative;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.voice-settings-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #718096;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.voice-settings-close:hover {
+    background: #f7fafc;
+    color: #2d3748;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .voice-settings-panel {
+        padding: 20px;
+        max-width: 90%;
+    }
+
+    .voice-settings-panel h3 {
+        font-size: 18px;
+    }
+
+    .voice-settings-panel h4 {
+        font-size: 15px;
+    }
+
+    .settings-actions {
+        flex-direction: column;
+    }
+
+    .settings-actions button {
+        width: 100%;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

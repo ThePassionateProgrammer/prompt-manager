@@ -1,6 +1,10 @@
 // Import modules
 import * as VoiceInteraction from './modules/voice_interaction.js';
 import * as ConversationMode from './modules/conversation_mode.js';
+import * as Notifications from './modules/notifications.js';
+import * as ErrorHandler from './modules/error_handler.js';
+import * as StateIndicator from './modules/conversation_state_indicator.js';
+import * as VoiceSettings from './modules/voice_settings.js';
 
 // State management
 let messages = [];
@@ -16,17 +20,31 @@ const conversationMode = ConversationMode.getConversationMode();
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
 
-    // Initialize conversation mode module with dependencies
-    ConversationMode.initializeDependencies({
-        VoiceInteraction: VoiceInteraction,
-        showNotification: showNotification
+    // Initialize error handler with notifications
+    ErrorHandler.initializeErrorHandler({
+        showNotification: Notifications.showNotification
     });
 
-    // Initialize voice interaction module with dependencies
+    // Initialize voice settings
+    VoiceSettings.initializeVoiceSettings();
+
+    // Initialize conversation state indicator
+    StateIndicator.initializeStateIndicator({
+        conversationMode: conversationMode
+    });
+
+    // Initialize conversation mode module with dependencies (use new notification system)
+    ConversationMode.initializeDependencies({
+        VoiceInteraction: VoiceInteraction,
+        showNotification: Notifications.showNotification,
+        StateIndicator: StateIndicator
+    });
+
+    // Initialize voice interaction module with dependencies (use new notification system)
     VoiceInteraction.initializeDependencies({
         conversationMode: conversationMode,
         getIsLoading: () => isLoading,
-        showNotification: showNotification
+        showNotification: Notifications.showNotification
     });
     VoiceInteraction.initializeVoiceRecognition();
 
@@ -170,7 +188,7 @@ async function loadProviders() {
         }
     } catch (error) {
         console.error('Error loading providers:', error);
-        showNotification('Failed to load providers', 'error');
+        Notifications.showNotification('Failed to load providers', 'error');
     }
 }
 
@@ -205,7 +223,7 @@ async function loadModelsForProvider(providerName) {
         updateConversationMetadata();
     } catch (error) {
         console.error('Error loading models:', error);
-        showNotification('Failed to load models for ' + providerName, 'error');
+        Notifications.showNotification('Failed to load models for ' + providerName, 'error');
     }
 }
 
@@ -243,7 +261,7 @@ async function sendMessage(providedMessage = null) {
             conversationMode.sendMessage();
         } catch (e) {
             console.error('Conversation mode error:', e);
-            showNotification(e.message, 'error');
+            Notifications.showNotification(e.message, 'error');
             return;
         }
     }
@@ -311,12 +329,12 @@ async function sendMessage(providedMessage = null) {
 
             // Show warning if context is filling
             if (result.token_usage.warning) {
-                showNotification(result.token_usage.warning, 'warning');
+                Notifications.showNotification(result.token_usage.warning, 'warning');
             }
 
             // Show trimming notice
             if (result.trimmed) {
-                showNotification(`Auto-trimmed ${result.trimmed} old messages to fit context`, 'success');
+                Notifications.showNotification(`Auto-trimmed ${result.trimmed} old messages to fit context`, 'success');
             }
 
             // Auto-save conversation
@@ -399,13 +417,13 @@ function clearChat() {
                 time: new Date().toISOString()
             });
         }
-        showNotification('Chat cleared successfully', 'success');
+        Notifications.showNotification('Chat cleared successfully', 'success');
     }
 }
 
 function exportChat() {
     if (messages.length <= 1) {
-        showNotification('No messages to export', 'error');
+        Notifications.showNotification('No messages to export', 'error');
         return;
     }
 
@@ -429,13 +447,13 @@ function exportChat() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    showNotification('Chat exported successfully', 'success');
+    Notifications.showNotification('Chat exported successfully', 'success');
 }
 
 function copyMessage(button) {
     const messageText = button.closest('.message-content').querySelector('.message-text').textContent;
     navigator.clipboard.writeText(messageText).then(() => {
-        showNotification('Message copied to clipboard', 'success');
+        Notifications.showNotification('Message copied to clipboard', 'success');
     });
 }
 
@@ -461,13 +479,13 @@ async function saveAsPrompt(button) {
         });
 
         if (response.ok) {
-            showNotification('Prompt saved successfully!', 'success');
+            Notifications.showNotification('Prompt saved successfully!', 'success');
         } else {
             const error = await response.json();
-            showNotification(`Failed to save: ${error.error}`, 'error');
+            Notifications.showNotification(`Failed to save: ${error.error}`, 'error');
         }
     } catch (error) {
-        showNotification(`Error saving prompt: ${error.message}`, 'error');
+        Notifications.showNotification(`Error saving prompt: ${error.message}`, 'error');
     }
 }
 
@@ -584,7 +602,7 @@ function insertPrompt(promptId) {
         input.style.height = input.scrollHeight + 'px';
         input.focus();
         closePromptsModal();
-        showNotification(`Inserted: ${prompt.name}`, 'success');
+        Notifications.showNotification(`Inserted: ${prompt.name}`, 'success');
     }
 }
 
@@ -628,16 +646,8 @@ function updateWelcomeTime() {
     }
 }
 
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
+// Notification function now provided by Notifications module
+// All calls to showNotification use Notifications.showNotification via dependency injection
 
 async function loadSystemPrompt() {
     try {
@@ -762,10 +772,10 @@ async function loadConversation(conversationId) {
                 percentage: Math.min(100, (estimatedTokens / getContextLimit(model)) * 100)
             });
 
-            showNotification('Conversation loaded', 'success');
+            Notifications.showNotification('Conversation loaded', 'success');
         }
     } catch (error) {
-        showNotification('Error loading conversation', 'error');
+        Notifications.showNotification('Error loading conversation', 'error');
     }
 }
 
@@ -857,13 +867,13 @@ async function deleteConversationFromHistory(conversationId) {
         });
 
         if (response.ok) {
-            showNotification('Conversation deleted', 'success');
+            Notifications.showNotification('Conversation deleted', 'success');
             await loadConversationsList(); // Reload list
         } else {
-            showNotification('Failed to delete conversation', 'error');
+            Notifications.showNotification('Failed to delete conversation', 'error');
         }
     } catch (error) {
-        showNotification('Error deleting conversation', 'error');
+        Notifications.showNotification('Error deleting conversation', 'error');
     }
 }
 
@@ -884,7 +894,7 @@ async function deleteAllConversations() {
             const conversations = data.conversations || [];
 
             if (conversations.length === 0) {
-                showNotification('No conversations to delete', 'success');
+                Notifications.showNotification('No conversations to delete', 'success');
                 return;
             }
 
@@ -897,13 +907,13 @@ async function deleteAllConversations() {
                 if (delResponse.ok) deleted++;
             }
 
-            showNotification(`Deleted ${deleted} conversation(s)`, 'success');
+            Notifications.showNotification(`Deleted ${deleted} conversation(s)`, 'success');
             await loadConversationsList(); // Reload list
         } else {
-            showNotification('Failed to load conversations', 'error');
+            Notifications.showNotification('Failed to load conversations', 'error');
         }
     } catch (error) {
-        showNotification('Error deleting conversations', 'error');
+        Notifications.showNotification('Error deleting conversations', 'error');
     }
 }
 
@@ -937,7 +947,7 @@ async function regenerateLastResponse() {
     }
 
     if (!lastUserMessage) {
-        showNotification('No user message to regenerate from', 'error');
+        Notifications.showNotification('No user message to regenerate from', 'error');
         return;
     }
 
@@ -994,7 +1004,7 @@ function updateConversationMetadata() {
 // Save Conversation Modal Functions
 function openSaveConvModal() {
     if (messages.length === 0 || messages.filter(m => m.type !== 'system').length === 0) {
-        showNotification('No messages to save', 'error');
+        Notifications.showNotification('No messages to save', 'error');
         return;
     }
 
@@ -1021,7 +1031,7 @@ async function saveConversationWithTitle() {
     const title = document.getElementById('conv-title-input').value.trim();
 
     if (!title) {
-        showNotification('Please enter a title', 'error');
+        Notifications.showNotification('Please enter a title', 'error');
         return;
     }
 
@@ -1051,12 +1061,12 @@ async function saveConversationWithTitle() {
             const result = await response.json();
             currentConversationId = result.id;
             closeSaveConvModal();
-            showNotification(`Saved: ${title}`, 'success');
+            Notifications.showNotification(`Saved: ${title}`, 'success');
         } else {
-            showNotification('Failed to save conversation', 'error');
+            Notifications.showNotification('Failed to save conversation', 'error');
         }
     } catch (error) {
-        showNotification('Error saving conversation', 'error');
+        Notifications.showNotification('Error saving conversation', 'error');
     }
 }
 
@@ -1074,3 +1084,22 @@ function playMessage(button) {
 function toggleConversationMode() {
     ConversationMode.toggleConversationMode();
 }
+
+// Expose functions to global scope for inline onclick handlers in HTML
+// These functions are called from onclick attributes and need to be on window object
+window.togglePanel = togglePanel;
+window.deleteAllConversations = deleteAllConversations;
+window.closeHistoryModal = closeHistoryModal;
+window.closePromptsModal = closePromptsModal;
+window.closeSaveConvModal = closeSaveConvModal;
+window.saveConversationWithTitle = saveConversationWithTitle;
+window.openHistoryModal = openHistoryModal;
+window.copyMessage = copyMessage;
+window.saveAsPrompt = saveAsPrompt;
+window.filterPrompts = filterPrompts;
+window.insertPrompt = insertPrompt;
+window.viewPromptDetails = viewPromptDetails;
+window.saveChatHistory = saveChatHistory;
+window.loadConversationFromHistory = loadConversationFromHistory;
+window.deleteConversationFromHistory = deleteConversationFromHistory;
+window.playMessage = playMessage;

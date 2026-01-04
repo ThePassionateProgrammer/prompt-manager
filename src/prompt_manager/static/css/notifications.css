@@ -1,0 +1,158 @@
+/**
+ * Notification Styles
+ *
+ * Shared styles for the centralized notification system.
+ * Supports success, error, warning, and info notification types.
+ */
+
+.notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    min-width: 300px;
+    max-width: 400px;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    animation: slideIn 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.notification-message {
+    flex: 1;
+    color: #2d3748;
+}
+
+.notification-dismiss {
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    color: #718096;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.notification-dismiss:hover {
+    background-color: #f7fafc;
+    color: #2d3748;
+}
+
+.notification-dismiss:active {
+    background-color: #edf2f7;
+}
+
+/* Slide-in animation */
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Notification types with color coding */
+.notification.success {
+    border-left: 4px solid #48bb78;
+}
+
+.notification.error {
+    border-left: 4px solid #fc8181;
+}
+
+.notification.warning {
+    border-left: 4px solid #f6ad55;
+}
+
+.notification.info {
+    border-left: 4px solid #4299e1;
+}
+
+/* Optional icons for notification types */
+.notification.success::before {
+    content: '✓';
+    margin-right: 12px;
+    font-weight: bold;
+    color: #48bb78;
+    font-size: 18px;
+}
+
+.notification.error::before {
+    content: '✕';
+    margin-right: 12px;
+    font-weight: bold;
+    color: #fc8181;
+    font-size: 18px;
+}
+
+.notification.warning::before {
+    content: '⚠';
+    margin-right: 12px;
+    font-weight: bold;
+    color: #f6ad55;
+    font-size: 18px;
+}
+
+.notification.info::before {
+    content: 'ℹ';
+    margin-right: 12px;
+    font-weight: bold;
+    color: #4299e1;
+    font-size: 18px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .notification {
+        top: 60px;
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+        max-width: none;
+        font-size: 13px;
+    }
+}
+
+/* Dark mode support (if needed in the future) */
+@media (prefers-color-scheme: dark) {
+    .notification {
+        background: #2d3748;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .notification-message {
+        color: #e2e8f0;
+    }
+
+    .notification-dismiss {
+        color: #cbd5e0;
+    }
+
+    .notification-dismiss:hover {
+        background-color: #4a5568;
+        color: #e2e8f0;
+    }
+
+    .notification-dismiss:active {
+        background-color: #1a202c;
+    }
+}

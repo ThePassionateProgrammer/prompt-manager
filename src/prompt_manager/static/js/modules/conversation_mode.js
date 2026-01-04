@@ -19,6 +19,16 @@
  * - showNotification function from main dashboard
  */
 
+/**
+ * Helper to update state and notify state indicator.
+ */
+function updateState(newState) {
+    conversationMode.state = newState;
+    if (StateIndicator && StateIndicator.updateState) {
+        StateIndicator.updateState(newState);
+    }
+}
+
 // Conversation mode state machine (JavaScript implementation of domain model)
 const conversationMode = {
     state: 'IDLE',
@@ -27,12 +37,12 @@ const conversationMode = {
     activate() {
         if (this.isActive) throw new Error('Already active');
         this.isActive = true;
-        this.state = 'LISTENING';
+        updateState('LISTENING');
     },
 
     deactivate() {
         this.isActive = false;
-        this.state = 'IDLE';
+        updateState('IDLE');
     },
 
     sendMessage() {
@@ -40,33 +50,33 @@ const conversationMode = {
         if (this.state === 'SENDING') throw new Error('Already sending');
         if (this.state === 'PLAYING') throw new Error('Cannot send while playing');
         if (this.state === 'LISTENING' || this.state === 'PAUSED') {
-            this.state = 'SENDING';
+            updateState('SENDING');
         }
     },
 
     receiveResponse() {
         if (this.state !== 'SENDING') throw new Error('Not waiting for response');
-        this.state = 'PLAYING';
+        updateState('PLAYING');
     },
 
     finishPlayback() {
         if (this.state !== 'PLAYING') throw new Error('Not playing');
-        this.state = 'LISTENING';
+        updateState('LISTENING');
     },
 
     pauseListening() {
         if (this.state !== 'LISTENING') throw new Error('Cannot pause');
-        this.state = 'PAUSED';
+        updateState('PAUSED');
     },
 
     resumeListening() {
         if (this.state !== 'PAUSED') throw new Error('Not paused');
-        this.state = 'LISTENING';
+        updateState('LISTENING');
     },
 
     interruptPlayback() {
         if (this.state !== 'PLAYING') throw new Error('Not playing');
-        this.state = 'LISTENING';
+        updateState('LISTENING');
     },
 
     shouldBeListening() {
@@ -85,6 +95,7 @@ const conversationMode = {
 // Dependencies injected from main dashboard
 let VoiceInteraction = null;
 let showNotification = null;
+let StateIndicator = null;
 
 /**
  * Initialize dependencies from main dashboard.
@@ -93,6 +104,7 @@ let showNotification = null;
 export function initializeDependencies(deps) {
     VoiceInteraction = deps.VoiceInteraction;
     showNotification = deps.showNotification;
+    StateIndicator = deps.StateIndicator;
 }
 
 /**
@@ -118,10 +130,9 @@ export function activateConversationMode() {
         const btn = document.getElementById('conversation-mode-btn');
         btn.classList.add('active');
 
-        // Disable standalone mic button (conversation mode controls mic)
+        // Keep mic button enabled for pause/resume functionality
         const voiceBtn = document.getElementById('voice-btn');
-        voiceBtn.disabled = true;
-        voiceBtn.style.opacity = '0.5';
+        voiceBtn.title = 'Pause/Resume Listening';
 
         // Auto-start listening
         VoiceInteraction.startListening();
@@ -144,10 +155,9 @@ export function deactivateConversationMode() {
     const btn = document.getElementById('conversation-mode-btn');
     btn.classList.remove('active');
 
-    // Re-enable standalone mic button
+    // Restore mic button title
     const voiceBtn = document.getElementById('voice-btn');
-    voiceBtn.disabled = false;
-    voiceBtn.style.opacity = '1';
+    voiceBtn.title = 'Voice Input';
 
     // Stop any active listening or speaking
     if (VoiceInteraction.getIsListening()) {

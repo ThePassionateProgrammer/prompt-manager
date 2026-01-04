@@ -1,0 +1,32 @@
+{
+  "name": "prompt-manager",
+  "version": "1.0.0",
+  "description": "Prompt Manager - LLM conversation interface with voice capabilities",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "moduleFileExtensions": ["js", "json"],
+    "testMatch": ["**/tests/js/**/*.test.js"],
+    "collectCoverageFrom": [
+      "src/prompt_manager/static/js/modules/**/*.js",
+      "!src/prompt_manager/static/js/modules/**/*.test.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"],
+    "setupFilesAfterEnv": ["<rootDir>/tests/js/setup.js"],
+    "transform": {},
+    "testEnvironmentOptions": {
+      "customExportConditions": ["node", "node-addons"]
+    }
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "type": "module"
+}

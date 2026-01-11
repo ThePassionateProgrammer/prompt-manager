@@ -16,6 +16,13 @@ export const HANDS_FREE_CONFIG = Object.freeze({
     PAUSE_COMMANDS: ['amber pause', 'amber, pause', 'pause amber'],
     RESUME_COMMANDS: ['amber resume', 'amber, resume', 'resume amber'],
 
+    // Command word configuration (e.g., "Ember, repeat that")
+    COMMAND_WORD: 'ember',
+    COMMANDS: {
+        'repeat': ['repeat', 'repeat that'],
+        'transcribe': ['transcribe', 'transcribe this']
+    },
+
     // Silence detection configuration (in milliseconds)
     DEFAULT_SILENCE_THRESHOLD_MS: 3000,
     EXTENDED_SILENCE_THRESHOLD_MS: 10000,  // Auto-pause after this duration

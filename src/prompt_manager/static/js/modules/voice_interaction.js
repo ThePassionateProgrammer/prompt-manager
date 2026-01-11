@@ -13,6 +13,7 @@
 
 import { VoiceCommandDetector } from './voice_command_detector.js';
 import { CommandDetector } from './command_detector.js';
+import { TranscriptProcessor } from './transcript_processor.js';
 import { SilenceCheckingService } from './silence_checking_service.js';
 
 // Voice interaction state
@@ -35,6 +36,9 @@ const voiceCommandDetector = new VoiceCommandDetector();
 // Command detector for Ember command word system ("Ember, repeat that")
 const commandDetector = new CommandDetector();
 
+// Transcript processor (created after dependencies initialized)
+let transcriptProcessor = null;
+
 // Silence checking service (created after dependencies initialized)
 let silenceCheckingService = null;
 
@@ -47,6 +51,15 @@ export function initializeDependencies(deps) {
     conversationModeModule = deps.conversationModeModule;
     getIsLoading = deps.getIsLoading;
     showNotification = deps.showNotification;
+
+    // Initialize transcript processor
+    const wakeWordDetector = conversationModeModule?.getWakeWordDetector?.();
+    transcriptProcessor = new TranscriptProcessor({
+        wakeWordDetector,
+        voiceCommandDetector,
+        commandDetector,
+        conversationMode
+    });
 
     // Initialize silence checking service
     const silenceDetector = conversationModeModule?.getSilenceDetector?.();
@@ -100,61 +113,53 @@ export function initializeVoiceRecognition() {
                     }
                 }
 
-                // In hands-free mode, check for wake/sleep/pause/resume commands
-                if (conversationMode && conversationMode.handsFreeModeEnabled) {
-                    console.log('[Hands-free] Mode enabled, state:', conversationMode.state);
-                    console.log('[Hands-free] Transcript:', transcript);
+                // Process transcript using TranscriptProcessor
+                if (transcriptProcessor) {
+                    console.log('[Hands-free] Processing transcript:', transcript);
+                    console.log('[Hands-free] State:', conversationMode?.state);
 
-                    // Check for wake word (when in WAKE_LISTENING/standby)
-                    const wakeWordDetector = conversationModeModule?.getWakeWordDetector?.();
-                    if (wakeWordDetector && conversationMode.state === 'WAKE_LISTENING') {
-                        const detection = wakeWordDetector.detect(transcript);
-                        console.log('[Hands-free] Wake word detection:', detection);
-                        if (detection.matched && detection.type === 'wake') {
+                    const processingResult = transcriptProcessor.process(transcript);
+                    console.log('[Hands-free] Processing result:', processingResult);
+
+                    // Handle the action based on processing result
+                    switch (processingResult.action) {
+                        case 'WAKE':
                             console.log('[Hands-free] Wake word detected - starting transcription');
                             conversationMode.onWakeWordDetected();
-                            showNotification('Listening...', 'success');
+                            if (processingResult.message) {
+                                showNotification(processingResult.message, 'success');
+                            }
                             processedResultIndex = i + 1;
-                            continue; // Don't add wake word to chat input
-                        }
-                    }
+                            continue;
 
-                    // Check for sleep word (when in LISTENING state)
-                    if (wakeWordDetector && conversationMode.state === 'LISTENING') {
-                        const detection = wakeWordDetector.detect(transcript);
-                        if (detection.matched && detection.type === 'sleep') {
+                        case 'SLEEP':
                             console.log('[Hands-free] Sleep word detected - stopping transcription');
                             conversationMode.onSleepWordDetected();
-                            showNotification('Standby mode. Say "Hey Amber" to wake.', 'info');
+                            if (processingResult.message) {
+                                showNotification(processingResult.message, 'info');
+                            }
                             processedResultIndex = i + 1;
-                            continue; // Don't add sleep word to chat input
-                        }
-                    }
+                            continue;
 
-                    // Check for voice commands (pause/resume)
-                    const commandDetection = voiceCommandDetector.detect(transcript);
-                    if (commandDetection.matched) {
-                        if (commandDetection.command === 'pause' && conversationMode.state === 'LISTENING') {
+                        case 'PAUSE':
                             console.log('[Hands-free] Pause command detected');
                             conversationMode.pauseListening();
-                            showNotification('Paused. Say "Amber, resume" to continue.', 'info');
+                            if (processingResult.message) {
+                                showNotification(processingResult.message, 'info');
+                            }
                             processedResultIndex = i + 1;
-                            continue; // Don't add pause command to chat input
-                        }
+                            continue;
 
-                        if (commandDetection.command === 'resume' && conversationMode.state === 'PAUSED') {
+                        case 'RESUME':
                             console.log('[Hands-free] Resume command detected');
                             conversationMode.resumeListening();
-                            showNotification('Resumed listening', 'success');
+                            if (processingResult.message) {
+                                showNotification(processingResult.message, 'success');
+                            }
                             processedResultIndex = i + 1;
-                            continue; // Don't add resume command to chat input
-                        }
-                    }
+                            continue;
 
-                    // Check for Ember command word system (e.g., "Ember, repeat that")
-                    const emberCommandDetection = commandDetector.detect(transcript);
-                    if (emberCommandDetection.matched) {
-                        if (emberCommandDetection.command === 'repeat' && conversationMode.state === 'LISTENING') {
+                        case 'REPEAT':
                             console.log('[Hands-free] Repeat command detected');
                             if (lastAIResponse) {
                                 speakText(lastAIResponse);
@@ -163,23 +168,25 @@ export function initializeVoiceRecognition() {
                                 showNotification('No previous response to repeat', 'warning');
                             }
                             processedResultIndex = i + 1;
-                            continue; // Don't add command to chat input
-                        }
+                            continue;
 
-                        if (emberCommandDetection.command === 'transcribe' && conversationMode.state === 'LISTENING') {
+                        case 'TRANSCRIBE_MODE':
                             console.log('[Hands-free] Transcribe command detected');
-                            showNotification('Transcribe mode - feature coming soon', 'info');
+                            if (processingResult.message) {
+                                showNotification(processingResult.message, 'info');
+                            }
                             processedResultIndex = i + 1;
-                            continue; // Don't add command to chat input
-                        }
-                    }
-                }
+                            continue;
 
-                // In WAKE_LISTENING (standby) or PAUSED state, don't add any speech to input
-                if (conversationMode && (conversationMode.state === 'WAKE_LISTENING' || conversationMode.state === 'PAUSED')) {
-                    console.log('[Hands-free] In standby/paused mode - not transcribing');
-                    processedResultIndex = i + 1;
-                    continue;
+                        case 'IGNORE':
+                            console.log('[Hands-free] In standby/paused mode - not transcribing');
+                            processedResultIndex = i + 1;
+                            continue;
+
+                        case 'TRANSCRIBE':
+                            // Fall through to add transcript to chat input
+                            break;
+                    }
                 }
 
                 // Append transcript to existing text or set as new text

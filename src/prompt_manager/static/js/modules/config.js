@@ -4,9 +4,13 @@
  */
 
 export const HANDS_FREE_CONFIG = Object.freeze({
-    // Wake word configuration
-    WAKE_WORD: 'hey amber',
-    SLEEP_WORD: 'sleep amber',
+    // Wake word configuration - multiple variations supported
+    WAKE_WORDS: ['hey amber', 'hi amber', 'amber'],
+    SLEEP_WORDS: ['sleep amber', 'goodbye amber', 'stop'],
+
+    // Backward compatibility (returns first word from array)
+    get WAKE_WORD() { return this.WAKE_WORDS[0]; },
+    get SLEEP_WORD() { return this.SLEEP_WORDS[0]; },
 
     // Voice commands
     PAUSE_COMMANDS: ['amber pause', 'amber, pause', 'pause amber'],
@@ -57,7 +61,7 @@ export function getSilenceThreshold() {
 }
 
 /**
- * Get the wake word
+ * Get the wake word (backward compatible - returns first word)
  * @returns {string} Wake word phrase
  */
 export function getWakeWord() {
@@ -65,9 +69,25 @@ export function getWakeWord() {
 }
 
 /**
- * Get the sleep word
+ * Get all wake words
+ * @returns {string[]} Array of wake word phrases
+ */
+export function getWakeWords() {
+    return HANDS_FREE_CONFIG.WAKE_WORDS;
+}
+
+/**
+ * Get the sleep word (backward compatible - returns first word)
  * @returns {string} Sleep word phrase
  */
 export function getSleepWord() {
     return HANDS_FREE_CONFIG.SLEEP_WORD;
+}
+
+/**
+ * Get all sleep words
+ * @returns {string[]} Array of sleep word phrases
+ */
+export function getSleepWords() {
+    return HANDS_FREE_CONFIG.SLEEP_WORDS;
 }

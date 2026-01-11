@@ -11,6 +11,8 @@
  * Commands are case-insensitive and must match exactly (not part of larger sentence).
  */
 
+import { HANDS_FREE_CONFIG } from './config.js';
+
 export class VoiceCommandDetector {
     /**
      * Create a VoiceCommandDetector instance
@@ -19,19 +21,9 @@ export class VoiceCommandDetector {
      * @param {string[]} options.resumeCommands - Array of resume command variations
      */
     constructor(options = {}) {
-        // Default pause command variations
-        this.pauseCommands = options.pauseCommands || [
-            'amber pause',
-            'amber, pause',
-            'pause amber'
-        ];
-
-        // Default resume command variations
-        this.resumeCommands = options.resumeCommands || [
-            'amber resume',
-            'amber, resume',
-            'resume amber'
-        ];
+        // Use config defaults if not provided
+        this.pauseCommands = options.pauseCommands || HANDS_FREE_CONFIG.PAUSE_COMMANDS;
+        this.resumeCommands = options.resumeCommands || HANDS_FREE_CONFIG.RESUME_COMMANDS;
     }
 
     /**

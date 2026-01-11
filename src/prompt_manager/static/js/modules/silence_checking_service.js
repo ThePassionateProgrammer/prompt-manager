@@ -12,23 +12,25 @@
  * to SilenceDetector and state management to ConversationMode.
  */
 
+import { HANDS_FREE_CONFIG } from './config.js';
+
 export class SilenceCheckingService {
     /**
      * Create a SilenceCheckingService instance
      * @param {Object} silenceDetector - The silence detector instance
      * @param {Object} conversationMode - The conversation mode state machine
      * @param {Object} options - Configuration options
-     * @param {number} options.checkInterval - How often to check (ms), default 100
-     * @param {number} options.extendedSilenceThreshold - Extended silence threshold (ms), default 10000
+     * @param {number} options.checkInterval - How often to check (ms)
+     * @param {number} options.extendedSilenceThreshold - Extended silence threshold (ms)
      */
     constructor(silenceDetector, conversationMode, options = {}) {
         this.silenceDetector = silenceDetector;
         this.conversationMode = conversationMode;
         this.interval = null;
 
-        // Configuration
-        this.CHECK_INTERVAL_MS = options.checkInterval || 100;
-        this.EXTENDED_SILENCE_MS = options.extendedSilenceThreshold || 10000;
+        // Configuration - use config defaults if not provided
+        this.CHECK_INTERVAL_MS = options.checkInterval || HANDS_FREE_CONFIG.SILENCE_CHECK_INTERVAL_MS;
+        this.EXTENDED_SILENCE_MS = options.extendedSilenceThreshold || HANDS_FREE_CONFIG.EXTENDED_SILENCE_THRESHOLD_MS;
     }
 
     /**

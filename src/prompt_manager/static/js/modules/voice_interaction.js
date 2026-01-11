@@ -11,17 +11,24 @@
  * - Requires showNotification function from main dashboard
  */
 
+import { VoiceCommandDetector } from './voice_command_detector.js';
+
 // Voice interaction state
 let voiceRecognition = null;
 let voiceSynthesis = window.speechSynthesis;
 let isListening = false;
 let isSpeaking = false;
 let processedResultIndex = 0;
+let silenceCheckInterval = null;
 
 // Dependencies injected from main dashboard
 let conversationMode = null;
+let conversationModeModule = null;
 let getIsLoading = null;
 let showNotification = null;
+
+// Voice command detector for pause/resume commands
+const voiceCommandDetector = new VoiceCommandDetector();
 
 /**
  * Initialize dependencies from main dashboard.
@@ -29,6 +36,7 @@ let showNotification = null;
  */
 export function initializeDependencies(deps) {
     conversationMode = deps.conversationMode;
+    conversationModeModule = deps.conversationModeModule;
     getIsLoading = deps.getIsLoading;
     showNotification = deps.showNotification;
 }
@@ -69,6 +77,74 @@ export function initializeVoiceRecognition() {
             if (result.isFinal) {
                 const transcript = result[0].transcript;
 
+                // Mark speech start when we receive actual speech
+                if (conversationMode && conversationMode.handsFreeModeEnabled) {
+                    const silenceDetector = conversationModeModule?.getSilenceDetector?.();
+                    if (silenceDetector) {
+                        silenceDetector.onSpeechStart();
+                        console.log('[Hands-free] Speech detected, resetting silence timer');
+                    }
+                }
+
+                // In hands-free mode, check for wake/sleep/pause/resume commands
+                if (conversationMode && conversationMode.handsFreeModeEnabled) {
+                    console.log('[Hands-free] Mode enabled, state:', conversationMode.state);
+                    console.log('[Hands-free] Transcript:', transcript);
+
+                    // Check for wake word (when in WAKE_LISTENING/standby)
+                    const wakeWordDetector = conversationModeModule?.getWakeWordDetector?.();
+                    if (wakeWordDetector && conversationMode.state === 'WAKE_LISTENING') {
+                        const detection = wakeWordDetector.detect(transcript);
+                        console.log('[Hands-free] Wake word detection:', detection);
+                        if (detection.matched && detection.type === 'wake') {
+                            console.log('[Hands-free] Wake word detected - starting transcription');
+                            conversationMode.onWakeWordDetected();
+                            showNotification('Listening...', 'success');
+                            processedResultIndex = i + 1;
+                            continue; // Don't add wake word to chat input
+                        }
+                    }
+
+                    // Check for sleep word (when in LISTENING state)
+                    if (wakeWordDetector && conversationMode.state === 'LISTENING') {
+                        const detection = wakeWordDetector.detect(transcript);
+                        if (detection.matched && detection.type === 'sleep') {
+                            console.log('[Hands-free] Sleep word detected - stopping transcription');
+                            conversationMode.onSleepWordDetected();
+                            showNotification('Standby mode. Say "Hey Amber" to wake.', 'info');
+                            processedResultIndex = i + 1;
+                            continue; // Don't add sleep word to chat input
+                        }
+                    }
+
+                    // Check for voice commands (pause/resume)
+                    const commandDetection = voiceCommandDetector.detect(transcript);
+                    if (commandDetection.matched) {
+                        if (commandDetection.command === 'pause' && conversationMode.state === 'LISTENING') {
+                            console.log('[Hands-free] Pause command detected');
+                            conversationMode.pauseListening();
+                            showNotification('Paused. Say "Amber, resume" to continue.', 'info');
+                            processedResultIndex = i + 1;
+                            continue; // Don't add pause command to chat input
+                        }
+
+                        if (commandDetection.command === 'resume' && conversationMode.state === 'PAUSED') {
+                            console.log('[Hands-free] Resume command detected');
+                            conversationMode.resumeListening();
+                            showNotification('Resumed listening', 'success');
+                            processedResultIndex = i + 1;
+                            continue; // Don't add resume command to chat input
+                        }
+                    }
+                }
+
+                // In WAKE_LISTENING (standby) or PAUSED state, don't add any speech to input
+                if (conversationMode && (conversationMode.state === 'WAKE_LISTENING' || conversationMode.state === 'PAUSED')) {
+                    console.log('[Hands-free] In standby/paused mode - not transcribing');
+                    processedResultIndex = i + 1;
+                    continue;
+                }
+
                 // Append transcript to existing text or set as new text
                 if (chatInput.value.trim()) {
                     chatInput.value += ' ' + transcript;
@@ -98,7 +174,26 @@ export function initializeVoiceRecognition() {
         }
     };
 
+    voiceRecognition.onstart = function() {
+        console.log('[Hands-free] Voice recognition started, state:', conversationMode?.state);
+        // Don't mark speech start here - voice recognition auto-restarts even when silent
+        // Speech start should only be marked when we actually receive a transcript
+    };
+
     voiceRecognition.onend = function() {
+        console.log('[Hands-free] Voice recognition ended, state:', conversationMode?.state);
+        // Track speech end for silence detection
+        if (conversationMode && conversationMode.handsFreeModeEnabled) {
+            console.log('[Hands-free] Hands-free mode enabled, tracking silence');
+            const silenceDetector = conversationModeModule?.getSilenceDetector?.();
+            if (silenceDetector) {
+                silenceDetector.onSpeechEnd();
+                console.log('[Hands-free] Speech ended, starting silence checking...');
+                // Start checking for silence threshold
+                startSilenceChecking();
+            }
+        }
+
         // In conversation mode, don't auto-stop - let user control with mic/send buttons
         if (!conversationMode.isActive) {
             stopListening();
@@ -119,6 +214,93 @@ export function initializeVoiceRecognition() {
             }
         }
     };
+}
+
+/**
+ * Start checking for silence threshold (hands-free mode)
+ */
+function startSilenceChecking() {
+    // Clear any existing interval
+    if (silenceCheckInterval) {
+        clearInterval(silenceCheckInterval);
+    }
+
+    // Check every 100ms if silence threshold exceeded
+    let checkCount = 0;
+    silenceCheckInterval = setInterval(() => {
+        checkCount++;
+
+        if (!conversationMode || !conversationMode.handsFreeModeEnabled) {
+            console.log('[Hands-free] Stopping silence check - hands-free disabled');
+            clearInterval(silenceCheckInterval);
+            silenceCheckInterval = null;
+            return;
+        }
+
+        // Only auto-send when in LISTENING state
+        // Stop checking if we're in any other state (PAUSED, WAKE_LISTENING, SENDING, PLAYING)
+        if (conversationMode.state !== 'LISTENING') {
+            console.log('[Hands-free] Stopping silence check - state changed to', conversationMode.state);
+            clearInterval(silenceCheckInterval);
+            silenceCheckInterval = null;
+            return;
+        }
+
+        const silenceDetector = conversationModeModule?.getSilenceDetector?.();
+        if (!silenceDetector) {
+            console.log('[Hands-free] Stopping silence check - no detector');
+            clearInterval(silenceCheckInterval);
+            silenceCheckInterval = null;
+            return;
+        }
+
+        const silenceDuration = silenceDetector.getSilenceDuration();
+        if (checkCount % 10 === 0) {  // Log every second
+            console.log('[Hands-free] Silence duration:', silenceDuration, 'ms, threshold:', silenceDetector.silenceThreshold, 'ms');
+        }
+
+        // If silence exceeds 10 seconds, auto-pause
+        if (silenceDuration > 10000) {
+            console.log('[Hands-free] Extended silence (>10s) detected - auto-pausing');
+            clearInterval(silenceCheckInterval);
+            silenceCheckInterval = null;
+            conversationMode.pauseListening();
+            showNotification('Auto-paused after 10 seconds of silence. Say "Amber, resume" to continue.', 'info');
+            return;
+        }
+
+        if (silenceDetector.isSilent()) {
+            console.log('[Hands-free] Silence detected! Auto-sending message...');
+            // Silence threshold exceeded - trigger auto-send
+            clearInterval(silenceCheckInterval);
+            silenceCheckInterval = null;
+
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput && chatInput.value.trim()) {
+                console.log('[Hands-free] Message content:', chatInput.value.trim());
+                // Just click the send button - it will handle state transitions
+                const sendBtn = document.getElementById('send-btn');
+                if (sendBtn) {
+                    sendBtn.click();
+                } else {
+                    console.error('[Hands-free] Send button not found!');
+                }
+            } else {
+                console.log('[Hands-free] No message to send (empty input)');
+            }
+        }
+    }, 100);
+}
+
+/**
+ * Stop silence checking interval (for hands-free mode cleanup)
+ */
+export function stopSilenceChecking() {
+    if (silenceCheckInterval) {
+        clearInterval(silenceCheckInterval);
+        silenceCheckInterval = null;
+        console.log('[Hands-free] Silence checking stopped');
+    }
 }
 
 /**
@@ -193,6 +375,12 @@ export function stopListening() {
     }
 
     isListening = false;
+
+    // Clear silence checking interval
+    if (silenceCheckInterval) {
+        clearInterval(silenceCheckInterval);
+        silenceCheckInterval = null;
+    }
 
     if (voiceRecognition) {
         try {

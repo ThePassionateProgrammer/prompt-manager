@@ -329,6 +329,9 @@ async function sendMessage(providedMessage = null) {
             const result = await response.json();
             addMessage('assistant', result.response);
 
+            // Store response for "Ember, repeat that" command
+            VoiceInteraction.storeLastResponse(result.response);
+
             // Conversation mode: transition to PLAYING and auto-play response
             if (conversationMode.shouldAutoPlay()) {
                 conversationMode.receiveResponse();

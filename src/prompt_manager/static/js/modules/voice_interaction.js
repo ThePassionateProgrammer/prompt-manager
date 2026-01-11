@@ -12,6 +12,7 @@
  */
 
 import { VoiceCommandDetector } from './voice_command_detector.js';
+import { CommandDetector } from './command_detector.js';
 import { SilenceCheckingService } from './silence_checking_service.js';
 
 // Voice interaction state
@@ -20,6 +21,7 @@ let voiceSynthesis = window.speechSynthesis;
 let isListening = false;
 let isSpeaking = false;
 let processedResultIndex = 0;
+let lastAIResponse = null;  // Store last AI response for "repeat that" command
 
 // Dependencies injected from main dashboard
 let conversationMode = null;
@@ -29,6 +31,9 @@ let showNotification = null;
 
 // Voice command detector for pause/resume commands
 const voiceCommandDetector = new VoiceCommandDetector();
+
+// Command detector for Ember command word system ("Ember, repeat that")
+const commandDetector = new CommandDetector();
 
 // Silence checking service (created after dependencies initialized)
 let silenceCheckingService = null;
@@ -143,6 +148,29 @@ export function initializeVoiceRecognition() {
                             showNotification('Resumed listening', 'success');
                             processedResultIndex = i + 1;
                             continue; // Don't add resume command to chat input
+                        }
+                    }
+
+                    // Check for Ember command word system (e.g., "Ember, repeat that")
+                    const emberCommandDetection = commandDetector.detect(transcript);
+                    if (emberCommandDetection.matched) {
+                        if (emberCommandDetection.command === 'repeat' && conversationMode.state === 'LISTENING') {
+                            console.log('[Hands-free] Repeat command detected');
+                            if (lastAIResponse) {
+                                speakText(lastAIResponse);
+                                showNotification('Repeating last response...', 'info');
+                            } else {
+                                showNotification('No previous response to repeat', 'warning');
+                            }
+                            processedResultIndex = i + 1;
+                            continue; // Don't add command to chat input
+                        }
+
+                        if (emberCommandDetection.command === 'transcribe' && conversationMode.state === 'LISTENING') {
+                            console.log('[Hands-free] Transcribe command detected');
+                            showNotification('Transcribe mode - feature coming soon', 'info');
+                            processedResultIndex = i + 1;
+                            continue; // Don't add command to chat input
                         }
                     }
                 }
@@ -544,4 +572,15 @@ export function cancelSpeech() {
         voiceSynthesis.cancel();
     }
     isSpeaking = false;
+}
+
+/**
+ * Store the last AI response for "repeat that" command.
+ * Should be called when a new AI response is received.
+ *
+ * @param {string} responseText - The AI response text to store
+ */
+export function storeLastResponse(responseText) {
+    lastAIResponse = responseText;
+    console.log('[Voice] Stored last AI response for repeat command');
 }

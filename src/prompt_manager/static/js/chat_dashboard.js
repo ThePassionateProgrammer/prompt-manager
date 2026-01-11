@@ -5,6 +5,7 @@ import * as Notifications from './modules/notifications.js';
 import * as ErrorHandler from './modules/error_handler.js';
 import * as StateIndicator from './modules/conversation_state_indicator.js';
 import * as VoiceSettings from './modules/voice_settings.js';
+import * as Config from './modules/config.js';
 
 // State management
 let messages = [];
@@ -17,7 +18,7 @@ let systemPrompt = null;
 const conversationMode = ConversationMode.getConversationMode();
 
 // Initialize
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     setupEventListeners();
 
     // Initialize error handler with notifications
@@ -43,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize voice interaction module with dependencies (use new notification system)
     VoiceInteraction.initializeDependencies({
         conversationMode: conversationMode,
+        conversationModeModule: ConversationMode,
         getIsLoading: () => isLoading,
         showNotification: Notifications.showNotification
     });
@@ -53,6 +55,9 @@ document.addEventListener('DOMContentLoaded', function() {
     updateWelcomeTime();
     loadSystemPrompt();
     loadChatHistory();
+
+    // Load hands-free settings from server (must complete before SilenceDetector is used)
+    await Config.loadHandsFreeSettings();
 });
 
 function setupEventListeners() {
@@ -90,6 +95,13 @@ function setupEventListeners() {
     document.getElementById('send-btn').addEventListener('click', sendMessage);
     document.getElementById('voice-btn').addEventListener('click', toggleVoiceInput);
     document.getElementById('conversation-mode-btn').addEventListener('click', toggleConversationMode);
+    document.getElementById('hands-free-checkbox').addEventListener('change', (e) => {
+        if (e.target.checked) {
+            ConversationMode.enableHandsFreeMode();
+        } else {
+            ConversationMode.disableHandsFreeMode();
+        }
+    });
     document.getElementById('clear-btn').addEventListener('click', clearChat);
     document.getElementById('export-btn').addEventListener('click', exportChat);
     document.getElementById('prompts-btn').addEventListener('click', openPromptLibrary);

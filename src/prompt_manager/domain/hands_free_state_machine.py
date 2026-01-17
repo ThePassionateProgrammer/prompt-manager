@@ -70,3 +70,21 @@ class HandsFreeStateMachine:
         """
         if self.current_state == State.PLAYING:
             self.current_state = State.TRANSCRIBING
+
+    def stop_word_detected(self):
+        """
+        Transition to PAUSED when stop word is heard.
+        User wants to temporarily pause without exiting conversation mode.
+        Only valid from TRANSCRIBING state.
+        """
+        if self.current_state == State.TRANSCRIBING:
+            self.current_state = State.PAUSED
+
+    def resume(self):
+        """
+        Transition back to WAKE_LISTENING from PAUSED state.
+        User must say start word again to resume transcribing.
+        Only valid from PAUSED state.
+        """
+        if self.current_state == State.PAUSED:
+            self.current_state = State.WAKE_LISTENING

@@ -117,3 +117,36 @@ class TestHandsFreeStateMachine:
 
         # Assert
         assert state_machine.current_state == State.TRANSCRIBING
+
+    def test_stop_word_detected_transitions_to_paused(self):
+        """
+        When stop word heard ("Stop Amber"), pause transcription.
+        User wants to temporarily stop without exiting conversation mode.
+        """
+        # Arrange
+        state_machine = HandsFreeStateMachine()
+        state_machine.start_word_detected()
+        assert state_machine.current_state == State.TRANSCRIBING
+
+        # Act
+        state_machine.stop_word_detected()
+
+        # Assert
+        assert state_machine.current_state == State.PAUSED
+
+    def test_resume_from_paused_transitions_to_wake_listening(self):
+        """
+        When resuming from PAUSED, return to WAKE_LISTENING.
+        User must say start word again to begin transcribing.
+        """
+        # Arrange
+        state_machine = HandsFreeStateMachine()
+        state_machine.start_word_detected()
+        state_machine.stop_word_detected()
+        assert state_machine.current_state == State.PAUSED
+
+        # Act
+        state_machine.resume()
+
+        # Assert
+        assert state_machine.current_state == State.WAKE_LISTENING

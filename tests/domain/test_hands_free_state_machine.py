@@ -47,3 +47,19 @@ class TestHandsFreeStateMachine:
 
         # Assert
         assert state_machine.current_state == State.TRANSCRIBING
+
+    def test_silence_detected_transitions_to_sending(self):
+        """
+        After 10 seconds of silence during transcription, auto-send the message.
+        This triggers the AI interaction.
+        """
+        # Arrange
+        state_machine = HandsFreeStateMachine()
+        state_machine.start_word_detected()
+        assert state_machine.current_state == State.TRANSCRIBING
+
+        # Act
+        state_machine.silence_detected()
+
+        # Assert
+        assert state_machine.current_state == State.SENDING

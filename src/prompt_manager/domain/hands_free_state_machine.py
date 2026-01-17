@@ -37,3 +37,11 @@ class HandsFreeStateMachine:
         """
         if self.current_state == State.WAKE_LISTENING:
             self.current_state = State.TRANSCRIBING
+
+    def silence_detected(self):
+        """
+        Transition to SENDING after silence threshold reached.
+        Only valid from TRANSCRIBING state (user has stopped talking).
+        """
+        if self.current_state == State.TRANSCRIBING:
+            self.current_state = State.SENDING

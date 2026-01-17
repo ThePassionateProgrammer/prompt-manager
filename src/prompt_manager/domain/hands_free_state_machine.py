@@ -29,3 +29,11 @@ class HandsFreeStateMachine:
     def __init__(self):
         """Initialize state machine in WAKE_LISTENING state."""
         self.current_state = State.WAKE_LISTENING
+
+    def start_word_detected(self):
+        """
+        Transition to TRANSCRIBING when start word is heard.
+        Only valid from WAKE_LISTENING state.
+        """
+        if self.current_state == State.WAKE_LISTENING:
+            self.current_state = State.TRANSCRIBING

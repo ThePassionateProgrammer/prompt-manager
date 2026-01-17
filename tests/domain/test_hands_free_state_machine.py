@@ -32,3 +32,18 @@ class TestHandsFreeStateMachine:
 
         # Assert
         assert state_machine.current_state == State.WAKE_LISTENING
+
+    def test_start_word_detected_transitions_to_transcribing(self):
+        """
+        When system hears start word ("Hey Amber"), begin transcribing.
+        This is the key entry point into active conversation.
+        """
+        # Arrange
+        state_machine = HandsFreeStateMachine()
+        assert state_machine.current_state == State.WAKE_LISTENING
+
+        # Act
+        state_machine.start_word_detected()
+
+        # Assert
+        assert state_machine.current_state == State.TRANSCRIBING

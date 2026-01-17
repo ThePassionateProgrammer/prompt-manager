@@ -63,3 +63,57 @@ class TestHandsFreeStateMachine:
 
         # Assert
         assert state_machine.current_state == State.SENDING
+
+    def test_message_sent_transitions_to_waiting_for_reply(self):
+        """
+        Once message is sent to AI, wait for the response.
+        This is a brief transitional state.
+        """
+        # Arrange
+        state_machine = HandsFreeStateMachine()
+        state_machine.start_word_detected()
+        state_machine.silence_detected()
+        assert state_machine.current_state == State.SENDING
+
+        # Act
+        state_machine.message_sent()
+
+        # Assert
+        assert state_machine.current_state == State.WAITING_FOR_REPLY
+
+    def test_reply_received_transitions_to_playing(self):
+        """
+        When AI response arrives, play it via text-to-speech.
+        User hears the AI response.
+        """
+        # Arrange
+        state_machine = HandsFreeStateMachine()
+        state_machine.start_word_detected()
+        state_machine.silence_detected()
+        state_machine.message_sent()
+        assert state_machine.current_state == State.WAITING_FOR_REPLY
+
+        # Act
+        state_machine.reply_received()
+
+        # Assert
+        assert state_machine.current_state == State.PLAYING
+
+    def test_response_finished_transitions_to_transcribing(self):
+        """
+        After AI response finishes playing, return to transcribing.
+        This completes the conversation loop - ready for next question.
+        """
+        # Arrange
+        state_machine = HandsFreeStateMachine()
+        state_machine.start_word_detected()
+        state_machine.silence_detected()
+        state_machine.message_sent()
+        state_machine.reply_received()
+        assert state_machine.current_state == State.PLAYING
+
+        # Act
+        state_machine.response_finished()
+
+        # Assert
+        assert state_machine.current_state == State.TRANSCRIBING

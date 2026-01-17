@@ -45,3 +45,28 @@ class HandsFreeStateMachine:
         """
         if self.current_state == State.TRANSCRIBING:
             self.current_state = State.SENDING
+
+    def message_sent(self):
+        """
+        Transition to WAITING_FOR_REPLY after message is sent to AI.
+        Only valid from SENDING state.
+        """
+        if self.current_state == State.SENDING:
+            self.current_state = State.WAITING_FOR_REPLY
+
+    def reply_received(self):
+        """
+        Transition to PLAYING when AI response arrives.
+        Only valid from WAITING_FOR_REPLY state.
+        """
+        if self.current_state == State.WAITING_FOR_REPLY:
+            self.current_state = State.PLAYING
+
+    def response_finished(self):
+        """
+        Transition back to TRANSCRIBING after AI response finishes playing.
+        This completes the conversation loop - ready for next question.
+        Only valid from PLAYING state.
+        """
+        if self.current_state == State.PLAYING:
+            self.current_state = State.TRANSCRIBING

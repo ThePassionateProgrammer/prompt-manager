@@ -33,11 +33,52 @@ function updateState(newState) {
 const conversationMode = {
     state: 'IDLE',
     isActive: false,
+    handsFreeModeEnabled: false,
+
+    enableHandsFreeMode() {
+        this.handsFreeModeEnabled = true;
+    },
+
+    disableHandsFreeMode() {
+        this.handsFreeModeEnabled = false;
+    },
+
+    onWakeWordDetected() {
+        if (this.state === 'WAKE_LISTENING') {
+            updateState('LISTENING');
+        } else {
+            console.warn('Wake word detected but not in WAKE_LISTENING state');
+        }
+    },
+
+    onSleepWordDetected() {
+        if (!this.handsFreeModeEnabled) {
+            return;
+        }
+        if (this.state === 'LISTENING') {
+            updateState('WAKE_LISTENING');
+        } else {
+            console.warn('Sleep word detected but not in LISTENING state');
+        }
+    },
+
+    onSilenceDetected() {
+        if (!this.handsFreeModeEnabled) {
+            return;
+        }
+        if (this.state === 'LISTENING') {
+            updateState('SENDING');
+        }
+    },
 
     activate() {
         if (this.isActive) throw new Error('Already active');
         this.isActive = true;
-        updateState('LISTENING');
+        if (this.handsFreeModeEnabled) {
+            updateState('WAKE_LISTENING');
+        } else {
+            updateState('LISTENING');
+        }
     },
 
     deactivate() {

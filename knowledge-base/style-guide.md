@@ -73,6 +73,44 @@ This guide defines coding standards and conventions for our project. Consistency
 - Don't leave commented-out code (use version control instead)
 - Don't apologize for code quality (fix it instead)
 
+---
+
+## Dead Code Policy
+
+**Delete dead code immediately.** It's in version control if we ever need it.
+
+Dead code includes:
+- Unused functions, classes, or modules
+- Commented-out code blocks
+- Duplicate implementations (e.g., Python model when JavaScript is the actual runtime)
+- Experimental code that didn't pan out
+
+**Why delete?**
+- Dead code creates confusion about what's actually used
+- It adds maintenance burden
+- It can mislead future readers (including Claude)
+- Git preserves history - nothing is truly lost
+
+**Before deleting, ask:**
+- Is this code actually called anywhere?
+- Is there a single source of truth? (e.g., one state machine, not two)
+- Would keeping this cause confusion?
+
+---
+
+## Refactoring Philosophy
+
+**"Make the change easy, then make the easy change."** — Kent Beck
+
+Before adding new features:
+1. Examine the existing code
+2. Ask: Would refactoring first make this easier?
+3. Update stale documentation (code is the one true source)
+4. Clean up dead code
+5. Then add the feature
+
+Refactoring is not optional cleanup—it's preparation for the next change.
+
 **Documentation**
 - Public APIs and interfaces need clear documentation
 - Include parameter descriptions and return values

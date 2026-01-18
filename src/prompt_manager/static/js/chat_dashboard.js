@@ -95,13 +95,19 @@ function setupEventListeners() {
     document.getElementById('send-btn').addEventListener('click', sendMessage);
     document.getElementById('voice-btn').addEventListener('click', toggleVoiceInput);
     document.getElementById('conversation-mode-btn').addEventListener('click', toggleConversationMode);
-    document.getElementById('hands-free-checkbox').addEventListener('change', (e) => {
-        if (e.target.checked) {
-            ConversationMode.enableHandsFreeMode();
-        } else {
-            ConversationMode.disableHandsFreeMode();
-        }
-    });
+
+    // Hands-free checkbox may not exist if it's in a modal that hasn't been opened yet
+    const handsFreeCheckbox = document.getElementById('hands-free-checkbox');
+    if (handsFreeCheckbox) {
+        handsFreeCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                ConversationMode.enableHandsFreeMode();
+            } else {
+                ConversationMode.disableHandsFreeMode();
+            }
+        });
+    }
+
     document.getElementById('clear-btn').addEventListener('click', clearChat);
     document.getElementById('export-btn').addEventListener('click', exportChat);
     document.getElementById('prompts-btn').addEventListener('click', openPromptLibrary);

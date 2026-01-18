@@ -4,8 +4,8 @@ import { SilenceCheckingService } from '../../src/prompt_manager/static/js/modul
 /**
  * Tests for SilenceCheckingService
  *
- * Manages the interval-based checking for silence detection and auto-pause.
- * Encapsulates the complexity of coordinating silence checking with state machine.
+ * Manages the interval-based checking for silence detection in hands-free mode.
+ * When silence threshold (10 seconds) is exceeded, triggers auto-send.
  */
 
 describe('SilenceCheckingService', () => {
@@ -13,7 +13,6 @@ describe('SilenceCheckingService', () => {
     let mockSilenceDetector;
     let mockConversationMode;
     let onSilenceCallback;
-    let onExtendedSilenceCallback;
 
     beforeEach(() => {
         // Mock SilenceDetector
@@ -27,9 +26,8 @@ describe('SilenceCheckingService', () => {
             state: 'LISTENING'
         };
 
-        // Callbacks
+        // Callback
         onSilenceCallback = jest.fn();
-        onExtendedSilenceCallback = jest.fn();
 
         // Create service
         service = new SilenceCheckingService(mockSilenceDetector, mockConversationMode);
@@ -59,10 +57,6 @@ describe('SilenceCheckingService', () => {
             expect(service.CHECK_INTERVAL_MS).toBe(100);
         });
 
-        it('should have default extended silence threshold', () => {
-            expect(service.EXTENDED_SILENCE_MS).toBe(10000);
-        });
-
         it('should allow custom check interval', () => {
             const customService = new SilenceCheckingService(
                 mockSilenceDetector,
@@ -71,36 +65,27 @@ describe('SilenceCheckingService', () => {
             );
             expect(customService.CHECK_INTERVAL_MS).toBe(200);
         });
-
-        it('should allow custom extended silence threshold', () => {
-            const customService = new SilenceCheckingService(
-                mockSilenceDetector,
-                mockConversationMode,
-                { extendedSilenceThreshold: 15000 }
-            );
-            expect(customService.EXTENDED_SILENCE_MS).toBe(15000);
-        });
     });
 
     describe('start()', () => {
         it('should start checking interval', () => {
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
 
             expect(service.isRunning()).toBe(true);
         });
 
         it('should check silence at regular intervals', () => {
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
 
             // Advance time by check interval
             jest.advanceTimersByTime(100);
 
-            expect(mockSilenceDetector.getSilenceDuration).toHaveBeenCalled();
+            expect(mockSilenceDetector.isSilent).toHaveBeenCalled();
         });
 
         it('should not start multiple intervals', () => {
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
+            service.start(onSilenceCallback);
 
             expect(service.isRunning()).toBe(true);
             // Should only have one interval running
@@ -108,9 +93,8 @@ describe('SilenceCheckingService', () => {
 
         it('should call onSilence callback when silence detected', () => {
             mockSilenceDetector.isSilent.mockReturnValue(true);
-            mockSilenceDetector.getSilenceDuration.mockReturnValue(3000);
 
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
             jest.advanceTimersByTime(100);
 
             expect(onSilenceCallback).toHaveBeenCalled();
@@ -118,35 +102,15 @@ describe('SilenceCheckingService', () => {
 
         it('should stop checking after silence detected', () => {
             mockSilenceDetector.isSilent.mockReturnValue(true);
-            mockSilenceDetector.getSilenceDuration.mockReturnValue(3000);
 
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
-            jest.advanceTimersByTime(100);
-
-            expect(service.isRunning()).toBe(false);
-        });
-
-        it('should call onExtendedSilence callback when extended silence detected', () => {
-            mockSilenceDetector.getSilenceDuration.mockReturnValue(10001);
-
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
-            jest.advanceTimersByTime(100);
-
-            expect(onExtendedSilenceCallback).toHaveBeenCalled();
-            expect(onSilenceCallback).not.toHaveBeenCalled();
-        });
-
-        it('should stop checking after extended silence detected', () => {
-            mockSilenceDetector.getSilenceDuration.mockReturnValue(10001);
-
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
             jest.advanceTimersByTime(100);
 
             expect(service.isRunning()).toBe(false);
         });
 
         it('should stop checking if state changes from LISTENING', () => {
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
 
             // Change state
             mockConversationMode.state = 'PAUSED';
@@ -156,8 +120,8 @@ describe('SilenceCheckingService', () => {
             expect(service.isRunning()).toBe(false);
         });
 
-        it('should continue checking while in LISTENING state', () => {
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+        it('should continue checking while in LISTENING state and not silent', () => {
+            service.start(onSilenceCallback);
 
             jest.advanceTimersByTime(100);
             expect(service.isRunning()).toBe(true);
@@ -169,7 +133,7 @@ describe('SilenceCheckingService', () => {
 
     describe('stop()', () => {
         it('should stop checking interval', () => {
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
             expect(service.isRunning()).toBe(true);
 
             service.stop();
@@ -182,13 +146,13 @@ describe('SilenceCheckingService', () => {
         });
 
         it('should prevent further checks after stop', () => {
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
             service.stop();
 
-            mockSilenceDetector.getSilenceDuration.mockClear();
+            mockSilenceDetector.isSilent.mockClear();
             jest.advanceTimersByTime(100);
 
-            expect(mockSilenceDetector.getSilenceDuration).not.toHaveBeenCalled();
+            expect(mockSilenceDetector.isSilent).not.toHaveBeenCalled();
         });
     });
 
@@ -198,13 +162,13 @@ describe('SilenceCheckingService', () => {
         });
 
         it('should return true when started', () => {
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
 
             expect(service.isRunning()).toBe(true);
         });
 
         it('should return false after stopped', () => {
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
             service.stop();
 
             expect(service.isRunning()).toBe(false);
@@ -212,16 +176,8 @@ describe('SilenceCheckingService', () => {
     });
 
     describe('Edge Cases', () => {
-        it('should handle silence detector returning null', () => {
-            mockSilenceDetector.getSilenceDuration.mockReturnValue(null);
-
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
-
-            expect(() => jest.advanceTimersByTime(100)).not.toThrow();
-        });
-
-        it('should handle missing callbacks gracefully', () => {
-            service.start(null, null);
+        it('should handle missing callback gracefully', () => {
+            service.start(null);
 
             mockSilenceDetector.isSilent.mockReturnValue(true);
 
@@ -229,11 +185,11 @@ describe('SilenceCheckingService', () => {
         });
 
         it('should handle rapid start/stop cycles', () => {
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
             service.stop();
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
             service.stop();
-            service.start(onSilenceCallback, onExtendedSilenceCallback);
+            service.start(onSilenceCallback);
 
             expect(service.isRunning()).toBe(true);
         });

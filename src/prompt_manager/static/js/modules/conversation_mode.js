@@ -2,21 +2,34 @@
  * Conversation Mode Module
  *
  * Manages the conversation mode state machine and UI interactions.
- * Implements the State Pattern as defined in the domain model.
+ * Implements the State Pattern for voice conversation flow.
  *
- * State Transitions:
+ * Two Modes:
+ * - Manual Mode: IDLE → LISTENING (immediate transcription)
+ * - Hands-Free Mode: IDLE → WAKE_LISTENING (waits for wake word)
+ *
+ * State Transitions (Manual Mode):
  * - IDLE → LISTENING (activate)
  * - LISTENING → PAUSED (pause)
  * - LISTENING → SENDING (send message)
  * - PAUSED → LISTENING (resume)
- * - PAUSED → SENDING (send message)
  * - SENDING → PLAYING (receive response)
- * - PLAYING → LISTENING (finish playback / auto-restart)
+ * - PLAYING → LISTENING (finish playback)
+ * - ANY → IDLE (deactivate)
+ *
+ * State Transitions (Hands-Free Mode):
+ * - IDLE → WAKE_LISTENING (activate with hands-free enabled)
+ * - WAKE_LISTENING → LISTENING (wake word detected: "Hey Amber")
+ * - LISTENING → WAKE_LISTENING (sleep word detected: "Sleep Amber")
+ * - LISTENING → SENDING (10 seconds of silence triggers auto-send)
+ * - SENDING → PLAYING (receive response)
+ * - PLAYING → LISTENING (finish playback, ready for next question)
  * - ANY → IDLE (deactivate)
  *
  * Dependencies:
  * - VoiceInteraction module for controlling mic/speech
  * - showNotification function from main dashboard
+ * - StateIndicator for visual state feedback
  */
 
 /**

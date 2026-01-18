@@ -274,13 +274,14 @@ function startSilenceChecking() {
         return;
     }
 
-    // Define callbacks for silence detection
+    // Define callback for silence detection (10 seconds triggers auto-send)
     const onSilenceDetected = () => {
-        console.log('[Hands-free] Silence detected! Auto-sending message...');
+        console.log('[Hands-free] 10 seconds of silence detected! Auto-sending message...');
         const chatInput = document.getElementById('chat-input');
         if (chatInput && chatInput.value.trim()) {
             console.log('[Hands-free] Message content:', chatInput.value.trim());
-            // Just click the send button - it will handle state transitions
+            // Notify state machine, then click send button
+            conversationMode.onSilenceDetected();
             const sendBtn = document.getElementById('send-btn');
             if (sendBtn) {
                 sendBtn.click();
@@ -292,14 +293,8 @@ function startSilenceChecking() {
         }
     };
 
-    const onExtendedSilence = () => {
-        console.log('[Hands-free] Extended silence (>10s) detected - auto-pausing');
-        conversationMode.pauseListening();
-        showNotification('Auto-paused after 10 seconds of silence. Say "Amber, resume" to continue.', 'info');
-    };
-
     // Start the silence checking service
-    silenceCheckingService.start(onSilenceDetected, onExtendedSilence);
+    silenceCheckingService.start(onSilenceDetected);
 }
 
 /**

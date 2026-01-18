@@ -24,8 +24,7 @@ export const HANDS_FREE_CONFIG = Object.freeze({
     },
 
     // Silence detection configuration (in milliseconds)
-    DEFAULT_SILENCE_THRESHOLD_MS: 3000,
-    EXTENDED_SILENCE_THRESHOLD_MS: 10000,  // Auto-pause after this duration
+    DEFAULT_SILENCE_THRESHOLD_MS: 10000,   // 10 seconds - triggers auto-send in hands-free mode
     SILENCE_CHECK_INTERVAL_MS: 100,        // How often to check for silence
 
     // Matching configuration

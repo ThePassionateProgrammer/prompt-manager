@@ -21,6 +21,6 @@
       "goodbye ember",
       "stop ember"
     ],
-    "silence_timeout_seconds": 5
+    "silence_timeout_seconds": 8
   }
 }

@@ -89,11 +89,23 @@ export function initializeVoiceRecognition() {
 
     voiceRecognition = new SpeechRecognition();
     voiceRecognition.continuous = false;
-    voiceRecognition.interimResults = false;
+    voiceRecognition.interimResults = true;  // Enable interim results to detect ongoing speech
     voiceRecognition.lang = 'en-US';
 
     voiceRecognition.onresult = function(event) {
         const chatInput = document.getElementById('chat-input');
+
+        // In hands-free mode, ANY result (interim or final) indicates ongoing speech
+        // Reset the silence timer to prevent premature auto-send
+        if (conversationMode && conversationMode.handsFreeModeEnabled) {
+            const silenceDetector = conversationModeModule?.getSilenceDetector?.();
+            if (silenceDetector) {
+                const now = Date.now();
+                // Mark speech as active - this resets the silence countdown
+                silenceDetector.onSpeechStart(now);
+                console.log('[Hands-free] Speech detected (interim/final result) at', now);
+            }
+        }
 
         // Process only NEW results (not previously processed ones)
         // In continuous mode, event.results accumulates all results from the session
@@ -198,10 +210,12 @@ export function initializeVoiceRecognition() {
                 if (conversationMode && conversationMode.handsFreeModeEnabled) {
                     const silenceDetector = conversationModeModule?.getSilenceDetector?.();
                     if (silenceDetector) {
-                        // Record this moment as when speech ended
-                        silenceDetector.onSpeechStart();
-                        silenceDetector.onSpeechEnd();
-                        console.log('[Hands-free] Text added to input, starting 5s silence countdown');
+                        // Mark speech as ended - countdown starts from this moment
+                        // If interim results arrive, onSpeechStart will be called above,
+                        // which prevents isSilent() from returning true
+                        const now = Date.now();
+                        silenceDetector.onSpeechEnd(now);
+                        console.log('[Hands-free] Final transcript received at', now, '- silence countdown starts');
                         startSilenceChecking();
                     }
                 }

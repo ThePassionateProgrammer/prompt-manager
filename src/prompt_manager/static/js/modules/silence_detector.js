@@ -67,9 +67,16 @@ export class SilenceDetector {
 
         // Calculate elapsed time since last speech
         const elapsed = currentTime - this.lastSpeechTime;
+        const threshold = this.getSilenceThreshold();
+        const isSilent = elapsed >= threshold;
+
+        // Debug logging
+        if (isSilent) {
+            console.log('[SilenceDetector] isSilent check: elapsed=', elapsed, 'threshold=', threshold, 'lastSpeechTime=', this.lastSpeechTime, 'now=', currentTime);
+        }
 
         // Check if silence threshold exceeded (use dynamic threshold)
-        return elapsed >= this.getSilenceThreshold();
+        return isSilent;
     }
 
     /**

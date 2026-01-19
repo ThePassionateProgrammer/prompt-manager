@@ -46,9 +46,10 @@ export class SilenceCheckingService {
                 return;
             }
 
-            // Check for silence - auto-send after 10 seconds
+            // Check for silence - auto-send after threshold
             if (this.silenceDetector.isSilent()) {
-                console.log('[SilenceCheckingService] Silence threshold exceeded - triggering auto-send');
+                const elapsed = this.silenceDetector.getSilenceDuration();
+                console.log('[SilenceCheckingService] Silence threshold exceeded - elapsed:', elapsed, 'ms, triggering auto-send');
                 this.stop();
                 if (onSilenceDetected) {
                     onSilenceDetected();

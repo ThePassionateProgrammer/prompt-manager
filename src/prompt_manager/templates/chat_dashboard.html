@@ -265,6 +265,40 @@
             border-color: #38a169;
         }
 
+        /* Hands-Free Toggle */
+        .hands-free-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .hands-free-toggle:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .hands-free-toggle input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #667eea;
+            cursor: pointer;
+        }
+
+        .hands-free-toggle:has(input:checked) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
         /* Toggle Button */
         .toggle-panel-btn {
             width: 100%;
@@ -795,6 +829,10 @@
                             <span>🎙️</span>
                             <span>Conversation Mode</span>
                         </button>
+                        <label class="hands-free-toggle" title="Enable hands-free mode with wake word detection">
+                            <input type="checkbox" id="hands-free-checkbox">
+                            <span>Hands-Free</span>
+                        </label>
                     </div>
                 </div>
 

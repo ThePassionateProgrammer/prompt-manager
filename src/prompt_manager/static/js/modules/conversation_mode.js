@@ -32,6 +32,13 @@
  * - StateIndicator for visual state feedback
  */
 
+import { WakeWordDetector } from './wake_word_detector.js';
+import { SilenceDetector } from './silence_detector.js';
+
+// Detector instances for hands-free mode
+const wakeWordDetector = new WakeWordDetector();
+const silenceDetector = new SilenceDetector();
+
 /**
  * Helper to update state and notify state indicator.
  */
@@ -232,4 +239,42 @@ export function deactivateConversationMode() {
  */
 export function getConversationMode() {
     return conversationMode;
+}
+
+/**
+ * Get the wake word detector instance.
+ * Used by voice_interaction for transcript processing.
+ *
+ * @returns {WakeWordDetector} The wake word detector instance
+ */
+export function getWakeWordDetector() {
+    return wakeWordDetector;
+}
+
+/**
+ * Get the silence detector instance.
+ * Used by voice_interaction for silence checking.
+ *
+ * @returns {SilenceDetector} The silence detector instance
+ */
+export function getSilenceDetector() {
+    return silenceDetector;
+}
+
+/**
+ * Enable hands-free mode.
+ * When enabled, conversation mode starts in WAKE_LISTENING state.
+ */
+export function enableHandsFreeMode() {
+    conversationMode.enableHandsFreeMode();
+    console.log('[ConversationMode] Hands-free mode enabled');
+}
+
+/**
+ * Disable hands-free mode.
+ * When disabled, conversation mode starts in LISTENING state.
+ */
+export function disableHandsFreeMode() {
+    conversationMode.disableHandsFreeMode();
+    console.log('[ConversationMode] Hands-free mode disabled');
 }

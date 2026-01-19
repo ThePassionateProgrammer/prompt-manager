@@ -459,9 +459,10 @@ def hands_free_settings():
     if request.method == 'GET':
         settings = settings_manager.get_all_settings()
         hands_free = settings.get('hands_free', {})
+        # Include "ember" variations since Chrome often transcribes "Amber" as "Ember"
         return jsonify({
-            'wake_words': hands_free.get('wake_words', ['hey amber', 'hi amber', 'amber']),
-            'sleep_words': hands_free.get('sleep_words', ['sleep amber', 'goodbye amber', 'stop']),
+            'wake_words': hands_free.get('wake_words', ['hey amber', 'hi amber', 'amber', 'hey ember', 'hi ember', 'ember']),
+            'sleep_words': hands_free.get('sleep_words', ['sleep amber', 'goodbye amber', 'stop amber', 'sleep ember', 'goodbye ember', 'stop ember']),
             'auto_send_timeout': hands_free.get('silence_timeout_seconds', 5)
         })
     else:

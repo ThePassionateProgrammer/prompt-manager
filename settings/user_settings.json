@@ -5,8 +5,22 @@
   "temperature": 1.0,
   "max_tokens": 3000,
   "hands_free": {
-    "wake_words": ["hey amber", "hi amber", "amber"],
-    "sleep_words": ["sleep amber", "goodbye amber", "stop"],
+    "wake_words": [
+      "hey amber",
+      "hi amber",
+      "amber",
+      "hey ember",
+      "hi ember",
+      "ember"
+    ],
+    "sleep_words": [
+      "sleep amber",
+      "goodbye amber",
+      "stop amber",
+      "sleep ember",
+      "goodbye ember",
+      "stop ember"
+    ],
     "silence_timeout_seconds": 5
   }
 }

@@ -7,8 +7,9 @@
 
 export const HANDS_FREE_CONFIG = Object.freeze({
     // Default wake/sleep words (overridden by user settings)
-    DEFAULT_WAKE_WORDS: ['hey amber', 'hi amber', 'amber'],
-    DEFAULT_SLEEP_WORDS: ['sleep amber', 'goodbye amber', 'stop'],
+    // Include "ember" variations since Chrome often transcribes "Amber" as "Ember"
+    DEFAULT_WAKE_WORDS: ['hey amber', 'hi amber', 'amber', 'hey ember', 'hi ember', 'ember'],
+    DEFAULT_SLEEP_WORDS: ['sleep amber', 'goodbye amber', 'stop amber', 'sleep ember', 'goodbye ember', 'stop ember'],
 
     // Voice commands
     PAUSE_COMMANDS: ['amber pause', 'amber, pause', 'pause amber'],

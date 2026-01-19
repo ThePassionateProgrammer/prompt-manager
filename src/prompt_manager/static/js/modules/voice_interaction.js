@@ -104,20 +104,10 @@ export function initializeVoiceRecognition() {
             if (result.isFinal) {
                 const transcript = result[0].transcript;
 
-                // In hands-free mode, track silence from this moment
-                // Each final transcript = user finished a phrase, start 5s countdown
-                // If user speaks again (new transcript), this resets the timer
-                if (conversationMode && conversationMode.handsFreeModeEnabled) {
-                    const silenceDetector = conversationModeModule?.getSilenceDetector?.();
-                    if (silenceDetector) {
-                        // Record this moment as when speech ended (for this phrase)
-                        // onSpeechStart sets timestamp, onSpeechEnd allows isSilent() to work
-                        silenceDetector.onSpeechStart();
-                        silenceDetector.onSpeechEnd();
-                        console.log('[Hands-free] Final transcript received, starting 5s silence countdown');
-                        // Start checking immediately - triggers auto-send after 5s of no new transcripts
-                        startSilenceChecking();
-                    }
+                // In hands-free mode, stop any existing silence checking when new speech arrives
+                // We'll restart it after processing if this is a TRANSCRIBE action
+                if (conversationMode && conversationMode.handsFreeModeEnabled && silenceCheckingService) {
+                    silenceCheckingService.stop();
                 }
 
                 // Process transcript using TranscriptProcessor
@@ -201,6 +191,19 @@ export function initializeVoiceRecognition() {
                     chatInput.value += ' ' + transcript;
                 } else {
                     chatInput.value = transcript;
+                }
+
+                // Now start silence checking - only for TRANSCRIBE actions (text added to input)
+                // This ensures we don't start checking for WAKE/SLEEP/PAUSE/etc. commands
+                if (conversationMode && conversationMode.handsFreeModeEnabled) {
+                    const silenceDetector = conversationModeModule?.getSilenceDetector?.();
+                    if (silenceDetector) {
+                        // Record this moment as when speech ended
+                        silenceDetector.onSpeechStart();
+                        silenceDetector.onSpeechEnd();
+                        console.log('[Hands-free] Text added to input, starting 5s silence countdown');
+                        startSilenceChecking();
+                    }
                 }
 
                 processedResultIndex = i + 1;

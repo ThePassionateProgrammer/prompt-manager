@@ -113,4 +113,100 @@ When facing a design challenge:
 
 ---
 
+## Domain/Infrastructure Separation for Real-Time Features
+
+**Pattern**: Separate pure domain logic from timing/polling infrastructure
+
+**When to Use**:
+- Features involving timers, intervals, or async operations
+- Logic that needs to be testable without real time passing
+- Real-time detection (silence, activity, timeouts)
+
+**Structure**:
+```
+Domain (Pure Logic)              Infrastructure (Timing)
+├── State tracking               ├── setInterval polling
+├── Threshold comparisons        ├── Event coordination
+├── isSomething() → boolean      ├── Callback invocation
+└── Testable with fake time      └── Starts/stops intervals
+```
+
+**Example: Silence Detection**
+```javascript
+// Domain: SilenceDetector (testable, no timers)
+class SilenceDetector {
+    onSpeechStart(timestamp) { this.speechActive = true; }
+    onSpeechEnd(timestamp) { this.speechActive = false; this.lastSpeechTime = timestamp; }
+    isSilent(currentTime) { return !this.speechActive && (currentTime - this.lastSpeechTime) >= threshold; }
+}
+
+// Infrastructure: SilenceCheckingService (handles timing)
+class SilenceCheckingService {
+    start(callback) { this.interval = setInterval(() => { if (detector.isSilent()) callback(); }, 100); }
+    stop() { clearInterval(this.interval); }
+}
+```
+
+**Benefits**:
+- Domain logic is trivially testable (pass fake timestamps)
+- Infrastructure is simple (just polling)
+- Debugging is clearer (domain or timing issue?)
+
+---
+
+## Interim Results for Continuous Activity Detection
+
+**Pattern**: Use interim events to detect ongoing activity when final events are delayed
+
+**Context**: Browser APIs often batch events. Chrome's speech recognition sends "final" results only at natural pauses—a user speaking for 10 seconds without pausing gets ONE final transcript.
+
+**Problem**: Naive activity detection misses ongoing activity between final events.
+
+**Solution**: Enable interim/partial events and treat ANY event as evidence of activity:
+
+```javascript
+recognition.interimResults = true;
+
+recognition.onresult = function(event) {
+    // ANY result = user is speaking
+    activityDetector.markActive();
+
+    // Only USE final results
+    if (result.isFinal) {
+        processTranscript(result);
+        activityDetector.markInactive();
+    }
+};
+```
+
+**Applies To**:
+- Speech recognition
+- Streaming APIs
+- Any event source with batching behavior
+
+---
+
+## Priority Ordering for Overlapping Detectors
+
+**Pattern**: Check more specific conditions before general ones
+
+**When**: Multiple patterns could match the same input, and one is a subset of another.
+
+**Example**: "amber" (wake) vs "sleep amber" (sleep)
+- User says "sleep amber"
+- If we check wake first: matches "amber" → WRONG
+- If we check sleep first: matches "sleep amber" → CORRECT
+
+```javascript
+detect(input) {
+    if (this.matchesSpecific(input)) return 'specific';  // Check first
+    if (this.matchesGeneral(input)) return 'general';    // Check second
+    return null;
+}
+```
+
+**General Rule**: Order from most-specific to least-specific.
+
+---
+
 *Update this file as you discover patterns that work well for your team and domain. Remove patterns that don't add value. Make it your own.*

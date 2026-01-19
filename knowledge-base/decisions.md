@@ -97,21 +97,50 @@ Start adding your decisions below:
 
 ---
 
-### [Your First Decision] - [Date]
+### Use Interim Results for Silence Detection - 2026-01-19
 
 **Context**
-[Why did you need to make this decision?]
+Hands-free mode needs to auto-send messages after the user stops speaking. Initial implementation used Chrome's "final" transcript events to start a silence countdown. Users reported messages sending while they were still speaking.
+
+**Root Cause Discovery**
+Chrome's webkitSpeechRecognition batches continuous speech into phrases, only sending "final" results at natural pauses. A user speaking for 10 seconds without pausing receives ONE final transcript. The silence timer started after that transcript and fired 8 seconds later—even though the user continued speaking.
 
 **Decision**
-[What did you choose to do?]
+Enable `interimResults = true` in speech recognition. Treat ANY result (interim or final) as evidence of ongoing speech, resetting the silence timer. Only process final results for actual transcription.
 
 **Alternatives Considered**
-- Option 1: [Description and why rejected]
+- **Longer timeout (15+ seconds):** Rejected because it makes the system feel sluggish
+- **Audio level detection:** Rejected because Web Speech API doesn't expose audio levels
+- **Speech-end event:** Rejected because Chrome's `onend` fires ~10 seconds after speech stops, not immediately
 
 **Consequences**
-- **Benefits:**
-- **Trade-offs:**
-- **Risks:**
+- **Benefits:** Accurate silence detection regardless of how Chrome batches transcripts. Natural feel—users can speak as long as they want.
+- **Trade-offs:** More frequent events to process (every ~100ms while speaking). Slightly more complex event handling.
+- **Risks:** None identified. Interim results are the intended API for this use case.
+
+**Status**
+Active
+
+---
+
+### Separate Domain Logic from Timing Infrastructure - 2026-01-19
+
+**Context**
+Silence detection requires both pure logic (has enough time passed?) and timing infrastructure (polling every 100ms). Initially combined in one class, making it hard to test without real timers.
+
+**Decision**
+Split into two classes:
+- `SilenceDetector` (domain): Pure logic with `onSpeechStart()`, `onSpeechEnd()`, `isSilent(timestamp)`. No timers. Testable by passing fake timestamps.
+- `SilenceCheckingService` (infrastructure): Manages setInterval, checks detector, invokes callback.
+
+**Alternatives Considered**
+- **Single class with mockable timer:** More complex testing setup, mixed responsibilities
+- **Event-based approach:** Overkill for simple polling, adds unnecessary abstraction
+
+**Consequences**
+- **Benefits:** Domain logic has 100% test coverage with simple unit tests. Timing bugs are isolated to one small file. Clear separation of concerns.
+- **Trade-offs:** Two files instead of one. Requires understanding both to see full picture.
+- **Risks:** None. Pattern is well-established (Repository pattern applies same principle to data access).
 
 **Status**
 Active

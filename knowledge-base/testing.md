@@ -139,4 +139,41 @@ If testing feels difficult, your code might be:
 
 ---
 
+## Debugging with Timestamps
+
+When debugging timing-related issues (async, events, timeouts), add timestamps to trace the actual flow:
+
+**Pattern**: Log timestamps at key points, then analyze the gaps
+
+```javascript
+console.log('[Feature] Event A at', Date.now());
+// ... later ...
+console.log('[Feature] Event B at', Date.now());
+```
+
+**Analysis**:
+```
+Event A at 1768849318117
+Event B at 1768849326118  ← 8 seconds gap, expected was 5
+```
+
+**Key Insight**: The problem is often not your code—it's understanding when external systems send events. Log timestamps to discover actual behavior vs assumed behavior.
+
+**Example Discovery**: Chrome's speech recognition sends "final" transcripts at natural pauses, not continuously. Timestamps revealed 10-second gaps between transcripts during continuous speech.
+
+---
+
+## Browser API Behavior Discovery
+
+Browser APIs often behave differently than documentation suggests. When debugging:
+
+1. **Don't trust assumptions** - Log actual event timing
+2. **Read between the lines** - "Continuous" recognition may still batch results
+3. **Enable all events** - Interim/partial events reveal hidden activity
+4. **Test edge cases** - What happens during rapid speech? Long pauses? Interruptions?
+
+**Example**: `webkitSpeechRecognition` with `continuous: true` still only sends final results at phrase boundaries—not after every word.
+
+---
+
 *Testing is a skill that improves with practice. Start simple, stay disciplined with the red-green-refactor cycle, and let tests guide you toward better design.*

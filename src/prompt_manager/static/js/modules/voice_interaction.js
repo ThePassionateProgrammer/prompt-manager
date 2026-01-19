@@ -274,14 +274,13 @@ function startSilenceChecking() {
         return;
     }
 
-    // Define callback for silence detection (10 seconds triggers auto-send)
+    // Define callback for silence detection (triggers auto-send)
     const onSilenceDetected = () => {
-        console.log('[Hands-free] 10 seconds of silence detected! Auto-sending message...');
+        console.log('[Hands-free] Silence threshold exceeded - auto-sending message...');
         const chatInput = document.getElementById('chat-input');
         if (chatInput && chatInput.value.trim()) {
             console.log('[Hands-free] Message content:', chatInput.value.trim());
-            // Notify state machine, then click send button
-            conversationMode.onSilenceDetected();
+            // Just click send button - sendMessage() handles state transition
             const sendBtn = document.getElementById('send-btn');
             if (sendBtn) {
                 sendBtn.click();

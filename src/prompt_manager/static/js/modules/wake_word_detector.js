@@ -70,10 +70,18 @@ export class WakeWordDetector {
         }
 
         // Check against all wake words
+        // Match if transcript IS the wake word OR ENDS WITH the wake word (with word boundary)
+        // This allows "okay hey amber" but not "hey amber is here" or "hey-amber"
         return this.wakeWords.some(word => {
             const normalizedWake = this._normalize(word);
-            // Exact match only (per requirements)
-            return normalized === normalizedWake;
+            if (normalized === normalizedWake) {
+                return true;
+            }
+            // Check if ends with wake word preceded by space (word boundary)
+            if (normalized.endsWith(' ' + normalizedWake)) {
+                return true;
+            }
+            return false;
         });
     }
 
@@ -90,10 +98,18 @@ export class WakeWordDetector {
         }
 
         // Check against all sleep words
+        // Match if transcript IS the sleep word OR ENDS WITH the sleep word (with word boundary)
+        // This allows "thank you sleep amber" but not "sleep amber is here"
         return this.sleepWords.some(word => {
             const normalizedSleep = this._normalize(word);
-            // Exact match only (per requirements)
-            return normalized === normalizedSleep;
+            if (normalized === normalizedSleep) {
+                return true;
+            }
+            // Check if ends with sleep word preceded by space (word boundary)
+            if (normalized.endsWith(' ' + normalizedSleep)) {
+                return true;
+            }
+            return false;
         });
     }
 
@@ -103,12 +119,14 @@ export class WakeWordDetector {
      * @returns {Object} Detection result: { type: 'wake'|'sleep'|null, matched: boolean }
      */
     detect(transcript) {
-        if (this.detectWakeWord(transcript)) {
-            return { type: 'wake', matched: true };
-        }
-
+        // Check sleep words FIRST - they are typically more specific
+        // (e.g., "sleep amber" should match sleep, not wake for "amber")
         if (this.detectSleepWord(transcript)) {
             return { type: 'sleep', matched: true };
+        }
+
+        if (this.detectWakeWord(transcript)) {
+            return { type: 'wake', matched: true };
         }
 
         return { type: null, matched: false };

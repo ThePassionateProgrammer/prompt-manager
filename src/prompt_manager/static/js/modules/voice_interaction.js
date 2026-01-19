@@ -104,12 +104,17 @@ export function initializeVoiceRecognition() {
             if (result.isFinal) {
                 const transcript = result[0].transcript;
 
-                // Mark speech start when we receive actual speech
+                // In hands-free mode, track silence from when we receive final transcripts
+                // (not from when Chrome's recognition ends, which takes ~10 seconds)
                 if (conversationMode && conversationMode.handsFreeModeEnabled) {
                     const silenceDetector = conversationModeModule?.getSilenceDetector?.();
                     if (silenceDetector) {
-                        silenceDetector.onSpeechStart();
-                        console.log('[Hands-free] Speech detected, resetting silence timer');
+                        // Mark speech end immediately after receiving final transcript
+                        // This starts the silence timer from NOW, not from when Chrome fires onend
+                        silenceDetector.onSpeechEnd();
+                        console.log('[Hands-free] Final transcript received, starting silence timer');
+                        // Start silence checking immediately
+                        startSilenceChecking();
                     }
                 }
 
@@ -226,17 +231,9 @@ export function initializeVoiceRecognition() {
 
     voiceRecognition.onend = function() {
         console.log('[Hands-free] Voice recognition ended, state:', conversationMode?.state);
-        // Track speech end for silence detection
-        if (conversationMode && conversationMode.handsFreeModeEnabled) {
-            console.log('[Hands-free] Hands-free mode enabled, tracking silence');
-            const silenceDetector = conversationModeModule?.getSilenceDetector?.();
-            if (silenceDetector) {
-                silenceDetector.onSpeechEnd();
-                console.log('[Hands-free] Speech ended, starting silence checking...');
-                // Start checking for silence threshold
-                startSilenceChecking();
-            }
-        }
+        // Note: Silence detection is now handled in onresult when we receive final transcripts.
+        // This gives us accurate timing (5 seconds after speech ends) instead of waiting
+        // for Chrome's recognition timeout (~10 seconds) plus our threshold.
 
         // In conversation mode, don't auto-stop - let user control with mic/send buttons
         if (!conversationMode.isActive) {
@@ -314,12 +311,17 @@ export function stopSilenceChecking() {
 export function toggleVoiceInput() {
     // In conversation mode, mic button pauses/resumes listening
     if (conversationMode.isActive) {
-        if (isListening) {
+        // Can only pause from LISTENING state (not WAKE_LISTENING - need to say sleep word)
+        if (isListening && conversationMode.state === 'LISTENING') {
             conversationMode.pauseListening();
             stopListening();
         } else if (conversationMode.state === 'PAUSED') {
             conversationMode.resumeListening();
             startListening();
+        } else if (conversationMode.state === 'WAKE_LISTENING') {
+            // In hands-free WAKE_LISTENING state, mic click has no effect
+            // User should say sleep word to exit hands-free mode
+            console.log('[Hands-free] In WAKE_LISTENING state - say sleep word to exit');
         }
     } else {
         // Manual mode

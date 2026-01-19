@@ -94,10 +94,19 @@ describe('WakeWordDetector', () => {
             expect(multiDetector.detectWakeWord('hey amber')).toBe(true);
             expect(multiDetector.detectWakeWord('hi amber')).toBe(true);
             expect(multiDetector.detectWakeWord('amber')).toBe(true);
-            expect(multiDetector.detectWakeWord('hello amber')).toBe(false);
+            // "hello amber" now matches because it ends with " amber" (a wake word)
+            expect(multiDetector.detectWakeWord('hello amber')).toBe(true);
+            // But "hello amber time" should not match (wake word not at end)
+            expect(multiDetector.detectWakeWord('hello amber time')).toBe(false);
         });
 
-        it('should return false for wake word as part of larger sentence', () => {
+        it('should return true for wake word at end of sentence', () => {
+            expect(detector.detectWakeWord('okay hey amber')).toBe(true);
+            expect(detector.detectWakeWord('alright, hey amber')).toBe(true);
+        });
+
+        it('should return false for wake word at start/middle of sentence', () => {
+            expect(detector.detectWakeWord('hey amber said hello')).toBe(false);
             expect(detector.detectWakeWord('I said hey amber yesterday')).toBe(false);
         });
 
@@ -155,7 +164,13 @@ describe('WakeWordDetector', () => {
             expect(detector.detectSleepWord('amber')).toBe(false);
         });
 
-        it('should return false for sleep word as part of larger sentence', () => {
+        it('should return true for sleep word at end of sentence', () => {
+            expect(detector.detectSleepWord('thank you sleep amber')).toBe(true);
+            expect(detector.detectSleepWord('okay, goodbye amber')).toBe(true);
+        });
+
+        it('should return false for sleep word at start/middle of sentence', () => {
+            expect(detector.detectSleepWord('sleep amber is what I need')).toBe(false);
             expect(detector.detectSleepWord('I need sleep amber is tired')).toBe(false);
         });
 
@@ -185,13 +200,15 @@ describe('WakeWordDetector', () => {
             expect(result).toEqual({ type: null, matched: false });
         });
 
-        it('should prioritize wake word over sleep word if both somehow match', () => {
+        it('should prioritize sleep word over wake word if both match', () => {
+            // Sleep words are checked first because they're typically more specific
+            // (e.g., "sleep amber" should match sleep, not wake for just "amber")
             const detector = new WakeWordDetector({
                 wakeWord: 'test',
                 sleepWord: 'test'
             });
             const result = detector.detect('test');
-            expect(result.type).toBe('wake');
+            expect(result.type).toBe('sleep');
         });
     });
 

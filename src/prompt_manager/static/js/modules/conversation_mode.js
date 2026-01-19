@@ -141,7 +141,7 @@ const conversationMode = {
     },
 
     shouldBeListening() {
-        return this.state === 'LISTENING';
+        return this.state === 'LISTENING' || this.state === 'WAKE_LISTENING';
     },
 
     shouldAutoPlay() {

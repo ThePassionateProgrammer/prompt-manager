@@ -85,37 +85,37 @@ describe('SilenceDetector', () => {
         it('should return false before threshold is exceeded', () => {
             const startTime = 1000;
             detector.onSpeechEnd(startTime);
-            // Threshold is 10 seconds (10000ms)
-            expect(detector.isSilent(startTime + 9999)).toBe(false);
+            // Threshold is 5 seconds (5000ms)
+            expect(detector.isSilent(startTime + 4999)).toBe(false);
         });
 
         it('should return true when threshold is exceeded', () => {
             const startTime = 1000;
             detector.onSpeechEnd(startTime);
-            // Threshold is 10 seconds (10000ms)
-            expect(detector.isSilent(startTime + 10000)).toBe(true);
+            // Threshold is 5 seconds (5000ms)
+            expect(detector.isSilent(startTime + 5000)).toBe(true);
         });
 
         it('should return true when well past threshold', () => {
             const startTime = 1000;
             detector.onSpeechEnd(startTime);
-            expect(detector.isSilent(startTime + 15000)).toBe(true);
+            expect(detector.isSilent(startTime + 10000)).toBe(true);
         });
 
         it('should use current time if no timestamp provided', () => {
-            // Set speech end to 11 seconds ago (past 10 second threshold)
-            detector.onSpeechEnd(Date.now() - 11000);
+            // Set speech end to 6 seconds ago (past 5 second threshold)
+            detector.onSpeechEnd(Date.now() - 6000);
             expect(detector.isSilent()).toBe(true);
         });
 
         it('should reset when speech starts again', () => {
             const startTime = 1000;
             detector.onSpeechEnd(startTime);
-            // Threshold is 10 seconds
-            expect(detector.isSilent(startTime + 10000)).toBe(true);
+            // Threshold is 5 seconds
+            expect(detector.isSilent(startTime + 5000)).toBe(true);
 
-            detector.onSpeechStart(startTime + 10100);
-            expect(detector.isSilent(startTime + 10100)).toBe(false);
+            detector.onSpeechStart(startTime + 5100);
+            expect(detector.isSilent(startTime + 5100)).toBe(false);
         });
 
         it('should handle custom silence threshold', () => {
@@ -170,10 +170,10 @@ describe('SilenceDetector', () => {
 
         it('should make isSilent return false after reset', () => {
             detector.onSpeechEnd(1000);
-            // 10 second threshold: 1000 + 10000 = 11000
-            expect(detector.isSilent(11000)).toBe(true);
+            // 5 second threshold: 1000 + 5000 = 6000
+            expect(detector.isSilent(6000)).toBe(true);
             detector.reset();
-            expect(detector.isSilent(11000)).toBe(false);
+            expect(detector.isSilent(6000)).toBe(false);
         });
 
         it('should make getSilenceDuration return 0 after reset', () => {
@@ -187,15 +187,15 @@ describe('SilenceDetector', () => {
     describe('Edge Cases', () => {
         it('should handle timestamp of 0', () => {
             detector.onSpeechEnd(0);
-            // 10 second threshold
-            expect(detector.isSilent(10000)).toBe(true);
+            // 5 second threshold
+            expect(detector.isSilent(5000)).toBe(true);
         });
 
         it('should handle very large timestamps', () => {
             const largeTime = Number.MAX_SAFE_INTEGER - 20000;
             detector.onSpeechEnd(largeTime);
-            // 10 second threshold
-            expect(detector.isSilent(largeTime + 10000)).toBe(true);
+            // 5 second threshold
+            expect(detector.isSilent(largeTime + 5000)).toBe(true);
         });
 
         it('should handle negative silence duration gracefully', () => {

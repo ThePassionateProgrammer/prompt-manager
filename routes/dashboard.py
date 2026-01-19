@@ -442,12 +442,41 @@ def search_conversations():
     """Search conversations."""
     try:
         query = request.args.get('q', '')
-        
+
         if not query:
             return jsonify({'error': 'Query parameter required'}), 400
-        
+
         results = conversation_manager.search_conversations(query)
-        
+
         return jsonify({'conversations': results})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@dashboard_bp.route('/api/settings/hands-free', methods=['GET', 'POST'])
+def hands_free_settings():
+    """Get or update hands-free mode settings."""
+    if request.method == 'GET':
+        settings = settings_manager.get_all_settings()
+        hands_free = settings.get('hands_free', {})
+        return jsonify({
+            'wake_words': hands_free.get('wake_words', ['hey amber', 'hi amber', 'amber']),
+            'sleep_words': hands_free.get('sleep_words', ['sleep amber', 'goodbye amber', 'stop']),
+            'auto_send_timeout': hands_free.get('silence_timeout_seconds', 5)
+        })
+    else:
+        data = request.get_json()
+        settings = settings_manager.get_all_settings()
+        hands_free = settings.get('hands_free', {})
+
+        if 'wake_words' in data:
+            hands_free['wake_words'] = data['wake_words']
+        if 'sleep_words' in data:
+            hands_free['sleep_words'] = data['sleep_words']
+        if 'auto_send_timeout' in data:
+            hands_free['silence_timeout_seconds'] = data['auto_send_timeout']
+
+        settings['hands_free'] = hands_free
+        settings_manager.update_settings(settings)
+
+        return jsonify({'message': 'Hands-free settings saved successfully'})

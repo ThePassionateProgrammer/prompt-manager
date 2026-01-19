@@ -3,5 +3,10 @@
   "default_provider": "ollama",
   "default_model": "gemma3:4b",
   "temperature": 1.0,
-  "max_tokens": 3000
+  "max_tokens": 3000,
+  "hands_free": {
+    "wake_words": ["hey amber", "hi amber", "amber"],
+    "sleep_words": ["sleep amber", "goodbye amber", "stop"],
+    "silence_timeout_seconds": 5
+  }
 }

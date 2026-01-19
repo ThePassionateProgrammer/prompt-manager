@@ -100,10 +100,8 @@ export function initializeVoiceRecognition() {
         if (conversationMode && conversationMode.handsFreeModeEnabled) {
             const silenceDetector = conversationModeModule?.getSilenceDetector?.();
             if (silenceDetector) {
-                const now = Date.now();
                 // Mark speech as active - this resets the silence countdown
-                silenceDetector.onSpeechStart(now);
-                console.log('[Hands-free] Speech detected (interim/final result) at', now);
+                silenceDetector.onSpeechStart(Date.now());
             }
         }
 
@@ -205,17 +203,14 @@ export function initializeVoiceRecognition() {
                     chatInput.value = transcript;
                 }
 
-                // Now start silence checking - only for TRANSCRIBE actions (text added to input)
-                // This ensures we don't start checking for WAKE/SLEEP/PAUSE/etc. commands
+                // Start silence checking for TRANSCRIBE actions (text added to input)
+                // Mark speech as ended - countdown starts from this moment
+                // If interim results arrive, onSpeechStart will be called above,
+                // which prevents isSilent() from returning true
                 if (conversationMode && conversationMode.handsFreeModeEnabled) {
                     const silenceDetector = conversationModeModule?.getSilenceDetector?.();
                     if (silenceDetector) {
-                        // Mark speech as ended - countdown starts from this moment
-                        // If interim results arrive, onSpeechStart will be called above,
-                        // which prevents isSilent() from returning true
-                        const now = Date.now();
-                        silenceDetector.onSpeechEnd(now);
-                        console.log('[Hands-free] Final transcript received at', now, '- silence countdown starts');
+                        silenceDetector.onSpeechEnd(Date.now());
                         startSilenceChecking();
                     }
                 }
@@ -318,7 +313,6 @@ function startSilenceChecking() {
 export function stopSilenceChecking() {
     if (silenceCheckingService) {
         silenceCheckingService.stop();
-        console.log('[Hands-free] Silence checking stopped');
     }
 }
 

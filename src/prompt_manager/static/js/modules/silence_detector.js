@@ -2,7 +2,7 @@
  * Silence Detector - Pure domain logic for detecting silence after speech
  *
  * Tracks when speech starts and ends, and determines if silence has exceeded
- * a configurable threshold (e.g., 3 seconds).
+ * a configurable threshold (default 8 seconds for hands-free auto-send).
  *
  * This is a pure domain model with no browser API dependencies.
  */
@@ -68,15 +68,9 @@ export class SilenceDetector {
         // Calculate elapsed time since last speech
         const elapsed = currentTime - this.lastSpeechTime;
         const threshold = this.getSilenceThreshold();
-        const isSilent = elapsed >= threshold;
 
-        // Debug logging
-        if (isSilent) {
-            console.log('[SilenceDetector] isSilent check: elapsed=', elapsed, 'threshold=', threshold, 'lastSpeechTime=', this.lastSpeechTime, 'now=', currentTime);
-        }
-
-        // Check if silence threshold exceeded (use dynamic threshold)
-        return isSilent;
+        // Check if silence threshold exceeded
+        return elapsed >= threshold;
     }
 
     /**

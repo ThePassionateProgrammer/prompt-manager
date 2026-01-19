@@ -2,7 +2,8 @@
  * Silence Checking Service
  *
  * Manages interval-based checking for silence detection in hands-free mode.
- * When silence threshold (10 seconds) is exceeded, triggers auto-send.
+ * When silence threshold is exceeded (configurable, default 8 seconds),
+ * triggers auto-send of the message.
  *
  * This service follows the Single Responsibility Principle by handling
  * only the timing and coordination aspects, delegating silence detection
@@ -30,7 +31,7 @@ export class SilenceCheckingService {
 
     /**
      * Start checking for silence
-     * @param {Function} onSilenceDetected - Callback when silence threshold (10s) exceeded
+     * @param {Function} onSilenceDetected - Callback when silence threshold exceeded
      */
     start(onSilenceDetected) {
         // Don't start multiple intervals

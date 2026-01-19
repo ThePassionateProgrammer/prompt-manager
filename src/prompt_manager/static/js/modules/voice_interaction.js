@@ -104,16 +104,18 @@ export function initializeVoiceRecognition() {
             if (result.isFinal) {
                 const transcript = result[0].transcript;
 
-                // In hands-free mode, track silence from when we receive final transcripts
-                // (not from when Chrome's recognition ends, which takes ~10 seconds)
+                // In hands-free mode, track silence from this moment
+                // Each final transcript = user finished a phrase, start 5s countdown
+                // If user speaks again (new transcript), this resets the timer
                 if (conversationMode && conversationMode.handsFreeModeEnabled) {
                     const silenceDetector = conversationModeModule?.getSilenceDetector?.();
                     if (silenceDetector) {
-                        // Mark speech end immediately after receiving final transcript
-                        // This starts the silence timer from NOW, not from when Chrome fires onend
+                        // Record this moment as when speech ended (for this phrase)
+                        // onSpeechStart sets timestamp, onSpeechEnd allows isSilent() to work
+                        silenceDetector.onSpeechStart();
                         silenceDetector.onSpeechEnd();
-                        console.log('[Hands-free] Final transcript received, starting silence timer');
-                        // Start silence checking immediately
+                        console.log('[Hands-free] Final transcript received, starting 5s silence countdown');
+                        // Start checking immediately - triggers auto-send after 5s of no new transcripts
                         startSilenceChecking();
                     }
                 }
@@ -231,9 +233,9 @@ export function initializeVoiceRecognition() {
 
     voiceRecognition.onend = function() {
         console.log('[Hands-free] Voice recognition ended, state:', conversationMode?.state);
-        // Note: Silence detection is now handled in onresult when we receive final transcripts.
-        // This gives us accurate timing (5 seconds after speech ends) instead of waiting
-        // for Chrome's recognition timeout (~10 seconds) plus our threshold.
+        // Note: Silence checking is started in onresult after each final transcript.
+        // This gives accurate 5-second timing from when user actually stopped speaking,
+        // not from when Chrome's recognition session ends (~10s later).
 
         // In conversation mode, don't auto-stop - let user control with mic/send buttons
         if (!conversationMode.isActive) {

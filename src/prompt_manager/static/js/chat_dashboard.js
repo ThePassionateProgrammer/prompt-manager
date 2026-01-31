@@ -115,6 +115,7 @@ function setupEventListeners() {
     document.getElementById('chat-history-btn').addEventListener('click', openHistoryModal);
     document.getElementById('regenerate-btn').addEventListener('click', regenerateLastResponse);
     document.getElementById('save-prompt-btn').addEventListener('click', openSaveConvModal);
+    document.getElementById('voice-settings-btn').addEventListener('click', openVoiceSettingsModal);
 
     // Auto-save settings when they change
     document.getElementById('provider-select').addEventListener('change', saveDashboardSettings);
@@ -1091,6 +1092,43 @@ async function saveConversationWithTitle() {
     }
 }
 
+// Voice Settings Modal Functions
+let voiceSettingsPanelCreated = false;
+
+function openVoiceSettingsModal() {
+    const modal = document.getElementById('voice-settings-modal');
+    const container = document.getElementById('voice-settings-container');
+
+    // Create the settings panel if not already created
+    if (!voiceSettingsPanelCreated) {
+        const panel = VoiceSettings.createSettingsPanel();
+
+        // Add close button to panel
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'voice-settings-close';
+        closeBtn.innerHTML = '×';
+        closeBtn.onclick = closeVoiceSettingsModal;
+        panel.insertBefore(closeBtn, panel.firstChild);
+
+        container.appendChild(panel);
+        voiceSettingsPanelCreated = true;
+    }
+
+    modal.classList.remove('hidden');
+
+    // Close on backdrop click
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            closeVoiceSettingsModal();
+        }
+    };
+}
+
+function closeVoiceSettingsModal() {
+    const modal = document.getElementById('voice-settings-modal');
+    modal.classList.add('hidden');
+}
+
 // Module Wrapper Functions (for HTML onclick handlers and event listeners)
 // Actual implementations are in modules/
 
@@ -1124,3 +1162,5 @@ window.saveChatHistory = saveChatHistory;
 window.loadConversationFromHistory = loadConversationFromHistory;
 window.deleteConversationFromHistory = deleteConversationFromHistory;
 window.playMessage = playMessage;
+window.openVoiceSettingsModal = openVoiceSettingsModal;
+window.closeVoiceSettingsModal = closeVoiceSettingsModal;

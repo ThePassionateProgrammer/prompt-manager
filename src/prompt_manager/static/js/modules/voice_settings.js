@@ -315,7 +315,86 @@ function setupSettingsListeners(panel) {
 }
 
 /**
+ * Check if a voice is high-quality (enhanced, premium, or neural).
+ *
+ * @param {SpeechSynthesisVoice} voice - Voice to check
+ * @returns {boolean} True if voice is high-quality
+ */
+function isHighQualityVoice(voice) {
+    const name = voice.name.toLowerCase();
+    const indicators = [
+        'enhanced', 'premium', 'neural', 'natural',
+        'wavenet', 'studio', 'online', 'compact'
+    ];
+    return indicators.some(indicator => name.includes(indicator));
+}
+
+/**
+ * Get a quality label for a voice.
+ *
+ * @param {SpeechSynthesisVoice} voice - Voice to check
+ * @returns {string} Quality indicator string
+ */
+function getVoiceQualityLabel(voice) {
+    const name = voice.name.toLowerCase();
+    if (name.includes('neural') || name.includes('wavenet')) return '✨ Neural';
+    if (name.includes('enhanced') || name.includes('premium')) return '⭐ Enhanced';
+    if (name.includes('natural')) return '🎯 Natural';
+    if (voice.localService === false) return '☁️ Cloud';
+    return '';
+}
+
+/**
+ * Group voices by language.
+ *
+ * @param {Array<SpeechSynthesisVoice>} voices - Array of voices
+ * @returns {Object} Voices grouped by language code
+ */
+function groupVoicesByLanguage(voices) {
+    const groups = {};
+    voices.forEach(voice => {
+        const langCode = voice.lang.split('-')[0]; // 'en-US' -> 'en'
+        if (!groups[langCode]) {
+            groups[langCode] = [];
+        }
+        groups[langCode].push(voice);
+    });
+    return groups;
+}
+
+/**
+ * Get language display name from code.
+ *
+ * @param {string} langCode - Language code (e.g., 'en')
+ * @returns {string} Display name
+ */
+function getLanguageDisplayName(langCode) {
+    const names = {
+        'en': 'English',
+        'es': 'Spanish',
+        'fr': 'French',
+        'de': 'German',
+        'it': 'Italian',
+        'pt': 'Portuguese',
+        'ja': 'Japanese',
+        'zh': 'Chinese',
+        'ko': 'Korean',
+        'ru': 'Russian',
+        'ar': 'Arabic',
+        'hi': 'Hindi',
+        'nl': 'Dutch',
+        'pl': 'Polish',
+        'sv': 'Swedish',
+        'da': 'Danish',
+        'no': 'Norwegian',
+        'fi': 'Finnish'
+    };
+    return names[langCode] || langCode.toUpperCase();
+}
+
+/**
  * Load available voices into the voice select dropdown.
+ * Groups voices by language and highlights high-quality voices.
  *
  * @param {HTMLElement} panel - Settings panel element
  */
@@ -323,17 +402,57 @@ async function loadVoicesIntoSelect(panel) {
     const voiceSelect = panel.querySelector('#tts-voice');
     const voices = await getAvailableVoices();
 
-    // Clear existing options except default
-    voiceSelect.innerHTML = '<option value="">Default</option>';
+    // Clear existing options
+    voiceSelect.innerHTML = '<option value="">System Default</option>';
 
-    // Add voices
-    voices.forEach(voice => {
-        const option = document.createElement('option');
-        option.value = voice.name;
-        option.textContent = `${voice.name} (${voice.lang})`;
-        if (voice.name === settings.tts.voice) {
-            option.selected = true;
-        }
-        voiceSelect.appendChild(option);
+    // Sort voices: high-quality first, then alphabetically by name
+    const sortedVoices = [...voices].sort((a, b) => {
+        const aHQ = isHighQualityVoice(a);
+        const bHQ = isHighQualityVoice(b);
+        if (aHQ && !bHQ) return -1;
+        if (!aHQ && bHQ) return 1;
+        return a.name.localeCompare(b.name);
+    });
+
+    // Group by language
+    const grouped = groupVoicesByLanguage(sortedVoices);
+
+    // Add high-quality voices first as a special group
+    const highQualityVoices = sortedVoices.filter(isHighQualityVoice);
+    if (highQualityVoices.length > 0) {
+        const hqGroup = document.createElement('optgroup');
+        hqGroup.label = '⭐ High Quality Voices';
+        highQualityVoices.forEach(voice => {
+            const option = document.createElement('option');
+            option.value = voice.name;
+            const qualityLabel = getVoiceQualityLabel(voice);
+            option.textContent = `${voice.name} (${voice.lang}) ${qualityLabel}`;
+            if (voice.name === settings.tts.voice) {
+                option.selected = true;
+            }
+            hqGroup.appendChild(option);
+        });
+        voiceSelect.appendChild(hqGroup);
+    }
+
+    // Add remaining voices grouped by language
+    Object.keys(grouped).sort().forEach(langCode => {
+        const langVoices = grouped[langCode].filter(v => !isHighQualityVoice(v));
+        if (langVoices.length === 0) return;
+
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = getLanguageDisplayName(langCode);
+
+        langVoices.forEach(voice => {
+            const option = document.createElement('option');
+            option.value = voice.name;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            if (voice.name === settings.tts.voice) {
+                option.selected = true;
+            }
+            optgroup.appendChild(option);
+        });
+
+        voiceSelect.appendChild(optgroup);
     });
 }

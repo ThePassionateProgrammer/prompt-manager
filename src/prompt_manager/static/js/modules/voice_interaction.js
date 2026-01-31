@@ -15,6 +15,7 @@ import { VoiceCommandDetector } from './voice_command_detector.js';
 import { CommandDetector } from './command_detector.js';
 import { TranscriptProcessor } from './transcript_processor.js';
 import { SilenceCheckingService } from './silence_checking_service.js';
+import * as VoiceSettings from './voice_settings.js';
 
 // Voice interaction state
 let voiceRecognition = null;
@@ -90,7 +91,9 @@ export function initializeVoiceRecognition() {
     voiceRecognition = new SpeechRecognition();
     voiceRecognition.continuous = false;
     voiceRecognition.interimResults = true;  // Enable interim results to detect ongoing speech
-    voiceRecognition.lang = 'en-US';
+
+    // Apply user's STT settings
+    VoiceSettings.applySTTSettings(voiceRecognition);
 
     voiceRecognition.onresult = function(event) {
         const chatInput = document.getElementById('chat-input');
@@ -415,11 +418,12 @@ export function stopListening() {
 /**
  * Speak text using text-to-speech.
  * Can be stopped by calling again (toggle behavior).
+ * Uses voice settings from VoiceSettings module.
  *
  * @param {string} text - Text to speak
  * @param {HTMLElement} button - Play button element (optional)
  */
-export function speakText(text, button) {
+export async function speakText(text, button) {
     if (!voiceSynthesis) {
         showNotification('Text-to-speech not supported in this browser', 'error');
         return;
@@ -435,10 +439,9 @@ export function speakText(text, button) {
     voiceSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-    utterance.lang = 'en-US';
+
+    // Apply user's voice settings
+    await VoiceSettings.applyTTSSettings(utterance);
 
     utterance.onstart = function() {
         isSpeaking = true;
@@ -504,10 +507,11 @@ export function playMessage(button) {
 /**
  * Auto-play response in conversation mode.
  * Automatically restarts listening after playback finishes.
+ * Uses voice settings from VoiceSettings module.
  *
  * @param {string} text - Response text to speak
  */
-export function autoPlayResponse(text) {
+export async function autoPlayResponse(text) {
     // Auto-play response in conversation mode
     if (!voiceSynthesis) {
         console.error('Text-to-speech not supported');
@@ -523,10 +527,9 @@ export function autoPlayResponse(text) {
     voiceSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-    utterance.lang = 'en-US';
+
+    // Apply user's voice settings
+    await VoiceSettings.applyTTSSettings(utterance);
 
     utterance.onstart = function() {
         isSpeaking = true;

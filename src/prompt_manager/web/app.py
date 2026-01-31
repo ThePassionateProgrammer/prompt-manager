@@ -14,19 +14,28 @@ from src.prompt_manager.web.services.port_service import PortService
 def create_app():
     """Create and configure the Flask application."""
     import os
-    
+    import warnings
+
     # Set template directory
     template_dir = os.path.join(os.path.dirname(__file__), '..', 'templates')
     app = Flask(__name__, template_folder=template_dir)
-    
+
     # Register blueprints
     app.register_blueprint(prompt_bp)
     app.register_blueprint(template_bp)
     app.register_blueprint(custom_combo_bp)
-    
-    # Configuration
-    app.config['SECRET_KEY'] = 'your-secret-key-here'  # In production, use environment variable
-    
+
+    # Load SECRET_KEY from environment variable, with fallback for development
+    secret_key = os.environ.get('FLASK_SECRET_KEY')
+    if not secret_key:
+        warnings.warn(
+            "FLASK_SECRET_KEY not set. Using development key. "
+            "Set FLASK_SECRET_KEY environment variable for production.",
+            RuntimeWarning
+        )
+        secret_key = 'dev-only-not-for-production'
+    app.config['SECRET_KEY'] = secret_key
+
     return app
 
 

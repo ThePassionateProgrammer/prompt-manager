@@ -5,6 +5,8 @@ Prompt Manager - Main Application Entry Point
 A clean, modular prompt management system with template building and linkage capabilities.
 """
 
+import os
+import warnings
 from flask import Flask
 from src.prompt_manager.prompt_manager import PromptManager
 from src.prompt_manager.business.custom_combo_box_integration import CustomComboBoxIntegration
@@ -12,10 +14,20 @@ from src.prompt_manager.template_service import TemplateService
 
 def create_app():
     """Create and configure the Flask application."""
-    app = Flask(__name__, 
+    app = Flask(__name__,
                template_folder='src/prompt_manager/templates',
                static_folder='src/prompt_manager/static')
-    app.secret_key = 'your-secret-key-here'
+
+    # Load SECRET_KEY from environment variable, with fallback for development
+    secret_key = os.environ.get('FLASK_SECRET_KEY')
+    if not secret_key:
+        warnings.warn(
+            "FLASK_SECRET_KEY not set. Using development key. "
+            "Set FLASK_SECRET_KEY environment variable for production.",
+            RuntimeWarning
+        )
+        secret_key = 'dev-only-not-for-production'
+    app.secret_key = secret_key
     
     # Initialize services
     app.config['MANAGER'] = PromptManager()

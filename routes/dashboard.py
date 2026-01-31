@@ -226,6 +226,9 @@ def send_chat_message():
         service = current_app.config.get('CHAT_SERVICE', chat_service)
 
         data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+
         message = data.get('message')
         provider_name = data.get('provider', 'openai')
         model = data.get('model', 'gpt-3.5-turbo')
@@ -235,11 +238,34 @@ def send_chat_message():
         system_prompt = data.get('system_prompt', DEFAULT_SYSTEM_PROMPT)
         auto_trim = data.get('auto_trim', False)
 
+        # Input validation
+        if not message or not isinstance(message, str):
+            return jsonify({'error': 'Message is required and must be a string'}), 400
+
+        # Validate temperature (0.0 to 2.0)
+        try:
+            temperature = float(temperature)
+            if not 0.0 <= temperature <= 2.0:
+                return jsonify({'error': 'Temperature must be between 0.0 and 2.0'}), 400
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Temperature must be a number'}), 400
+
+        # Validate max_tokens (positive integer, reasonable limit)
+        try:
+            max_tokens = int(max_tokens)
+            if not 1 <= max_tokens <= 128000:
+                return jsonify({'error': 'max_tokens must be between 1 and 128000'}), 400
+        except (TypeError, ValueError):
+            return jsonify({'error': 'max_tokens must be an integer'}), 400
+
+        # Validate provider and model names (basic sanitization)
+        if not isinstance(provider_name, str) or len(provider_name) > 50:
+            return jsonify({'error': 'Invalid provider name'}), 400
+        if not isinstance(model, str) or len(model) > 100:
+            return jsonify({'error': 'Invalid model name'}), 400
+
         # Debug logging
         print(f"[CHAT] Received request - Provider: {provider_name}, Model: {model}")
-
-        if not message:
-            return jsonify({'error': 'Message is required'}), 400
 
         # Use ChatService to handle business logic
         result = service.send_message(

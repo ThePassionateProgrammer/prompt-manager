@@ -5,6 +5,8 @@ Dashboard routes for the Prompt Manager application.
 from flask import Blueprint, request, jsonify, render_template
 from src.prompt_manager.business.llm_provider_manager import LLMProviderManager
 from src.prompt_manager.business.llm_provider import OpenAIProvider
+from src.prompt_manager.business.anthropic_provider import AnthropicProvider
+from src.prompt_manager.business.google_provider import GoogleProvider
 from src.prompt_manager.business.ollama_provider import OllamaProvider
 from src.prompt_manager.business.ollama_discovery import OllamaDiscovery
 from src.prompt_manager.business.key_loader import SecureKeyManager
@@ -40,11 +42,16 @@ def _initialize_providers():
             if provider_name.lower() == 'openai':
                 provider = OpenAIProvider(api_key=key_value)
                 provider_manager.add_provider('openai', provider)
+            elif provider_name.lower() == 'anthropic':
+                provider = AnthropicProvider(api_key=key_value)
+                provider_manager.add_provider('anthropic', provider)
+            elif provider_name.lower() == 'google':
+                provider = GoogleProvider(api_key=key_value)
+                provider_manager.add_provider('google', provider)
 
-                # Set as default if it's the first one
-                if provider_manager.default_provider is None:
-                    provider_manager.set_default_provider('openai')
-            # Add other providers here as we support them (anthropic, google, etc.)
+            # Set as default if it's the first one
+            if provider_manager.default_provider is None:
+                provider_manager.set_default_provider(provider_name.lower())
 
     # Always initialize Ollama provider (no API key needed for local)
     ollama_provider = OllamaProvider()
@@ -81,32 +88,39 @@ def add_provider():
         data = request.get_json()
         name = data.get('name')
         api_key = data.get('api_key')
-        
+
         if not name or not api_key:
             return jsonify({'error': 'Provider name and API key are required'}), 400
-        
-        # For now, only support OpenAI
-        if name.lower() != 'openai':
-            return jsonify({'error': 'Only OpenAI provider is currently supported'}), 400
-        
-        # Create the provider
-        provider = OpenAIProvider(api_key=api_key)
-        
+
+        name_lower = name.lower()
+
+        # Create provider based on type
+        if name_lower == 'openai':
+            provider = OpenAIProvider(api_key=api_key)
+        elif name_lower == 'anthropic':
+            provider = AnthropicProvider(api_key=api_key)
+        elif name_lower == 'google':
+            provider = GoogleProvider(api_key=api_key)
+        else:
+            return jsonify({
+                'error': f'Provider {name} not supported. Supported: openai, anthropic, google'
+            }), 400
+
         # Add to manager
-        provider_manager.add_provider(name, provider)
-        
+        provider_manager.add_provider(name_lower, provider)
+
         # Save the API key securely
         key_manager = SecureKeyManager()
-        key_manager.save_key(f'{name.lower()}_api_key', api_key)
-        
+        key_manager.save_key(f'{name_lower}_api_key', api_key)
+
         return jsonify({
             'message': f'Provider {name} added successfully',
             'provider': {
-                'name': name,
+                'name': name_lower,
                 'is_available': provider.is_available()
             }
         })
-        
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -136,16 +150,20 @@ def list_provider_models(provider_name):
     Returns:
         JSON with models list. Format differs by provider:
         - OpenAI: Static list of known models
+        - Anthropic: Static list of Claude models
+        - Google: Static list of Gemini models
         - Ollama: Dynamic list from local server
     """
     try:
-        # OpenAI has a static catalog of known models
-        if provider_name.lower() == 'openai':
-            models = ModelCatalog.get_openai_models()
+        provider_lower = provider_name.lower()
+
+        # Use unified catalog lookup for cloud providers
+        if provider_lower in ('openai', 'anthropic', 'google'):
+            models = ModelCatalog.get_models_for_provider(provider_lower)
             return jsonify({'models': models})
 
         # Ollama requires dynamic discovery from local server
-        elif provider_name.lower() == 'ollama':
+        elif provider_lower == 'ollama':
             discovery = OllamaDiscovery()
             ollama_models = discovery.list_downloaded_models()
             models = [

@@ -212,4 +212,54 @@ def delete_key(key_name: str) -> bool:
 def list_keys() -> list:
     """List all stored keys."""
     key_manager = get_key_manager()
-    return key_manager.list_keys() 
+    return key_manager.list_keys()
+
+
+def load_anthropic_api_key() -> str:
+    """Load Anthropic API key from secure storage or environment.
+
+    Returns:
+        The Anthropic API key
+
+    Raises:
+        ValueError: If key is not found in secure storage or environment
+    """
+    key_manager = get_key_manager()
+    key = key_manager.load_key('anthropic_api_key')
+
+    if key:
+        return key
+
+    # Fallback to environment variable
+    key = os.getenv('ANTHROPIC_API_KEY')
+    if key:
+        # Store it securely for next time
+        key_manager.save_key('anthropic_api_key', key)
+        return key
+
+    raise ValueError('Anthropic API key not found in secure storage or environment variable')
+
+
+def load_google_api_key() -> str:
+    """Load Google API key from secure storage or environment.
+
+    Returns:
+        The Google API key
+
+    Raises:
+        ValueError: If key is not found in secure storage or environment
+    """
+    key_manager = get_key_manager()
+    key = key_manager.load_key('google_api_key')
+
+    if key:
+        return key
+
+    # Fallback to environment variable
+    key = os.getenv('GOOGLE_API_KEY')
+    if key:
+        # Store it securely for next time
+        key_manager.save_key('google_api_key', key)
+        return key
+
+    raise ValueError('Google API key not found in secure storage or environment variable')

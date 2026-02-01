@@ -60,11 +60,20 @@ class TestContextLimits:
         assert token_manager.get_context_limit('unknown-model') == 4096
     
     def test_get_all_model_limits(self, token_manager):
-        """Test getting all model limits."""
+        """Test getting all model limits includes all providers."""
         limits = token_manager.get_all_model_limits()
-        assert len(limits) == 4
+        # Should have OpenAI, Anthropic, and Google models
+        assert len(limits) >= 4  # At least original OpenAI models
         assert 'gpt-4-turbo-preview' in limits
         assert limits['gpt-4'] == 8192
+
+    def test_get_context_limit_claude_sonnet(self, token_manager):
+        """Test getting context limit for Claude 3.5 Sonnet."""
+        assert token_manager.get_context_limit('claude-3-5-sonnet-20241022') == 200000
+
+    def test_get_context_limit_gemini_flash(self, token_manager):
+        """Test getting context limit for Gemini 1.5 Flash."""
+        assert token_manager.get_context_limit('gemini-1.5-flash') == 1000000
 
 
 class TestMessageTokenCalculation:

@@ -15,10 +15,23 @@ class TokenManager:
     
     # Model context limits (in tokens)
     MODEL_CONTEXT_LIMITS = {
+        # OpenAI models
         'gpt-4-turbo-preview': 128000,
+        'gpt-4-turbo': 128000,
         'gpt-4': 8192,
         'gpt-3.5-turbo': 4096,
-        'gpt-3.5-turbo-16k': 16384
+        'gpt-3.5-turbo-16k': 16384,
+        # Anthropic Claude models
+        'claude-opus-4-20250514': 200000,
+        'claude-sonnet-4-20250514': 200000,
+        'claude-3-5-sonnet-20241022': 200000,
+        'claude-3-5-haiku-20241022': 200000,
+        'claude-3-opus-20240229': 200000,
+        # Google Gemini models
+        'gemini-2.0-flash': 1000000,
+        'gemini-1.5-pro': 2000000,
+        'gemini-1.5-flash': 1000000,
+        'gemini-1.5-flash-8b': 1000000,
     }
     
     def estimate_tokens(self, text: str) -> int:

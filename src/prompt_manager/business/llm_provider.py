@@ -62,18 +62,18 @@ class OpenAIProvider(LLMProvider):
     
     def generate(self, prompt: str = None, messages: list = None, **kwargs) -> str:
         """Generate text from a prompt or messages array.
-        
+
         Args:
             prompt: Single prompt string (legacy)
             messages: Array of message dicts with role and content (preferred)
             **kwargs: Additional parameters (model, temperature, max_tokens)
-        
+
         Returns:
             Generated text response
         """
         try:
             self._initialize_client()
-            
+
             # Support both prompt string and messages array
             if messages:
                 msg_array = messages
@@ -81,7 +81,7 @@ class OpenAIProvider(LLMProvider):
                 msg_array = [{"role": "user", "content": prompt}]
             else:
                 raise ValueError("Either prompt or messages must be provided")
-            
+
             response = self.client.chat.completions.create(
                 model=kwargs.get('model', 'gpt-3.5-turbo'),
                 messages=msg_array,
@@ -89,6 +89,29 @@ class OpenAIProvider(LLMProvider):
                 temperature=kwargs.get('temperature', 0.7),
             )
             return response.choices[0].message.content
+
+        except openai.RateLimitError as e:
+            # 429 errors - distinguish between quota/billing and rate limiting
+            error_msg = str(e)
+            if 'quota' in error_msg.lower() or 'billing' in error_msg.lower():
+                raise RuntimeError(
+                    "OpenAI API quota exceeded. This usually means:\n"
+                    "1. Your account has insufficient credits\n"
+                    "2. You've exceeded your spending limit\n"
+                    "Please visit https://platform.openai.com/account/billing to add credits."
+                )
+            raise RuntimeError(
+                f"OpenAI rate limit exceeded. Please wait and retry. Details: {error_msg}"
+            )
+
+        except openai.AuthenticationError as e:
+            raise RuntimeError(
+                f"OpenAI authentication failed. Please verify your API key is correct. Details: {e}"
+            )
+
+        except openai.BadRequestError as e:
+            raise RuntimeError(f"OpenAI request error: {e}")
+
         except Exception as e:
             raise RuntimeError(f"LLM Error: {e}")
     

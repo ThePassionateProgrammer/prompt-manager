@@ -739,10 +739,12 @@
             </div>
         </div>
         <div class="nav-right">
+            {% if config.get('FEATURE_FLAGS', {}).get('TEMPLATE_BUILDER', False) %}
             <button class="btn-nav" onclick="window.location.href='/template-builder'">
                 <span>📝</span>
                 <span>Templates</span>
             </button>
+            {% endif %}
             <button class="btn-nav" id="chat-history-btn">
                 <span>📜</span>
                 <span>History</span>

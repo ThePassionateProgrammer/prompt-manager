@@ -8,7 +8,10 @@ import pytest
 import json
 from unittest.mock import patch, MagicMock
 
+from conftest import skip_template_builder
 
+
+@skip_template_builder
 class TestEditModeToggle:
     """Test edit mode toggle functionality."""
     

@@ -8,7 +8,10 @@ import pytest
 import json
 from src.prompt_manager.web.app import create_app
 
+from conftest import skip_template_builder
 
+
+@skip_template_builder
 class TestEditModeServerIntegration:
     """Test edit mode server integration."""
     

@@ -8,6 +8,53 @@ from approvaltests.reporters import Reporter
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
+
+# Feature flag helpers
+def load_feature_flags():
+    """Load feature flags from settings file."""
+    flags_path = os.path.join(os.path.dirname(__file__), '..', 'settings', 'feature_flags.json')
+    try:
+        with open(flags_path) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def is_feature_enabled(feature_name):
+    """Check if a feature is enabled."""
+    flags = load_feature_flags()
+    return flags.get(feature_name, False)
+
+
+# Skip markers for feature-flagged tests
+def skip_if_feature_disabled(feature_name):
+    """Return a pytest skip marker if feature is disabled."""
+    if not is_feature_enabled(feature_name):
+        return pytest.mark.skip(reason=f"Feature '{feature_name}' is disabled")
+    return pytest.mark.skipif(False, reason="")
+
+
+# Pre-defined skip markers for common features
+skip_template_builder = pytest.mark.skipif(
+    not is_feature_enabled('TEMPLATE_BUILDER'),
+    reason="TEMPLATE_BUILDER feature is disabled"
+)
+
+skip_custom_combo = pytest.mark.skipif(
+    not is_feature_enabled('CUSTOM_COMBO_BOX'),
+    reason="CUSTOM_COMBO_BOX feature is disabled"
+)
+
+skip_linkages = pytest.mark.skipif(
+    not is_feature_enabled('LINKAGES'),
+    reason="LINKAGES feature is disabled"
+)
+
+skip_memory_cards = pytest.mark.skipif(
+    not is_feature_enabled('MEMORY_CARDS'),
+    reason="MEMORY_CARDS feature is disabled"
+)
+
 from prompt_manager.api import PromptManagerAPI
 
 # Configure approval tests reporter

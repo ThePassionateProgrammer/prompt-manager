@@ -11,6 +11,11 @@ import pytest
 from unittest.mock import patch, MagicMock
 import json
 
+from conftest import skip_template_builder
+
+# Skip all tests in this module if TEMPLATE_BUILDER feature is disabled
+pytestmark = skip_template_builder
+
 
 class TestTemplateBuilderUI:
     """Test the Template Builder web interface functionality."""

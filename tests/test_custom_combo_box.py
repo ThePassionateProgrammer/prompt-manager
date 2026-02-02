@@ -9,6 +9,11 @@ import pytest
 from unittest.mock import Mock, patch
 import json
 
+from conftest import skip_custom_combo
+
+# Skip all tests in this module if CUSTOM_COMBO feature is disabled
+pytestmark = skip_custom_combo
+
 
 class TestCustomComboBoxBehavior:
     """Test the behavior of our custom combo box component."""

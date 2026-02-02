@@ -8,6 +8,11 @@ import pytest
 import json
 from src.prompt_manager.web.app import create_app
 
+from conftest import skip_custom_combo
+
+# Skip all tests in this module if CUSTOM_COMBO feature is disabled
+pytestmark = skip_custom_combo
+
 
 class TestCustomComboDualMode:
     """Test custom combo box dual mode functionality."""

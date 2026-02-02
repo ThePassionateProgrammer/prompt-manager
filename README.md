@@ -17,7 +17,7 @@ A production-ready prompt management system with AI chat capabilities, template 
 ## 🌟 Features
 
 ### **AI Chat Interface**
-- **Multi-Model Support**: GPT-4, GPT-4 Turbo, GPT-3.5, GPT-3.5-16K
+- **Multi-Provider Support**: OpenAI, Anthropic (Claude), Google (Gemini), and Ollama (local)
 - **Chat History**: Full conversation context maintained automatically
 - **Token Tracking**: Real-time context usage with visual indicators
 - **Auto-Trimming**: Intelligent message trimming to prevent context overflow
@@ -45,7 +45,20 @@ A production-ready prompt management system with AI chat capabilities, template 
 
 ## 🚀 Quick Start
 
-### Installation
+### Easy Installation (Recommended)
+
+```bash
+git clone <repository-url>
+cd prompt-manager
+./setup.sh
+```
+
+The setup script automatically:
+- Creates a Python virtual environment
+- Installs all dependencies
+- Checks for Ollama (optional, for local AI models)
+
+### Manual Installation
 
 1. **Clone the repository**
    ```bash
@@ -66,8 +79,8 @@ A production-ready prompt management system with AI chat capabilities, template 
 
 ### Running the Application
 
-**Start the web server:**
 ```bash
+source venv/bin/activate
 python prompt_manager_app.py
 ```
 
@@ -85,10 +98,22 @@ The application will:
 ### First-Time Setup
 
 1. Navigate to **Settings** (http://localhost:8000/settings)
-2. Add your OpenAI API key
-3. (Optional) Customize your system prompt
-4. Test your connection
+2. Add your API key for one of the supported providers:
+   - **OpenAI**: ChatGPT models
+   - **Anthropic**: Claude models
+   - **Google**: Gemini models
+3. Or use **Ollama** for local models (no API key needed)
+4. (Optional) Customize your system prompt
 5. Start chatting at http://localhost:8000/chat
+
+### Local AI with Ollama (Optional)
+
+Run AI models locally without API keys:
+
+1. **Install Ollama**: https://ollama.ai
+2. **Start Ollama**: `ollama serve`
+3. **Download a model**: `ollama pull gemma3:4b` (lightweight, ~3GB)
+4. The app automatically detects Ollama and shows local models
 
 ## 💬 Usage Guide
 

@@ -300,11 +300,11 @@ class TestProvidersAPI:
                                   'name': 'unsupported',
                                   'api_key': 'test123'
                               })
-        
+
         assert response.status_code == 400
         data = json.loads(response.data)
         assert 'error' in data
-        assert 'currently supported' in data['error'].lower()
+        assert 'not supported' in data['error'].lower()
     
     @patch('routes.dashboard.provider_manager')
     def test_list_providers(self, mock_manager, client):

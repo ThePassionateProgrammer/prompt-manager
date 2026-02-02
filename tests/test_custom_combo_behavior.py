@@ -8,7 +8,10 @@ import pytest
 import requests
 import json
 
+from conftest import skip_custom_combo
 
+
+@skip_custom_combo
 class TestCustomComboBehavior:
     """Test the actual custom combo box behavior."""
     

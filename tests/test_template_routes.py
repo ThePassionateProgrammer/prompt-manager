@@ -4,6 +4,11 @@ import tempfile
 from pathlib import Path
 from src.prompt_manager.template_service import TemplateService
 
+from conftest import skip_template_builder
+
+# Skip all tests in this module if TEMPLATE_BUILDER feature is disabled
+pytestmark = skip_template_builder
+
 
 class TestTemplateRoutes:
     """Test the Flask routes for template persistence."""

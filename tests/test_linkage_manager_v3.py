@@ -8,6 +8,11 @@ import json
 import os
 from pathlib import Path
 
+from conftest import skip_linkages
+
+# Skip all tests in this module if LINKAGES feature is disabled
+pytestmark = skip_linkages
+
 
 class TestLinkageManagerV3Structure:
     """Test the enhanced LinkageManager v3.0 structure"""

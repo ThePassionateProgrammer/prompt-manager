@@ -442,6 +442,61 @@
                     </div>
                 </div>
             </div>
+
+            <div class="saved-keys" id="ollama-section">
+                <h2>🦙 Ollama Local Models</h2>
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <div class="info-box-title">💻 Run AI Locally</div>
+                    <div class="info-box-text">
+                        Ollama lets you run AI models on your own computer. No API keys or internet required.
+                        <a href="https://ollama.ai" target="_blank" style="color: #4299e1;">Install Ollama →</a>
+                    </div>
+                </div>
+
+                <div id="ollama-status" class="key-item" style="margin-bottom: 20px;">
+                    <div class="key-info">
+                        <div class="key-icon" style="background: linear-gradient(135deg, #718096 0%, #4a5568 100%);">
+                            🦙
+                        </div>
+                        <div class="key-details">
+                            <div class="key-name">Ollama Server</div>
+                            <div class="key-status unavailable">
+                                <span class="status-dot unavailable"></span>
+                                Checking...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ollama-pull-form" style="margin-bottom: 20px; display: none;">
+                    <button type="button" class="btn" onclick="openModelSelector()">
+                        📦 Browse Available Models
+                    </button>
+                </div>
+
+                <div id="ollama-models">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🦙</div>
+                        <p>Checking for local models...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Selection Modal -->
+    <div id="model-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; font-size: 20px; color: #2d3748;">📦 Available Models</h2>
+                <button onclick="closeModelSelector()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #718096;">&times;</button>
+            </div>
+            <p style="color: #718096; font-size: 14px; margin-bottom: 20px;">Select a model to download. Smaller models run faster on modest hardware.</p>
+            <div id="available-models-list">
+                <div class="empty-state">
+                    <p>Loading available models...</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -645,6 +700,212 @@
                 showNotification('Network error: ' + error.message, 'error');
             }
         });
+
+        // Ollama management
+        async function checkOllamaStatus() {
+            try {
+                const response = await fetch('/api/ollama/status');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateOllamaStatus(data.running);
+                    if (data.running) {
+                        loadOllamaModels();
+                    }
+                }
+            } catch (error) {
+                updateOllamaStatus(false);
+            }
+        }
+
+        function updateOllamaStatus(isRunning) {
+            const statusEl = document.getElementById('ollama-status');
+            const pullForm = document.getElementById('ollama-pull-form');
+            const modelsEl = document.getElementById('ollama-models');
+
+            const statusClass = isRunning ? '' : 'unavailable';
+            const iconBg = isRunning
+                ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)'
+                : 'linear-gradient(135deg, #718096 0%, #4a5568 100%)';
+            const statusText = isRunning ? 'Connected' : 'Not Running';
+
+            statusEl.innerHTML = `
+                <div class="key-info">
+                    <div class="key-icon" style="background: ${iconBg};">
+                        🦙
+                    </div>
+                    <div class="key-details">
+                        <div class="key-name">Ollama Server</div>
+                        <div class="key-status ${statusClass}">
+                            <span class="status-dot ${statusClass}"></span>
+                            ${statusText}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            pullForm.style.display = isRunning ? 'block' : 'none';
+
+            if (!isRunning) {
+                modelsEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🦙</div>
+                        <p>Ollama is not running</p>
+                        <p style="font-size: 13px; margin-top: 10px; color: #718096;">
+                            Start Ollama to manage local models
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadOllamaModels() {
+            try {
+                const response = await fetch('/api/ollama/models');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayOllamaModels(data.models || []);
+                }
+            } catch (error) {
+                console.error('Error loading Ollama models:', error);
+            }
+        }
+
+        function displayOllamaModels(models) {
+            const container = document.getElementById('ollama-models');
+
+            if (models.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <p>No models downloaded yet</p>
+                        <p style="font-size: 13px; margin-top: 10px; color: #718096;">
+                            Use the form above to download a model
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<h3 style="font-size: 14px; color: #718096; margin-bottom: 15px;">Downloaded Models</h3>';
+            for (const model of models) {
+                html += `
+                    <div class="key-item">
+                        <div class="key-info">
+                            <div class="key-icon" style="background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);">
+                                🤖
+                            </div>
+                            <div class="key-details">
+                                <div class="key-name">${model.full_name}</div>
+                                <div class="key-status">
+                                    ${model.size_display} • ${model.parameter_size || 'Unknown params'}
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-delete" onclick="deleteOllamaModel('${model.full_name}')">Delete</button>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function openModelSelector() {
+            const modal = document.getElementById('model-modal');
+            modal.style.display = 'flex';
+            loadAvailableModels();
+        }
+
+        function closeModelSelector() {
+            document.getElementById('model-modal').style.display = 'none';
+        }
+
+        async function loadAvailableModels() {
+            const container = document.getElementById('available-models-list');
+            try {
+                const response = await fetch('/api/ollama/models/available');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayAvailableModels(data.models || []);
+                }
+            } catch (error) {
+                container.innerHTML = '<p style="color: #fc8181;">Failed to load available models</p>';
+            }
+        }
+
+        function displayAvailableModels(models) {
+            const container = document.getElementById('available-models-list');
+            let html = '';
+
+            for (const model of models) {
+                const sizeColor = model.size_gb < 3 ? '#48bb78' : model.size_gb < 5 ? '#ed8936' : '#fc8181';
+                html += `
+                    <div class="key-item" style="margin-bottom: 12px;">
+                        <div class="key-info" style="flex: 1;">
+                            <div class="key-icon" style="background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);">
+                                🤖
+                            </div>
+                            <div class="key-details">
+                                <div class="key-name">${model.name}</div>
+                                <div class="key-status" style="color: #718096;">
+                                    <span style="color: ${sizeColor}; font-weight: 600;">${model.size_gb} GB</span> • ${model.description}
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn" style="width: auto; padding: 10px 20px; font-size: 14px;" onclick="downloadModel('${model.id}', '${model.name}')">
+                            ⬇️ Download
+                        </button>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        async function downloadModel(modelId, modelName) {
+            closeModelSelector();
+            showNotification(`Downloading ${modelName}... This may take a while.`, 'success');
+
+            try {
+                const response = await fetch('/api/ollama/models/pull', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: modelId })
+                });
+
+                if (response.ok) {
+                    showNotification(`${modelName} downloaded successfully!`, 'success');
+                    loadOllamaModels();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Failed to download model', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteOllamaModel(modelName) {
+            if (!confirm(`Are you sure you want to delete ${modelName}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/ollama/models/${encodeURIComponent(modelName)}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showNotification(`${modelName} deleted successfully!`, 'success');
+                    loadOllamaModels();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Failed to delete model', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error: ' + error.message, 'error');
+            }
+        }
+
+        // Initialize Ollama status check
+        checkOllamaStatus();
     </script>
 </body>
 </html>

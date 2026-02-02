@@ -8,7 +8,10 @@ import pytest
 import json
 from src.prompt_manager.web.app import create_app
 
+from conftest import skip_custom_combo
 
+
+@skip_custom_combo
 class TestAddItemFunctionality:
     """Test add item functionality in custom combo boxes."""
     

@@ -89,3 +89,114 @@ class TestOllamaDiscoveryListModels:
         assert model.family == 'gemma3'
         assert model.parameter_size == '4.3B'
         assert model.size_display() == '3.1 GB'
+
+
+class TestOllamaDiscoveryServerStatus:
+    """Test Ollama server status checking."""
+
+    @patch('ollama.Client')
+    def test_is_server_running_returns_true_when_connected(self, mock_client_class):
+        """Should return True when Ollama server responds."""
+        # Arrange
+        mock_client = Mock()
+        mock_client.list.return_value = Mock(models=[])
+        mock_client_class.return_value = mock_client
+
+        discovery = OllamaDiscovery()
+
+        # Act
+        result = discovery.is_server_running()
+
+        # Assert
+        assert result is True
+
+    @patch('ollama.Client')
+    def test_is_server_running_returns_false_when_connection_fails(self, mock_client_class):
+        """Should return False when Ollama server not available."""
+        # Arrange
+        mock_client = Mock()
+        mock_client.list.side_effect = Exception("Connection refused")
+        mock_client_class.return_value = mock_client
+
+        discovery = OllamaDiscovery()
+
+        # Act
+        result = discovery.is_server_running()
+
+        # Assert
+        assert result is False
+
+
+class TestOllamaDiscoveryPullModel:
+    """Test pulling/downloading Ollama models."""
+
+    @patch('ollama.Client')
+    def test_pull_model_calls_ollama_pull(self, mock_client_class):
+        """Should call Ollama client's pull method with model name."""
+        # Arrange
+        mock_client = Mock()
+        mock_client.pull.return_value = iter([{'status': 'success'}])
+        mock_client_class.return_value = mock_client
+
+        discovery = OllamaDiscovery()
+
+        # Act
+        result = discovery.pull_model('gemma3:4b')
+
+        # Assert
+        mock_client.pull.assert_called_once_with('gemma3:4b', stream=True)
+        assert result['success'] is True
+
+    @patch('ollama.Client')
+    def test_pull_model_returns_error_on_failure(self, mock_client_class):
+        """Should return error when pull fails."""
+        # Arrange
+        mock_client = Mock()
+        mock_client.pull.side_effect = Exception("Model not found")
+        mock_client_class.return_value = mock_client
+
+        discovery = OllamaDiscovery()
+
+        # Act
+        result = discovery.pull_model('invalid-model')
+
+        # Assert
+        assert result['success'] is False
+        assert 'error' in result
+
+
+class TestOllamaDiscoveryDeleteModel:
+    """Test deleting Ollama models."""
+
+    @patch('ollama.Client')
+    def test_delete_model_calls_ollama_delete(self, mock_client_class):
+        """Should call Ollama client's delete method with model name."""
+        # Arrange
+        mock_client = Mock()
+        mock_client_class.return_value = mock_client
+
+        discovery = OllamaDiscovery()
+
+        # Act
+        result = discovery.delete_model('gemma3:4b')
+
+        # Assert
+        mock_client.delete.assert_called_once_with('gemma3:4b')
+        assert result['success'] is True
+
+    @patch('ollama.Client')
+    def test_delete_model_returns_error_on_failure(self, mock_client_class):
+        """Should return error when delete fails."""
+        # Arrange
+        mock_client = Mock()
+        mock_client.delete.side_effect = Exception("Model not found")
+        mock_client_class.return_value = mock_client
+
+        discovery = OllamaDiscovery()
+
+        # Act
+        result = discovery.delete_model('nonexistent-model')
+
+        # Assert
+        assert result['success'] is False
+        assert 'error' in result

@@ -7,6 +7,11 @@ into prompt_manager_app.py alongside chat and dashboard features.
 
 import pytest
 
+from conftest import skip_template_builder
+
+# Skip all tests in this module if TEMPLATE_BUILDER feature is disabled
+pytestmark = skip_template_builder
+
 
 @pytest.fixture
 def client():

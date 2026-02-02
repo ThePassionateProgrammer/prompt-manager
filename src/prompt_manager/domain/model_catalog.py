@@ -39,6 +39,58 @@ class ModelCatalog:
         {'id': 'models/gemini-2.0-flash-lite', 'name': 'Gemini 2.0 Flash Lite', 'context_window': 1000000},
     ]
 
+    # Ollama local models catalog (popular models available for download)
+    OLLAMA_MODELS = [
+        {
+            'id': 'gemma3:4b',
+            'name': 'Gemma 3 (4B)',
+            'size_gb': 3.3,
+            'description': 'Google\'s lightweight model. Fast and efficient for general tasks.',
+        },
+        {
+            'id': 'llama3.2:3b',
+            'name': 'Llama 3.2 (3B)',
+            'size_gb': 2.0,
+            'description': 'Meta\'s compact model. Good balance of speed and capability.',
+        },
+        {
+            'id': 'phi3:mini',
+            'name': 'Phi-3 Mini',
+            'size_gb': 2.2,
+            'description': 'Microsoft\'s small model. Excellent for coding and reasoning.',
+        },
+        {
+            'id': 'mistral:7b',
+            'name': 'Mistral (7B)',
+            'size_gb': 4.1,
+            'description': 'Mistral AI\'s flagship. Strong general performance.',
+        },
+        {
+            'id': 'llama3:8b',
+            'name': 'Llama 3 (8B)',
+            'size_gb': 4.7,
+            'description': 'Meta\'s popular model. Great for most tasks.',
+        },
+        {
+            'id': 'codellama:7b',
+            'name': 'Code Llama (7B)',
+            'size_gb': 3.8,
+            'description': 'Specialized for code generation and understanding.',
+        },
+        {
+            'id': 'deepseek-coder:6.7b',
+            'name': 'DeepSeek Coder (6.7B)',
+            'size_gb': 3.8,
+            'description': 'Optimized for programming tasks and code completion.',
+        },
+        {
+            'id': 'qwen2:7b',
+            'name': 'Qwen 2 (7B)',
+            'size_gb': 4.4,
+            'description': 'Alibaba\'s multilingual model. Strong in multiple languages.',
+        },
+    ]
+
     @classmethod
     def get_openai_models(cls) -> List[Dict]:
         """Get list of available OpenAI models.
@@ -67,11 +119,20 @@ class ModelCatalog:
         return cls.GOOGLE_MODELS.copy()
 
     @classmethod
+    def get_ollama_models(cls) -> List[Dict]:
+        """Get list of available Ollama models for download.
+
+        Returns:
+            List of model dictionaries with id, name, size_gb, description
+        """
+        return [m.copy() for m in cls.OLLAMA_MODELS]
+
+    @classmethod
     def get_models_for_provider(cls, provider: str) -> List[Dict]:
         """Get models for any provider by name.
 
         Args:
-            provider: Provider name (openai, anthropic, google)
+            provider: Provider name (openai, anthropic, google, ollama)
 
         Returns:
             List of model dictionaries for the provider
@@ -83,6 +144,8 @@ class ModelCatalog:
             return cls.get_anthropic_models()
         elif provider_lower == 'google':
             return cls.get_google_models()
+        elif provider_lower == 'ollama':
+            return cls.get_ollama_models()
         return []
 
     @classmethod

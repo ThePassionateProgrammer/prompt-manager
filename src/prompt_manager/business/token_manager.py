@@ -27,11 +27,11 @@ class TokenManager:
         'claude-3-5-sonnet-20241022': 200000,
         'claude-3-5-haiku-20241022': 200000,
         'claude-3-opus-20240229': 200000,
-        # Google Gemini models
-        'gemini-2.0-flash': 1000000,
-        'gemini-1.5-pro': 2000000,
-        'gemini-1.5-flash': 1000000,
-        'gemini-1.5-flash-8b': 1000000,
+        # Google Gemini models (with models/ prefix)
+        'models/gemini-2.5-flash': 1000000,
+        'models/gemini-2.5-pro': 1000000,
+        'models/gemini-2.0-flash': 1000000,
+        'models/gemini-2.0-flash-lite': 1000000,
     }
     
     def estimate_tokens(self, text: str) -> int:

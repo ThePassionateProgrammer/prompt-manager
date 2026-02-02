@@ -72,8 +72,8 @@ class TestContextLimits:
         assert token_manager.get_context_limit('claude-3-5-sonnet-20241022') == 200000
 
     def test_get_context_limit_gemini_flash(self, token_manager):
-        """Test getting context limit for Gemini 1.5 Flash."""
-        assert token_manager.get_context_limit('gemini-1.5-flash') == 1000000
+        """Test getting context limit for Gemini 2.0 Flash."""
+        assert token_manager.get_context_limit('models/gemini-2.0-flash') == 1000000
 
 
 class TestMessageTokenCalculation:

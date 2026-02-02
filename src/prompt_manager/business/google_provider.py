@@ -77,7 +77,7 @@ class GoogleProvider(LLMProvider):
             self._initialize_client()
             import google.generativeai as genai
 
-            model_name = kwargs.get('model', 'gemini-1.5-flash')
+            model_name = kwargs.get('model', 'models/gemini-2.0-flash')
 
             # Build generation config
             generation_config = {

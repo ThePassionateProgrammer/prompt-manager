@@ -63,6 +63,77 @@ class TestModelCatalogOllamaModels:
         assert model['id'] == first_model_id
 
 
+class TestModelCatalogOllamaFiltering:
+    """Test Ollama model filtering functionality."""
+
+    def test_ollama_models_have_category_field(self):
+        """Each Ollama model should have a category field."""
+        # Act
+        models = ModelCatalog.get_ollama_models()
+
+        # Assert
+        for model in models:
+            assert 'category' in model, f"Model missing 'category': {model['name']}"
+            assert model['category'] in ['general', 'code', 'multilingual', 'reasoning'], \
+                f"Invalid category: {model['category']}"
+
+    def test_filter_by_max_size(self):
+        """Should filter models by maximum size in GB."""
+        # Act
+        small_models = ModelCatalog.get_ollama_models(max_size_gb=3)
+
+        # Assert
+        assert len(small_models) > 0, "Should have some small models"
+        for model in small_models:
+            assert model['size_gb'] <= 3, f"Model {model['name']} exceeds 3GB"
+
+    def test_filter_by_category(self):
+        """Should filter models by category."""
+        # Act
+        code_models = ModelCatalog.get_ollama_models(category='code')
+
+        # Assert
+        assert len(code_models) > 0, "Should have some code models"
+        for model in code_models:
+            assert model['category'] == 'code', f"Model {model['name']} is not a code model"
+
+    def test_filter_by_size_and_category(self):
+        """Should filter by both size and category."""
+        # Act
+        small_code_models = ModelCatalog.get_ollama_models(max_size_gb=5, category='code')
+
+        # Assert
+        for model in small_code_models:
+            assert model['size_gb'] <= 5
+            assert model['category'] == 'code'
+
+    def test_filter_returns_empty_for_no_matches(self):
+        """Should return empty list when no models match filters."""
+        # Act - filter for very small code models (unlikely to exist)
+        models = ModelCatalog.get_ollama_models(max_size_gb=0.1, category='code')
+
+        # Assert
+        assert models == []
+
+    def test_size_tiers_defined(self):
+        """Should have size tier thresholds defined."""
+        # Assert
+        assert hasattr(ModelCatalog, 'SIZE_TIERS')
+        assert 'small' in ModelCatalog.SIZE_TIERS
+        assert 'medium' in ModelCatalog.SIZE_TIERS
+        assert 'large' in ModelCatalog.SIZE_TIERS
+
+    def test_get_models_by_size_tier(self):
+        """Should get models by size tier name."""
+        # Act
+        small_models = ModelCatalog.get_ollama_models_by_tier('small')
+
+        # Assert
+        assert len(small_models) > 0
+        for model in small_models:
+            assert model['size_gb'] < ModelCatalog.SIZE_TIERS['small']
+
+
 class TestModelCatalogExistingProviders:
     """Ensure existing provider methods still work."""
 

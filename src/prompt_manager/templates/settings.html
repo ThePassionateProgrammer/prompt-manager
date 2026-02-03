@@ -486,12 +486,42 @@
 
     <!-- Model Selection Modal -->
     <div id="model-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <h2 style="margin: 0; font-size: 20px; color: #2d3748;">📦 Available Models</h2>
                 <button onclick="closeModelSelector()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #718096;">&times;</button>
             </div>
-            <p style="color: #718096; font-size: 14px; margin-bottom: 20px;">Select a model to download. Smaller models run faster on modest hardware.</p>
+
+            <!-- Filter Controls -->
+            <div style="background: #f7fafc; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                    <!-- Size Filter -->
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-size: 11px; font-weight: 600; color: #718096; text-transform: uppercase;">Size</label>
+                        <div style="display: flex; gap: 6px;">
+                            <button class="filter-btn active" data-size="all" onclick="filterModels('size', 'all')">All</button>
+                            <button class="filter-btn" data-size="3" onclick="filterModels('size', 3)" title="< 3GB - Runs on most laptops">Small</button>
+                            <button class="filter-btn" data-size="6" onclick="filterModels('size', 6)" title="3-6GB - Needs 16GB+ RAM">Medium</button>
+                            <button class="filter-btn" data-size="100" onclick="filterModels('size', 100)" title="> 6GB - Needs 32GB+ RAM">Large</button>
+                        </div>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-left: 20px;">
+                        <label style="font-size: 11px; font-weight: 600; color: #718096; text-transform: uppercase;">Category</label>
+                        <div style="display: flex; gap: 6px;">
+                            <button class="filter-btn active" data-category="all" onclick="filterModels('category', 'all')">All</button>
+                            <button class="filter-btn" data-category="general" onclick="filterModels('category', 'general')">💬 General</button>
+                            <button class="filter-btn" data-category="code" onclick="filterModels('category', 'code')">💻 Code</button>
+                            <button class="filter-btn" data-category="multilingual" onclick="filterModels('category', 'multilingual')">🌍 Multi</button>
+                        </div>
+                    </div>
+                </div>
+                <p style="color: #718096; font-size: 12px; margin-top: 12px; margin-bottom: 0;">
+                    💡 Small models run on most laptops. Medium requires 16GB+ RAM. Large requires 32GB+ RAM.
+                </p>
+            </div>
+
             <div id="available-models-list">
                 <div class="empty-state">
                     <p>Loading available models...</p>
@@ -499,6 +529,29 @@
             </div>
         </div>
     </div>
+
+    <style>
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-btn:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+    </style>
 
     <script>
         // Load saved keys and system prompt on page load
@@ -808,9 +861,15 @@
             container.innerHTML = html;
         }
 
+        // Current filter state
+        let currentFilters = { size: 'all', category: 'all' };
+
         function openModelSelector() {
             const modal = document.getElementById('model-modal');
             modal.style.display = 'flex';
+            // Reset filters when opening
+            currentFilters = { size: 'all', category: 'all' };
+            resetFilterButtons();
             loadAvailableModels();
         }
 
@@ -818,10 +877,48 @@
             document.getElementById('model-modal').style.display = 'none';
         }
 
+        function resetFilterButtons() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.size === 'all' || btn.dataset.category === 'all') {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function filterModels(filterType, value) {
+            // Update filter state
+            currentFilters[filterType] = value;
+
+            // Update button states
+            document.querySelectorAll(`.filter-btn[data-${filterType}]`).forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset[filterType] == value) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Reload with new filters
+            loadAvailableModels();
+        }
+
         async function loadAvailableModels() {
             const container = document.getElementById('available-models-list');
+            container.innerHTML = '<div class="empty-state"><p>Loading...</p></div>';
+
             try {
-                const response = await fetch('/api/ollama/models/available');
+                // Build query string from filters
+                const params = new URLSearchParams();
+                if (currentFilters.size !== 'all') {
+                    params.append('max_size', currentFilters.size);
+                }
+                if (currentFilters.category !== 'all') {
+                    params.append('category', currentFilters.category);
+                }
+
+                const url = '/api/ollama/models/available' + (params.toString() ? '?' + params.toString() : '');
+                const response = await fetch(url);
+
                 if (response.ok) {
                     const data = await response.json();
                     displayAvailableModels(data.models || []);
@@ -833,18 +930,41 @@
 
         function displayAvailableModels(models) {
             const container = document.getElementById('available-models-list');
-            let html = '';
+
+            if (models.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="padding: 40px; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                        <p style="color: #718096;">No models match your filters</p>
+                        <p style="font-size: 13px; color: #a0aec0; margin-top: 8px;">Try adjusting the size or category filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `<p style="color: #718096; font-size: 13px; margin-bottom: 16px;">${models.length} model${models.length !== 1 ? 's' : ''} available</p>`;
 
             for (const model of models) {
-                const sizeColor = model.size_gb < 3 ? '#48bb78' : model.size_gb < 5 ? '#ed8936' : '#fc8181';
+                const sizeColor = model.size_gb < 3 ? '#48bb78' : model.size_gb < 6 ? '#ed8936' : '#fc8181';
+                const categoryEmoji = {
+                    'general': '💬',
+                    'code': '💻',
+                    'multilingual': '🌍',
+                    'reasoning': '🧠'
+                }[model.category] || '🤖';
+                const categoryBadge = model.category ? `<span style="background: #f7fafc; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: #4a5568;">${categoryEmoji} ${model.category}</span>` : '';
+
                 html += `
                     <div class="key-item" style="margin-bottom: 12px;">
                         <div class="key-info" style="flex: 1;">
                             <div class="key-icon" style="background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);">
-                                🤖
+                                ${categoryEmoji}
                             </div>
                             <div class="key-details">
-                                <div class="key-name">${model.name}</div>
+                                <div class="key-name" style="display: flex; align-items: center; gap: 8px;">
+                                    ${model.name}
+                                    ${categoryBadge}
+                                </div>
                                 <div class="key-status" style="color: #718096;">
                                     <span style="color: ${sizeColor}; font-weight: 600;">${model.size_gb} GB</span> • ${model.description}
                                 </div>

@@ -187,3 +187,37 @@ class TestOllamaAvailableModelsAPI:
             assert 'name' in model
             assert 'size_gb' in model
             assert 'description' in model
+
+    def test_filter_models_by_max_size(self, client):
+        """GET /api/ollama/models/available?max_size=3 should filter by size."""
+        # Act
+        response = client.get('/api/ollama/models/available?max_size=3')
+
+        # Assert
+        assert response.status_code == 200
+        data = response.get_json()
+        for model in data['models']:
+            assert model['size_gb'] <= 3, f"Model {model['name']} exceeds 3GB"
+
+    def test_filter_models_by_category(self, client):
+        """GET /api/ollama/models/available?category=code should filter by category."""
+        # Act
+        response = client.get('/api/ollama/models/available?category=code')
+
+        # Assert
+        assert response.status_code == 200
+        data = response.get_json()
+        for model in data['models']:
+            assert model['category'] == 'code', f"Model {model['name']} is not a code model"
+
+    def test_filter_models_by_size_and_category(self, client):
+        """Should filter by both size and category."""
+        # Act
+        response = client.get('/api/ollama/models/available?max_size=5&category=general')
+
+        # Assert
+        assert response.status_code == 200
+        data = response.get_json()
+        for model in data['models']:
+            assert model['size_gb'] <= 5
+            assert model['category'] == 'general'

@@ -72,10 +72,18 @@ def pull_model():
 def list_available_models():
     """List available Ollama models that can be downloaded.
 
+    Query Parameters:
+        max_size: Maximum model size in GB (optional)
+        category: Filter by category - 'general', 'code', 'multilingual', 'reasoning' (optional)
+
     Returns:
         JSON response with catalog of downloadable models
     """
-    models = ModelCatalog.get_ollama_models()
+    # Parse optional filters from query params
+    max_size = request.args.get('max_size', type=float)
+    category = request.args.get('category')
+
+    models = ModelCatalog.get_ollama_models(max_size_gb=max_size, category=category)
     return jsonify({'models': models})
 
 

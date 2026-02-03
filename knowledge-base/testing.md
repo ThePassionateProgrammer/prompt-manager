@@ -117,7 +117,8 @@ assert total == 0
 - Prevents integration gaps (when unit tests pass but full system fails)
 - Example: Your new test mocks method A, but production calls method B
 - Full suite reveals what actually works vs what you think works
-- Make this part of your testing methodology—no exceptions
+- Make this part of your testing methodology -- no exceptions
+
 
 **Pure Domain Model Benefits**
 - Business logic has no external dependencies
@@ -154,10 +155,10 @@ console.log('[Feature] Event B at', Date.now());
 **Analysis**:
 ```
 Event A at 1768849318117
-Event B at 1768849326118  ← 8 seconds gap, expected was 5
+Event B at 1768849326118  <- 8 seconds gap, expected was 5
 ```
 
-**Key Insight**: The problem is often not your code—it's understanding when external systems send events. Log timestamps to discover actual behavior vs assumed behavior.
+**Key Insight**: The problem is often not your code -- it's understanding when external systems send events. Log timestamps to discover actual behavior vs assumed behavior.
 
 **Example Discovery**: Chrome's speech recognition sends "final" transcripts at natural pauses, not continuously. Timestamps revealed 10-second gaps between transcripts during continuous speech.
 
@@ -172,8 +173,9 @@ Browser APIs often behave differently than documentation suggests. When debuggin
 3. **Enable all events** - Interim/partial events reveal hidden activity
 4. **Test edge cases** - What happens during rapid speech? Long pauses? Interruptions?
 
-**Example**: `webkitSpeechRecognition` with `continuous: true` still only sends final results at phrase boundaries—not after every word.
+**Example**: `webkitSpeechRecognition` with `continuous: true` still only sends final results at phrase boundaries -- not after every word.
 
 ---
+
 
 *Testing is a skill that improves with practice. Start simple, stay disciplined with the red-green-refactor cycle, and let tests guide you toward better design.*

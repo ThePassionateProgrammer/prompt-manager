@@ -3,6 +3,27 @@ __pycache__/
 .venv/
 venv/
 .env
-.DS_Storenode_modules/
+.DS_Store
+node_modules/
 conversations/conversations.json
 conversations/
+
+# Test outputs
+.pytest_cache/
+htmlcov/
+.coverage
+*.approved.txt
+*.received.txt
+*.output.txt
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+
+# Data files (for local development)
+prompts.json
+demo_prompts.json
+templates.json
+
+# Logs
+*.log

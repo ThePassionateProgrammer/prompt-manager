@@ -5,8 +5,11 @@ Enhanced Simple Web Server for Prompt Manager
 A working web interface that directly uses the PromptManager with improvements.
 """
 
-from flask import Flask, render_template_string, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template_string, render_template, request, redirect, url_for, flash, jsonify, Response
 from src.prompt_manager.prompt_manager import PromptManager
+from src.prompt_manager.business.chat_service import ChatService
+from src.prompt_manager.business.conversation_storage import ConversationStorage
+from src.prompt_manager.business.llm_provider import OllamaProvider
 import json
 import socket
 import subprocess
@@ -106,6 +109,11 @@ app.secret_key = 'your-secret-key-here'  # Required for flash messages
 
 # Initialize the prompt manager
 manager = PromptManager()
+
+# Initialize chat services for Ember (gemma3:4b)
+conversation_storage = ConversationStorage()
+llm_provider = OllamaProvider()
+chat_service = ChatService(storage=conversation_storage, llm_provider=llm_provider)
 
 # Initialize template builder
 from test_template_builder import TemplateBuilder, PromptTemplate
@@ -2047,7 +2055,7 @@ def save_template():
     """Save a template to persistent storage."""
     try:
         data = request.get_json()
-        
+
         # Validate required fields
         required_fields = ['name', 'description', 'template_text', 'combo_box_values', 'linkage_data']
         for field in required_fields:
@@ -2056,10 +2064,10 @@ def save_template():
                     "success": False,
                     "error": f"Missing required field: {field}"
                 }), 400
-        
+
         # Initialize template service
         template_service = TemplateService('templates/templates.json')
-        
+
         # Save template
         template_service.save_template(
             name=data['name'],
@@ -2068,12 +2076,12 @@ def save_template():
             combo_box_values=data['combo_box_values'],
             linkage_data=data['linkage_data']
         )
-        
+
         return json.dumps({
             "success": True,
             "message": "Template saved successfully"
         }), 200
-        
+
     except ValueError as e:
         return json.dumps({
             "success": False,
@@ -2091,12 +2099,12 @@ def load_template(template_name):
     try:
         template_service = TemplateService('templates/templates.json')
         template = template_service.load_template(template_name)
-        
+
         return json.dumps({
             "success": True,
             "template": template
         }), 200
-        
+
     except ValueError as e:
         return json.dumps({
             "success": False,
@@ -2114,12 +2122,12 @@ def list_templates():
     try:
         template_service = TemplateService('templates/templates.json')
         templates = template_service.list_templates()
-        
+
         return json.dumps({
             "success": True,
             "templates": templates
         }), 200
-        
+
     except Exception as e:
         return json.dumps({
             "success": False,
@@ -2131,20 +2139,20 @@ def delete_template(template_name):
     """Delete a template by name."""
     try:
         template_service = TemplateService('templates/templates.json')
-        
+
         if not template_service.template_exists(template_name):
             return json.dumps({
                 "success": False,
                 "error": "Template not found"
             }), 404
-        
+
         template_service.delete_template(template_name)
-        
+
         return json.dumps({
             "success": True,
             "message": "Template deleted successfully"
         }), 200
-        
+
     except Exception as e:
         return json.dumps({
             "success": False,
@@ -2157,17 +2165,132 @@ def template_exists(template_name):
     try:
         template_service = TemplateService('templates/templates.json')
         exists = template_service.template_exists(template_name)
-        
+
         return json.dumps({
             "success": True,
             "exists": exists
         }), 200
-        
+
     except Exception as e:
         return json.dumps({
             "success": False,
             "error": f"Unexpected error: {str(e)}"
         }), 500
+
+# Chat Routes (Ember Interface)
+@app.route('/chat')
+def chat_page():
+    """Chat interface with Ember (gemma3:4b)."""
+    return render_template('chat.html')
+
+@app.route('/api/chat/conversations', methods=['GET'])
+def list_conversations():
+    """List all conversations, sorted by most recently updated."""
+    conversations = chat_service.list_conversations()
+
+    return jsonify({
+        'conversations': [
+            {
+                'id': conv.id,
+                'title': conv.title,
+                'model': conv.model,
+                'message_count': len(conv.messages),
+                'created_at': conv.created_at.isoformat(),
+                'updated_at': conv.updated_at.isoformat()
+            }
+            for conv in conversations
+        ]
+    })
+
+@app.route('/api/chat/conversations', methods=['POST'])
+def create_conversation():
+    """Create a new conversation."""
+    data = request.get_json() or {}
+
+    title = data.get('title', 'New Conversation')
+    model = data.get('model', 'gemma3:4b')
+
+    conv_id = chat_service.create_conversation(title=title, model=model)
+    conv = chat_service.get_conversation(conv_id)
+
+    return jsonify({
+        'id': conv.id,
+        'title': conv.title,
+        'model': conv.model,
+        'created_at': conv.created_at.isoformat(),
+        'updated_at': conv.updated_at.isoformat()
+    }), 201
+
+@app.route('/api/chat/conversations/<conversation_id>', methods=['GET'])
+def get_conversation(conversation_id):
+    """Get conversation details with all messages."""
+    conv = chat_service.get_conversation(conversation_id)
+
+    if not conv:
+        return jsonify({'error': 'Conversation not found'}), 404
+
+    return jsonify({
+        'id': conv.id,
+        'title': conv.title,
+        'model': conv.model,
+        'messages': [
+            {
+                'id': msg.id,
+                'role': msg.role,
+                'content': msg.content,
+                'timestamp': msg.timestamp.isoformat()
+            }
+            for msg in conv.messages
+        ],
+        'created_at': conv.created_at.isoformat(),
+        'updated_at': conv.updated_at.isoformat()
+    })
+
+@app.route('/api/chat/conversations/<conversation_id>', methods=['DELETE'])
+def delete_conversation(conversation_id):
+    """Delete a conversation."""
+    success = chat_service.delete_conversation(conversation_id)
+
+    if not success:
+        return jsonify({'error': 'Conversation not found'}), 404
+
+    return '', 204
+
+@app.route('/api/chat/conversations/<conversation_id>/messages', methods=['POST'])
+def send_message(conversation_id):
+    """
+    Send a message and stream the response using Server-Sent Events (SSE).
+
+    This endpoint returns a text/event-stream that yields chunks as they arrive
+    from the LLM, enabling real-time streaming in the UI.
+    """
+    data = request.get_json() or {}
+    message = data.get('message', '')
+
+    if not message:
+        return jsonify({'error': 'Message is required'}), 400
+
+    # Check if conversation exists
+    conv = chat_service.get_conversation(conversation_id)
+    if not conv:
+        return jsonify({'error': 'Conversation not found'}), 404
+
+    def generate():
+        """Generator function for SSE streaming."""
+        try:
+            # Stream chunks from LLM
+            for chunk in chat_service.send_message(conversation_id, message):
+                # Send chunk as SSE event
+                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+
+            # Send completion event
+            yield f"data: {json.dumps({'done': True})}\n\n"
+
+        except Exception as e:
+            # Send error event
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     print("🚀 Starting Enhanced Simple Prompt Manager Web Server...")

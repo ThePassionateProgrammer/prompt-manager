@@ -100,7 +100,7 @@ Dead code includes:
 
 ## Refactoring Philosophy
 
-**"Make the change easy, then make the easy change."** — Kent Beck
+**"Make the change easy, then make the easy change."** -- Kent Beck
 
 Before adding new features:
 1. Examine the existing code
@@ -109,7 +109,8 @@ Before adding new features:
 4. Clean up dead code
 5. Then add the feature
 
-Refactoring is not optional cleanup—it's preparation for the next change.
+Refactoring is not optional cleanup -- it's preparation for the next change.
+
 
 **Documentation**
 - Public APIs and interfaces need clear documentation
@@ -225,5 +226,6 @@ Test Results: (if applicable)
 - Include test results in commit message when fixing bugs
 
 ---
+
 
 *These are our conventions for Python development. Consistency across the codebase makes collaboration easier.*

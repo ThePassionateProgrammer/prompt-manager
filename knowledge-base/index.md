@@ -70,11 +70,12 @@ A living knowledge base grows with your project and partnership.
 
 *This knowledge base is designed for use with Claude Code and follows the starter template from [Coding with Claude](https://youtube.com/@codingwithclaude).*
 
+
 ---
 
 ## Development Process: When Things Break - Recovery Protocol
 
-**Created**: January 16, 2026  
+**Created**: January 16, 2026
 **Context**: Dashboard broken after memory card implementation. Continued adding code instead of stopping to investigate.
 
 ### Critical Rule: STOP-CHECK-REVERT Protocol
@@ -143,7 +144,7 @@ git push origin <branch>  # NEVER skip this!
 Before modifying any code, answer these questions:
 
 1. **Which app file does the user run?**
-   - `prompt_manager_app.py`? 
+   - `prompt_manager_app.py`?
    - `src/prompt_manager/web/app.py`?
    - Something else?
 
@@ -183,11 +184,11 @@ User says any of these:
 
 ### Recovery Success Metrics
 
-✅ User confirms app works  
-✅ All conversations/data preserved  
-✅ Code reverted to known-good state  
-✅ Understanding of what broke (for prevention)  
-✅ Changes pushed to GitHub (for visibility)  
+- User confirms app works
+- All conversations/data preserved
+- Code reverted to known-good state
+- Understanding of what broke (for prevention)
+- Changes pushed to GitHub (for visibility)
 
 ---
 

@@ -1,6 +1,14 @@
 # Prompt Manager V1.0
 
-A production-ready prompt management system with AI chat capabilities, template building, and domain-driven architecture.
+A production-ready prompt management system with AI chat capabilities, template building, and domain-driven architecture. Built as an educational AI collaboration playground with chat interface, prompt library, and local LLM support using test-first development and domain-driven design principles.
+
+## Vision
+
+Prompt Manager is designed to help you:
+- **Learn to prompt effectively** through experimentation and prompt reuse
+- **Chat with AI models** (OpenAI, Anthropic, Google, and local models via Ollama)
+- **Manage and share prompts** with an organized library
+- **Explore different AI interfaces** as we build new interaction patterns
 
 [![Tests](https://img.shields.io/badge/tests-447%20passing-brightgreen)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage->90%25-brightgreen)](#)
@@ -8,13 +16,16 @@ A production-ready prompt management system with AI chat capabilities, template 
 [![Architecture](https://img.shields.io/badge/architecture-clean-blue)](#)
 
 **V1.0 Highlights:**
-- 🏗️ Clean Architecture (Routes → Business → Domain)
-- 🎯 Domain-Driven Design with pure domain models
-- ✅ 447 comprehensive tests (all passing)
-- 🔒 Encrypted API key storage
-- 🚀 Production-ready code quality
+- Clean Architecture (Routes -> Business -> Domain)
+- Domain-Driven Design with pure domain models
+- 447 comprehensive tests (all passing)
+- Encrypted API key storage
+- Production-ready code quality
+- Multi-LLM provider support (OpenAI, Anthropic, Google, Ollama)
+- Real-time SSE streaming chat
+- Conversation persistence
 
-## 🌟 Features
+## Features
 
 ### **AI Chat Interface**
 - **Multi-Provider Support**: OpenAI, Anthropic (Claude), Google (Gemini), and Ollama (local)
@@ -23,6 +34,7 @@ A production-ready prompt management system with AI chat capabilities, template 
 - **Auto-Trimming**: Intelligent message trimming to prevent context overflow
 - **Conversation Persistence**: Save and reload conversations
 - **Customizable System Prompts**: Define AI behavior and personality
+- **Real-time SSE Streaming**: Stream responses as they arrive from the LLM
 
 ### **Secure API Key Management**
 - **Encrypted Storage**: API keys encrypted at rest using Fernet encryption
@@ -43,7 +55,31 @@ A production-ready prompt management system with AI chat capabilities, template 
 - **Save & Load**: Persist templates for reuse
 - **Linkage System**: Dynamic template variable resolution
 
-## 🚀 Quick Start
+## Prerequisites
+
+- **Python 3.11+**
+- **Ollama** (optional, for local LLM support)
+- **Git** (for cloning the repository)
+
+### Installing Ollama (Optional)
+
+Ollama enables running AI models locally without API keys:
+
+```bash
+# macOS/Linux
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Or download from https://ollama.com/download
+```
+
+After installing Ollama, pull a model:
+
+```bash
+ollama pull gemma3:4b
+ollama list  # Verify it's available
+```
+
+## Quick Start
 
 ### Easy Installation (Recommended)
 
@@ -115,7 +151,7 @@ Run AI models locally without API keys:
 3. **Download a model**: `ollama pull gemma3:4b` (lightweight, ~3GB)
 4. The app automatically detects Ollama and shows local models
 
-## 💬 Usage Guide
+## Usage Guide
 
 ### Chat Interface
 
@@ -203,7 +239,7 @@ conversation = {
 saved = conv_manager.save_conversation(conversation)
 ```
 
-## 📁 Data Storage
+## Data Storage
 
 The application stores data locally in structured formats:
 
@@ -227,13 +263,20 @@ The application stores data locally in structured formats:
 - Format: JSON
 - Contains: User preferences, default models, system prompts
 
-## 🧪 Testing
+## Testing
 
 The project uses pytest with comprehensive test coverage:
 
 **Run all tests:**
 ```bash
-python -m pytest tests/ -v
+# Run all tests
+./venv/bin/python -m pytest tests/ -v
+
+# Run specific test file
+./venv/bin/python -m pytest tests/test_chat_message.py -v
+
+# Run with coverage
+./venv/bin/python -m pytest tests/ --cov=src/prompt_manager --cov-report=html
 ```
 
 **Run specific test suites:**
@@ -255,56 +298,63 @@ python -m pytest tests/ --cov=src --cov-report=html
 
 See `TESTING_GUIDE.md` for detailed testing documentation.
 
-## 🏗️ Architecture
+## Architecture
 
 **V1.0 features a clean, three-layer architecture:**
 
 ```
-┌─────────────────────────────────────┐
-│     Routes (HTTP Layer)             │
-│   • Thin orchestration              │
-│   • No business logic               │
-└──────────────┬──────────────────────┘
-               │ uses
-               ▼
-┌─────────────────────────────────────┐
-│  Business Layer (Services)          │
-│   • LLMProviderManager              │
-│   • ConversationManager             │
-│   • TokenManager                    │
-└──────────────┬──────────────────────┘
-               │ uses
-               ▼
-┌─────────────────────────────────────┐
-│   Domain Layer (Pure Logic)         │
-│   • ConversationBuilder             │
-│   • ContextWindowManager            │
-│   • LinkageManager                  │
-│   ✅ Zero dependencies               │
-└─────────────────────────────────────┘
++-------------------------------------+
+|     Routes (HTTP Layer)             |
+|   - Thin orchestration              |
+|   - No business logic               |
++----------------+--------------------+
+                 | uses
+                 v
++-------------------------------------+
+|  Business Layer (Services)          |
+|   - LLMProviderManager              |
+|   - ConversationManager             |
+|   - TokenManager                    |
++----------------+--------------------+
+                 | uses
+                 v
++-------------------------------------+
+|   Domain Layer (Pure Logic)         |
+|   - ConversationBuilder             |
+|   - ContextWindowManager            |
+|   - LinkageManager                  |
+|   - Conversation (aggregate root)   |
+|   - ChatMessage (entity)            |
+|   Zero dependencies                 |
++-------------------------------------+
 ```
 
 ### **Project Structure**
 ```
 prompt-manager/
 ├── prompt_manager_app.py          # Main application entry point
+├── enhanced_simple_server.py      # Alternative server with chat routes
 ├── routes/
 │   ├── dashboard.py               # Chat & settings routes
 │   ├── linkage.py                 # Template builder routes
 │   └── static.py                  # Static file serving
 ├── src/prompt_manager/
-│   ├── domain/                    # Pure business logic (NEW in V1.0)
-│   │   ├── conversation.py        # ConversationBuilder & ContextWindowManager
-│   │   └── linkage_manager.py    # Template linkage rules
+│   ├── domain/                    # Pure business logic
+│   │   ├── chat_message.py        # Message entity
+│   │   ├── conversation.py        # Conversation aggregate + builders
+│   │   └── linkage_manager.py     # Template linkage rules
 │   ├── business/                  # Business services
 │   │   ├── llm_provider_manager.py
-│   │   ├── llm_provider.py
+│   │   ├── llm_provider.py        # LLM abstraction (OpenAI, Ollama)
+│   │   ├── chat_service.py        # Chat orchestration
 │   │   ├── conversation_manager.py
+│   │   ├── conversation_storage.py
 │   │   ├── token_manager.py
 │   │   ├── key_loader.py
 │   │   └── ...
 │   ├── templates/                 # Jinja2 HTML templates
 │   │   ├── chat_dashboard.html
+│   │   ├── chat.html
 │   │   ├── settings.html
 │   │   └── ...
 │   ├── static/                    # CSS, JS, images
@@ -314,67 +364,81 @@ prompt-manager/
     ├── test_llm_provider_manager.py
     ├── test_conversation_storage.py
     ├── test_chat_context_management.py
+    ├── test_ollama_provider.py
     └── ...
 ```
 
 ### **Clean Architecture Principles**
-- **Domain Layer**: Pure business logic, zero dependencies (NEW in V1.0)
+- **Domain Layer**: Pure business logic, zero dependencies
 - **Business Layer**: Services orchestrating domain and infrastructure
 - **Routes**: Thin HTTP handlers, dependency injection pattern
 - **Templates**: Presentation only, no logic
-- **Tests**: 447 tests covering all layers, 16 pure domain tests
+- **Tests**: 447 tests covering all layers
 
 ### **Domain Models (Pure Business Logic)**
 - **ConversationBuilder**: Message array construction rules
 - **ContextWindowManager**: Token trimming and context limits
 - **LinkageManager**: Template variable linkage system
+- **Conversation**: Aggregate root for chat conversations
+- **ChatMessage**: Message entity
 
-✅ **No Flask dependencies** - Portable to CLI, desktop, or mobile apps!
+No Flask dependencies - Portable to CLI, desktop, or mobile apps!
 
-## 🚀 Roadmap
+## Roadmap
 
-### **Version 1.0** ✅ COMPLETE
-- ✅ Multi-model chat interface
-- ✅ Token tracking and auto-trimming
-- ✅ Conversation persistence
-- ✅ Secure API key storage (encrypted)
-- ✅ System prompt customization
-- ✅ Template builder with linkages
-- ✅ Clean architecture refactoring
-- ✅ Domain-driven design
-- ✅ 447 comprehensive tests
-- ✅ Dependency injection pattern
+### **Version 1.0** - COMPLETE
+- Multi-model chat interface
+- Token tracking and auto-trimming
+- Conversation persistence
+- Secure API key storage (encrypted)
+- System prompt customization
+- Template builder with linkages
+- Clean architecture refactoring
+- Domain-driven design
+- 447 comprehensive tests
+- Dependency injection pattern
+- Ollama integration with streaming support
 
 ### **Version 2.0** (Planned)
-- 🔮 Claude and Gemini integration
-- 🔮 Conversation history UI
-- 🔮 Export conversations (Markdown, PDF)
-- 🔮 Prompt library integration
-- 🔮 Usage analytics and cost tracking
-- 🔮 Multi-user support
+- Claude and Gemini integration
+- Conversation history UI
+- Export conversations (Markdown, PDF)
+- Prompt library integration
+- Usage analytics and cost tracking
+- Multi-user support
+- Enhanced context management
+- RAG-style knowledge integration
 
-## 📝 Documentation
+## Documentation
 
 ### **V1.0 Documentation**
 - **V1_FINAL_REPORT.md**: Complete V1.0 metrics and achievements
 - **V1_COMPLETION_PLAN.md**: Refactoring strategy and execution
-- **EPISODE_8A_NARRATION_SCRIPT.md**: Safe refactoring guide
-- **EPISODE_9_DOMAIN_MODELS_SCRIPT.md**: Domain extraction guide
-- **.cursorrules**: AI collaboration partnership charter
-
-### **Technical Documentation**
 - **TESTING_GUIDE.md**: Comprehensive testing documentation
-- **ARCHITECTURE.md**: System design and patterns (coming soon)
-- **CHAT_IMPLEMENTATION.md**: Chat feature technical details
+- **CLAUDE.md**: Development partnership charter
 
-### **Video Series**
-- 📹 **Episode 8A**: Safe Refactoring (Extract Method, Dependency Injection)
-- 📹 **Episode 9**: Domain Models (What they are & why they matter)
+## Contributing
 
-## 🤝 Contributing
+This project is built as an educational collaboration between David (human) and Claude (AI). We document our learnings and design decisions in:
 
-This is a learning project built with AI pair programming. Contributions welcome!
+- `CLAUDE.md` - Partnership charter and principles
+- `knowledge-base/` - ADRs, spike reports, technical notes
+- Git commit messages - Detailed context for each change
 
-## 📄 License
+Feel free to:
+- Report issues
+- Suggest features
+- Learn from the code
+- Fork for your own experiments
 
-MIT License - See LICENSE file for details 
+## License
+
+MIT License - See LICENSE file for details
+
+## Acknowledgments
+
+Built with test-first, domain-driven principles as a collaboration between:
+- **David** - Vision, architecture, domain expertise
+- **Claude** - Implementation, testing, documentation
+
+*Generated with [Claude Code](https://claude.com/claude-code)*

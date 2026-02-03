@@ -1,0 +1,18 @@
+# Core dependencies
+flask>=3.0.0
+flask-cors>=4.0.0
+requests>=2.31.0
+jinja2>=3.1.2
+
+# LLM Providers
+openai>=1.0.0
+ollama>=0.4.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+approvaltests>=0.2.0
+
+# Utilities
+python-dotenv>=1.0.0
+cryptography>=41.0.0

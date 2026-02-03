@@ -194,8 +194,8 @@ recognition.onresult = function(event) {
 
 **Example**: "amber" (wake) vs "sleep amber" (sleep)
 - User says "sleep amber"
-- If we check wake first: matches "amber" → WRONG
-- If we check sleep first: matches "sleep amber" → CORRECT
+- If we check wake first: matches "amber" -> WRONG
+- If we check sleep first: matches "sleep amber" -> CORRECT
 
 ```javascript
 detect(input) {
@@ -208,5 +208,6 @@ detect(input) {
 **General Rule**: Order from most-specific to least-specific.
 
 ---
+
 
 *Update this file as you discover patterns that work well for your team and domain. Remove patterns that don't add value. Make it your own.*

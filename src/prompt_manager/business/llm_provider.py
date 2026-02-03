@@ -105,8 +105,20 @@ class OpenAIProvider(LLMProvider):
             )
 
         except openai.AuthenticationError as e:
+            # Provide specific guidance for common key issues
+            error_detail = str(e)
+            if 'sk-test' in error_detail or 'test' in self.api_key.lower() if self.api_key else False:
+                raise RuntimeError(
+                    "OpenAI authentication failed: You appear to be using a test/placeholder API key.\n"
+                    "Please replace it with a valid API key from https://platform.openai.com/api-keys"
+                )
             raise RuntimeError(
-                f"OpenAI authentication failed. Please verify your API key is correct. Details: {e}"
+                "OpenAI authentication failed: Invalid API key.\n"
+                "Please check your API key at https://platform.openai.com/api-keys\n"
+                "Common issues:\n"
+                "- Key may have been revoked or expired\n"
+                "- Key may have been copied incorrectly\n"
+                "- Key may belong to a different organization"
             )
 
         except openai.BadRequestError as e:

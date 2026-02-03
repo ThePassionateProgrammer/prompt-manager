@@ -4,17 +4,13 @@ Dashboard routes for the Prompt Manager application.
 
 from flask import Blueprint, request, jsonify, render_template
 from src.prompt_manager.business.llm_provider_manager import LLMProviderManager
-from src.prompt_manager.business.llm_provider import OpenAIProvider
-from src.prompt_manager.business.anthropic_provider import AnthropicProvider
-from src.prompt_manager.business.google_provider import GoogleProvider
-from src.prompt_manager.business.ollama_provider import OllamaProvider
+from src.prompt_manager.business.provider_factory import ProviderFactory
 from src.prompt_manager.business.ollama_discovery import OllamaDiscovery
 from src.prompt_manager.business.key_loader import SecureKeyManager
 from src.prompt_manager.business.conversation_manager import ConversationManager
 from src.prompt_manager.business.token_manager import TokenManager
 from src.prompt_manager.business.user_settings_manager import UserSettingsManager
 from src.prompt_manager.business.chat_service import ChatService
-from src.prompt_manager.domain.conversation import ConversationBuilder, ContextWindowManager
 from src.prompt_manager.domain.model_catalog import ModelCatalog
 
 dashboard_bp = Blueprint('dashboard', __name__)
@@ -28,7 +24,7 @@ chat_service = ChatService(provider_manager, token_manager)
 
 # Load saved API keys and initialize providers on startup
 def _initialize_providers():
-    """Load saved API keys and initialize providers."""
+    """Load saved API keys and initialize providers using ProviderFactory."""
     key_manager = SecureKeyManager()
     saved_keys = key_manager.load_all_keys()
 
@@ -36,25 +32,20 @@ def _initialize_providers():
     for key_name, key_value in saved_keys.items():
         # Extract provider name from key name (e.g., 'openai_api_key' -> 'openai')
         if key_name.endswith('_api_key'):
-            provider_name = key_name.replace('_api_key', '')
+            provider_name = key_name.replace('_api_key', '').lower()
 
-            # Create provider based on name
-            if provider_name.lower() == 'openai':
-                provider = OpenAIProvider(api_key=key_value)
-                provider_manager.add_provider('openai', provider)
-            elif provider_name.lower() == 'anthropic':
-                provider = AnthropicProvider(api_key=key_value)
-                provider_manager.add_provider('anthropic', provider)
-            elif provider_name.lower() == 'google':
-                provider = GoogleProvider(api_key=key_value)
-                provider_manager.add_provider('google', provider)
+            # Use ProviderFactory to create provider
+            if provider_name in ProviderFactory.get_supported_providers():
+                if ProviderFactory.requires_api_key(provider_name):
+                    provider = ProviderFactory.create(provider_name, api_key=key_value)
+                    provider_manager.add_provider(provider_name, provider)
 
-            # Set as default if it's the first one
-            if provider_manager.default_provider is None:
-                provider_manager.set_default_provider(provider_name.lower())
+                    # Set as default if it's the first one
+                    if provider_manager.default_provider is None:
+                        provider_manager.set_default_provider(provider_name)
 
     # Always initialize Ollama provider (no API key needed for local)
-    ollama_provider = OllamaProvider()
+    ollama_provider = ProviderFactory.create('ollama')
     if ollama_provider.is_available():
         provider_manager.add_provider('ollama', ollama_provider)
         # Set as default if no online provider configured
@@ -94,17 +85,11 @@ def add_provider():
 
         name_lower = name.lower()
 
-        # Create provider based on type
-        if name_lower == 'openai':
-            provider = OpenAIProvider(api_key=api_key)
-        elif name_lower == 'anthropic':
-            provider = AnthropicProvider(api_key=api_key)
-        elif name_lower == 'google':
-            provider = GoogleProvider(api_key=api_key)
-        else:
-            return jsonify({
-                'error': f'Provider {name} not supported. Supported: openai, anthropic, google'
-            }), 400
+        # Use ProviderFactory for creation
+        try:
+            provider = ProviderFactory.create(name_lower, api_key=api_key)
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 400
 
         # Add to manager
         provider_manager.add_provider(name_lower, provider)
@@ -525,3 +510,35 @@ def hands_free_settings():
         settings_manager.update_settings(settings)
 
         return jsonify({'message': 'Hands-free settings saved successfully'})
+
+
+@dashboard_bp.route('/api/settings/voice', methods=['GET', 'POST'])
+def voice_settings():
+    """Get or update voice control settings (voice, rate, pitch, auto-send timeout)."""
+    if request.method == 'GET':
+        settings = settings_manager.get_all_settings()
+        voice = settings.get('voice', {})
+        return jsonify({
+            'voice_name': voice.get('voice_name', ''),
+            'rate': voice.get('rate', 1.0),
+            'pitch': voice.get('pitch', 1.0),
+            'auto_send_timeout': voice.get('auto_send_timeout', 5)
+        })
+    else:
+        data = request.get_json()
+        settings = settings_manager.get_all_settings()
+        voice = settings.get('voice', {})
+
+        if 'voice_name' in data:
+            voice['voice_name'] = data['voice_name']
+        if 'rate' in data:
+            voice['rate'] = float(data['rate'])
+        if 'pitch' in data:
+            voice['pitch'] = float(data['pitch'])
+        if 'auto_send_timeout' in data:
+            voice['auto_send_timeout'] = int(data['auto_send_timeout'])
+
+        settings['voice'] = voice
+        settings_manager.update_settings(settings)
+
+        return jsonify({'message': 'Voice settings saved successfully'})

@@ -1272,6 +1272,76 @@
             btn.textContent = bar.classList.contains('collapsed') ? '▼ Show Voice' : '▲ Hide Voice';
         }
 
+        // Voice settings persistence
+        let _savedVoiceName = '';
+
+        async function loadVoiceSettings() {
+            try {
+                const response = await fetch('/api/settings/voice');
+                if (response.ok) {
+                    const data = await response.json();
+                    _savedVoiceName = data.voice_name || '';
+
+                    const rateSlider = document.getElementById('voice-rate');
+                    const pitchSlider = document.getElementById('voice-pitch');
+                    const timeoutSlider = document.getElementById('auto-send-timeout');
+
+                    if (rateSlider) {
+                        rateSlider.value = data.rate;
+                        document.getElementById('rate-value').textContent = parseFloat(data.rate).toFixed(1) + 'x';
+                    }
+                    if (pitchSlider) {
+                        pitchSlider.value = data.pitch;
+                        document.getElementById('pitch-value').textContent = parseFloat(data.pitch).toFixed(1);
+                    }
+                    if (timeoutSlider) {
+                        timeoutSlider.value = data.auto_send_timeout;
+                        document.getElementById('timeout-value').textContent = data.auto_send_timeout + 's';
+                    }
+
+                    // Apply saved voice name to dropdown if voices are loaded
+                    applySelectedVoice();
+                }
+            } catch (err) {
+                console.error('Failed to load voice settings:', err);
+            }
+        }
+
+        function applySelectedVoice() {
+            if (!_savedVoiceName) return;
+            const voiceSelect = document.getElementById('voice-select');
+            const voices = speechSynthesis.getVoices();
+            for (let i = 0; i < voices.length; i++) {
+                if (voices[i].name === _savedVoiceName) {
+                    voiceSelect.value = i;
+                    break;
+                }
+            }
+        }
+
+        async function saveVoiceSettings() {
+            const voiceSelect = document.getElementById('voice-select');
+            const voices = speechSynthesis.getVoices();
+            const selectedVoice = voices[voiceSelect.value];
+
+            const settings = {
+                voice_name: selectedVoice ? selectedVoice.name : '',
+                rate: parseFloat(document.getElementById('voice-rate').value),
+                pitch: parseFloat(document.getElementById('voice-pitch').value),
+                auto_send_timeout: parseInt(document.getElementById('auto-send-timeout').value)
+            };
+
+            try {
+                await fetch('/api/settings/voice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+            } catch (err) {
+                console.error('Failed to save voice settings:', err);
+            }
+        }
+
         // Initialize voice controls
         document.addEventListener('DOMContentLoaded', function() {
             // Populate voice select
@@ -1286,9 +1356,12 @@
                         option.textContent = `${voice.name} (${voice.lang})`;
                         voiceSelect.appendChild(option);
                     });
+                    applySelectedVoice();
                 }
                 populateVoices();
                 speechSynthesis.onvoiceschanged = populateVoices;
+
+                voiceSelect.addEventListener('change', saveVoiceSettings);
             }
 
             // Voice control sliders
@@ -1303,17 +1376,23 @@
                 rateSlider.addEventListener('input', () => {
                     rateValue.textContent = parseFloat(rateSlider.value).toFixed(1) + 'x';
                 });
+                rateSlider.addEventListener('change', saveVoiceSettings);
             }
             if (pitchSlider) {
                 pitchSlider.addEventListener('input', () => {
                     pitchValue.textContent = parseFloat(pitchSlider.value).toFixed(1);
                 });
+                pitchSlider.addEventListener('change', saveVoiceSettings);
             }
             if (timeoutSlider) {
                 timeoutSlider.addEventListener('input', () => {
                     timeoutValue.textContent = timeoutSlider.value + 's';
                 });
+                timeoutSlider.addEventListener('change', saveVoiceSettings);
             }
+
+            // Load saved voice settings
+            loadVoiceSettings();
 
             // Test voice button
             const testBtn = document.getElementById('test-voice-btn');

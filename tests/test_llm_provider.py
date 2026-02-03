@@ -187,3 +187,27 @@ class TestOpenAIProviderErrorHandling:
 
         # Should suggest retry
         assert "wait" in str(exc_info.value).lower() or "retry" in str(exc_info.value).lower()
+
+    @patch('src.prompt_manager.business.llm_provider.openai.OpenAI')
+    def test_test_key_error_provides_clear_guidance(self, mock_openai_client):
+        """Test that test/placeholder API keys get specific error guidance."""
+        import openai
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = openai.AuthenticationError(
+            message="Incorrect API key provided: sk-test-...",
+            response=MagicMock(status_code=401),
+            body={"error": {"message": "Incorrect API key provided: sk-test-abc123"}}
+        )
+        mock_openai_client.return_value = mock_client
+
+        from src.prompt_manager.business.llm_provider import OpenAIProvider
+        provider = OpenAIProvider(api_key='sk-test-placeholder')
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.generate(prompt="test")
+
+        error_msg = str(exc_info.value).lower()
+        # Should mention test/placeholder key
+        assert "test" in error_msg or "placeholder" in error_msg
+        # Should point to OpenAI API keys page
+        assert "platform.openai.com" in error_msg

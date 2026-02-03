@@ -253,34 +253,37 @@ class TestProvidersAPI:
     
     @patch('routes.dashboard.provider_manager')
     @patch('routes.dashboard.SecureKeyManager')
-    @patch('routes.dashboard.OpenAIProvider')
-    def test_add_provider_success(self, mock_provider_class, mock_key_manager_class, mock_manager, client):
+    @patch('routes.dashboard.ProviderFactory')
+    def test_add_provider_success(self, mock_factory, mock_key_manager_class, mock_manager, client):
         """Test successfully adding a provider."""
         # Setup mocks
         mock_provider = Mock()
         mock_provider.is_available.return_value = True
-        mock_provider_class.return_value = mock_provider
-        
+        mock_factory.create.return_value = mock_provider
+
         mock_key_manager = Mock()
         mock_key_manager.save_key.return_value = True
         mock_key_manager_class.return_value = mock_key_manager
-        
+
         # Send request
         response = client.post('/api/providers/add',
                               json={
                                   'name': 'openai',
                                   'api_key': 'sk-test123'
                               })
-        
+
         # Assertions
         assert response.status_code == 200
         data = json.loads(response.data)
         assert 'message' in data
         assert 'openai' in data['message'].lower()
-        
-        # Verify provider was added
+
+        # Verify provider was created via factory
+        mock_factory.create.assert_called_once_with('openai', api_key='sk-test123')
+
+        # Verify provider was added to manager
         mock_manager.add_provider.assert_called_once()
-        
+
         # Verify key was saved
         mock_key_manager.save_key.assert_called_once_with('openai_api_key', 'sk-test123')
     

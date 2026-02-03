@@ -115,7 +115,12 @@ function setupEventListeners() {
     document.getElementById('chat-history-btn').addEventListener('click', openHistoryModal);
     document.getElementById('regenerate-btn').addEventListener('click', regenerateLastResponse);
     document.getElementById('save-prompt-btn').addEventListener('click', openSaveConvModal);
-    document.getElementById('voice-settings-btn').addEventListener('click', openVoiceSettingsModal);
+
+    // Voice settings button may not exist in new inline UI
+    const voiceSettingsBtn = document.getElementById('voice-settings-btn');
+    if (voiceSettingsBtn) {
+        voiceSettingsBtn.addEventListener('click', openVoiceSettingsModal);
+    }
 
     // Auto-save settings when they change
     document.getElementById('provider-select').addEventListener('change', saveDashboardSettings);

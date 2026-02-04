@@ -4,7 +4,7 @@ Model catalog domain logic.
 Defines available models for each provider.
 Pure business logic with zero dependencies.
 """
-from typing import List, Dict
+from typing import List, Dict, Set
 
 
 class ModelCatalog:
@@ -277,6 +277,47 @@ class ModelCatalog:
         elif provider_lower == 'ollama':
             return cls.get_ollama_models()
         return []
+
+    @classmethod
+    def _get_size_tier(cls, size_gb: float) -> str:
+        """Determine size tier for a model based on its size in GB.
+
+        Args:
+            size_gb: Model size in gigabytes
+
+        Returns:
+            'small', 'medium', or 'large'
+        """
+        if size_gb < cls.SIZE_TIERS['small']:
+            return 'small'
+        elif size_gb < cls.SIZE_TIERS['medium']:
+            return 'medium'
+        else:
+            return 'large'
+
+    @classmethod
+    def enrich_with_installed_status(
+        cls, catalog_models: List[Dict], installed_ids: Set[str]
+    ) -> List[Dict]:
+        """Enrich catalog models with installed status and size tier.
+
+        Pure domain logic: takes catalog data and installed model IDs,
+        returns new list with 'installed' and 'size_tier' fields added.
+
+        Args:
+            catalog_models: List of catalog model dicts
+            installed_ids: Set of installed model ID strings
+
+        Returns:
+            New list of enriched model dicts (originals not mutated)
+        """
+        enriched = []
+        for model in catalog_models:
+            enriched_model = model.copy()
+            enriched_model['installed'] = model['id'] in installed_ids
+            enriched_model['size_tier'] = cls._get_size_tier(model.get('size_gb', 0))
+            enriched.append(enriched_model)
+        return enriched
 
     @classmethod
     def get_model_by_id(cls, provider: str, model_id: str) -> Dict | None:

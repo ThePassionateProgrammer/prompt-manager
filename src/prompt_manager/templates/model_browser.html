@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Browser - Prompt Manager</title>
+    <style>
+        /* Studio Vibe - Dark Theme (shared palette) */
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-elevated: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-primary: #7c3aed;
+            --accent-secondary: #a78bfa;
+            --accent-glow: rgba(124, 58, 237, 0.3);
+            --success: #3fb950;
+            --warning: #d29922;
+            --error: #f85149;
+            --info: #58a6ff;
+            --border-default: #30363d;
+            --border-muted: #21262d;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px var(--accent-glow);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ---- NAVBAR ---- */
+        .navbar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-default);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            z-index: 100;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--error);
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 6px var(--success);
+        }
+
+        /* ---- MAIN LAYOUT ---- */
+        .main-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* ---- FILTER SIDEBAR ---- */
+        .filter-sidebar {
+            width: 240px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-default);
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .filter-group input[type="text"] {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .filter-group input[type="text"]:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .filter-chip {
+            padding: 5px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-radius: 14px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--accent-secondary);
+            color: var(--text-primary);
+        }
+
+        .filter-chip.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .filter-count {
+            font-size: 12px;
+            color: var(--text-muted);
+            padding-top: 8px;
+            border-top: 1px solid var(--border-muted);
+        }
+
+        /* ---- MODEL GRID ---- */
+        .model-grid-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+        }
+
+        .model-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .model-card:hover {
+            border-color: var(--accent-secondary);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .model-card.selected {
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .model-card.installed {
+            border-left: 3px solid var(--success);
+        }
+
+        .model-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .model-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .model-id {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .model-badges {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .badge-installed {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--success);
+        }
+
+        .badge-size {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .badge-category {
+            background: rgba(88, 166, 255, 0.12);
+            color: var(--info);
+        }
+
+        .model-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-top: 6px;
+        }
+
+        .model-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ---- DETAIL PANEL ---- */
+        .detail-panel {
+            width: 320px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-default);
+            padding: 24px 20px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .detail-panel.visible {
+            display: block;
+        }
+
+        .detail-header {
+            margin-bottom: 20px;
+        }
+
+        .detail-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .detail-id {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .detail-section {
+            margin-bottom: 16px;
+        }
+
+        .detail-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .detail-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .detail-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .detail-stat {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .detail-stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .detail-stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .detail-actions {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* ---- BUTTONS ---- */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #6d28d9;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--error);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(248, 81, 73, 0.25);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-default);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .btn-icon {
+            padding: 6px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        /* ---- LOADING & EMPTY STATES ---- */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--text-muted);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        /* ---- TOAST NOTIFICATION ---- */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-success {
+            background: rgba(63, 185, 80, 0.9);
+            color: white;
+        }
+
+        .toast-error {
+            background: rgba(248, 81, 73, 0.9);
+            color: white;
+        }
+
+        .toast-info {
+            background: rgba(88, 166, 255, 0.9);
+            color: white;
+        }
+
+        /* ---- PROGRESS BAR ---- */
+        .pull-progress {
+            width: 100%;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .pull-progress-bar {
+            height: 100%;
+            background: var(--accent-primary);
+            border-radius: 2px;
+            animation: progress-pulse 1.5s ease-in-out infinite;
+            width: 40%;
+        }
+
+        @keyframes progress-pulse {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(300%); }
+        }
+
+        .detail-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+
+        .detail-close:hover {
+            color: var(--text-primary);
+        }
+
+        .detail-panel {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <span class="nav-title">Model Browser</span>
+            <a href="/chat" class="nav-link">Chat</a>
+            <a href="/" class="nav-link">Prompts</a>
+        </div>
+        <div class="nav-left">
+            <div class="server-status">
+                <span class="status-dot" id="server-dot"></span>
+                <span id="server-status-text">Checking...</span>
+            </div>
+            <button class="btn-icon" onclick="refreshModels()" title="Refresh model list">&#x21bb;</button>
+        </div>
+    </nav>
+
+    <!-- MAIN LAYOUT -->
+    <div class="main-container">
+        <!-- FILTER SIDEBAR -->
+        <aside class="filter-sidebar">
+            <div class="filter-group">
+                <label>Search</label>
+                <input type="text" id="search-input" placeholder="Filter models..." oninput="applyFilters()">
+            </div>
+
+            <div class="filter-group">
+                <label>Category</label>
+                <div class="filter-chips" id="category-filters">
+                    <button class="filter-chip active" data-category="all" onclick="toggleCategory(this)">All</button>
+                    <button class="filter-chip" data-category="general" onclick="toggleCategory(this)">General</button>
+                    <button class="filter-chip" data-category="code" onclick="toggleCategory(this)">Code</button>
+                    <button class="filter-chip" data-category="multilingual" onclick="toggleCategory(this)">Multi-lang</button>
+                    <button class="filter-chip" data-category="reasoning" onclick="toggleCategory(this)">Reasoning</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Size Tier</label>
+                <div class="filter-chips" id="size-filters">
+                    <button class="filter-chip active" data-tier="all" onclick="toggleTier(this)">All</button>
+                    <button class="filter-chip" data-tier="small" onclick="toggleTier(this)">Small (&lt;3GB)</button>
+                    <button class="filter-chip" data-tier="medium" onclick="toggleTier(this)">Medium (3-6GB)</button>
+                    <button class="filter-chip" data-tier="large" onclick="toggleTier(this)">Large (&gt;6GB)</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Status</label>
+                <div class="filter-chips" id="status-filters">
+                    <button class="filter-chip active" data-status="all" onclick="toggleStatus(this)">All</button>
+                    <button class="filter-chip" data-status="installed" onclick="toggleStatus(this)">Installed</button>
+                    <button class="filter-chip" data-status="available" onclick="toggleStatus(this)">Available</button>
+                </div>
+            </div>
+
+            <div class="filter-count" id="filter-count">Loading...</div>
+        </aside>
+
+        <!-- MODEL GRID -->
+        <div class="model-grid-container">
+            <div class="model-grid" id="model-grid">
+                <div class="empty-state">
+                    <div class="empty-state-icon">&#x1f504;</div>
+                    <p>Loading models...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DETAIL PANEL -->
+        <aside class="detail-panel" id="detail-panel">
+            <button class="detail-close" onclick="closeDetail()">&times;</button>
+            <div class="detail-header">
+                <div class="detail-title" id="detail-title"></div>
+                <div class="detail-id" id="detail-id"></div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title">Description</div>
+                <div class="detail-description" id="detail-description"></div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title">Specifications</div>
+                <div class="detail-stats">
+                    <div class="detail-stat">
+                        <div class="detail-stat-label">Size</div>
+                        <div class="detail-stat-value" id="detail-size"></div>
+                    </div>
+                    <div class="detail-stat">
+                        <div class="detail-stat-label">Category</div>
+                        <div class="detail-stat-value" id="detail-category"></div>
+                    </div>
+                    <div class="detail-stat">
+                        <div class="detail-stat-label">Tier</div>
+                        <div class="detail-stat-value" id="detail-tier"></div>
+                    </div>
+                    <div class="detail-stat">
+                        <div class="detail-stat-label">Status</div>
+                        <div class="detail-stat-value" id="detail-status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-actions" id="detail-actions"></div>
+        </aside>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ---- STATE ----
+        let allModels = [];
+        let filteredModels = [];
+        let selectedModel = null;
+        let activeCategory = 'all';
+        let activeTier = 'all';
+        let activeStatus = 'all';
+        let serverRunning = false;
+
+        // ---- INITIALIZATION ----
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshModels();
+        });
+
+        async function refreshModels() {
+            try {
+                const response = await fetch('/api/ollama/models/browse');
+                const data = await response.json();
+
+                allModels = data.models || [];
+                serverRunning = data.server_running;
+
+                updateServerStatus();
+                applyFilters();
+
+                if (selectedModel) {
+                    const updated = allModels.find(m => m.id === selectedModel.id);
+                    if (updated) {
+                        selectModel(updated);
+                    }
+                }
+            } catch (err) {
+                showToast('Failed to load models: ' + err.message, 'error');
+            }
+        }
+
+        // ---- SERVER STATUS ----
+        function updateServerStatus() {
+            const dot = document.getElementById('server-dot');
+            const text = document.getElementById('server-status-text');
+
+            if (serverRunning) {
+                dot.classList.add('connected');
+                text.textContent = 'Ollama Connected';
+            } else {
+                dot.classList.remove('connected');
+                text.textContent = 'Ollama Offline';
+            }
+        }
+
+        // ---- FILTERING ----
+        function toggleCategory(chip) {
+            activeCategory = chip.dataset.category;
+            updateChipGroup('category-filters', activeCategory);
+            applyFilters();
+        }
+
+        function toggleTier(chip) {
+            activeTier = chip.dataset.tier;
+            updateChipGroup('size-filters', activeTier);
+            applyFilters();
+        }
+
+        function toggleStatus(chip) {
+            activeStatus = chip.dataset.status;
+            updateChipGroup('status-filters', activeStatus);
+            applyFilters();
+        }
+
+        function updateChipGroup(groupId, activeValue) {
+            const chips = document.querySelectorAll(`#${groupId} .filter-chip`);
+            chips.forEach(c => {
+                const val = c.dataset.category || c.dataset.tier || c.dataset.status;
+                c.classList.toggle('active', val === activeValue);
+            });
+        }
+
+        function applyFilters() {
+            const searchText = document.getElementById('search-input').value.toLowerCase();
+
+            filteredModels = allModels.filter(model => {
+                // Search filter
+                if (searchText) {
+                    const haystack = `${model.id} ${model.name} ${model.description}`.toLowerCase();
+                    if (!haystack.includes(searchText)) return false;
+                }
+
+                // Category filter
+                if (activeCategory !== 'all' && model.category !== activeCategory) return false;
+
+                // Size tier filter
+                if (activeTier !== 'all' && model.size_tier !== activeTier) return false;
+
+                // Status filter
+                if (activeStatus === 'installed' && !model.installed) return false;
+                if (activeStatus === 'available' && model.installed) return false;
+
+                return true;
+            });
+
+            renderGrid();
+            updateFilterCount();
+        }
+
+        function updateFilterCount() {
+            const installed = allModels.filter(m => m.installed).length;
+            const total = allModels.length;
+            const showing = filteredModels.length;
+
+            document.getElementById('filter-count').textContent =
+                `Showing ${showing} of ${total} models (${installed} installed)`;
+        }
+
+        // ---- RENDERING ----
+        function renderGrid() {
+            const grid = document.getElementById('model-grid');
+
+            if (filteredModels.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">&#x1f50d;</div>
+                        <p>No models match your filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filteredModels.map(model => `
+                <div class="model-card ${model.installed ? 'installed' : ''} ${selectedModel && selectedModel.id === model.id ? 'selected' : ''}"
+                     data-model-id="${esc(model.id)}">
+                    <div class="model-card-header">
+                        <div>
+                            <div class="model-name">${esc(model.name)}</div>
+                            <div class="model-id">${esc(model.id)}</div>
+                        </div>
+                        <div class="model-badges">
+                            ${model.installed ? '<span class="badge badge-installed">Installed</span>' : ''}
+                            <span class="badge badge-size">${model.size_gb} GB</span>
+                        </div>
+                    </div>
+                    <div class="model-description">${esc(model.description)}</div>
+                    <div class="model-meta">
+                        <span class="badge badge-category">${esc(model.category)}</span>
+                        <span>${esc(model.size_tier)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Attach click handlers via delegation
+            grid.querySelectorAll('.model-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const modelId = card.dataset.modelId;
+                    const model = allModels.find(m => m.id === modelId);
+                    if (model) selectModel(model);
+                });
+            });
+        }
+
+        // ---- DETAIL PANEL ----
+        function selectModel(model) {
+            selectedModel = model;
+            const panel = document.getElementById('detail-panel');
+
+            document.getElementById('detail-title').textContent = model.name;
+            document.getElementById('detail-id').textContent = model.id;
+            document.getElementById('detail-description').textContent = model.description;
+            document.getElementById('detail-size').textContent = model.size_gb + ' GB';
+            document.getElementById('detail-category').textContent = model.category;
+            document.getElementById('detail-tier').textContent = model.size_tier;
+
+            const statusEl = document.getElementById('detail-status');
+            statusEl.textContent = model.installed ? 'Installed' : 'Available';
+            statusEl.style.color = model.installed ? 'var(--success)' : 'var(--text-secondary)';
+
+            // Actions
+            const actionsEl = document.getElementById('detail-actions');
+            if (model.installed) {
+                actionsEl.innerHTML = `
+                    <button class="btn btn-danger" onclick="deleteModel('${esc(model.id)}')">
+                        Delete Model
+                    </button>
+                `;
+            } else {
+                actionsEl.innerHTML = `
+                    <button class="btn btn-primary" onclick="pullModel('${esc(model.id)}')"
+                            ${!serverRunning ? 'disabled title="Ollama server is offline"' : ''}>
+                        Download Model
+                    </button>
+                    ${!serverRunning ? '<p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Start Ollama to download models</p>' : ''}
+                `;
+            }
+
+            panel.classList.add('visible');
+            renderGrid(); // re-render to update selected state
+        }
+
+        function closeDetail() {
+            selectedModel = null;
+            document.getElementById('detail-panel').classList.remove('visible');
+            renderGrid();
+        }
+
+        // ---- ACTIONS ----
+        async function pullModel(modelId) {
+            const actionsEl = document.getElementById('detail-actions');
+            actionsEl.innerHTML = `
+                <button class="btn btn-primary" disabled>
+                    <span class="loading-spinner"></span> Downloading...
+                </button>
+                <div class="pull-progress"><div class="pull-progress-bar"></div></div>
+            `;
+
+            try {
+                const response = await fetch('/api/ollama/models/pull', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: modelId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`${modelId} downloaded successfully`, 'success');
+                    await refreshModels();
+                } else {
+                    showToast(`Failed to download: ${data.error}`, 'error');
+                    if (selectedModel) selectModel(selectedModel);
+                }
+            } catch (err) {
+                showToast('Download failed: ' + err.message, 'error');
+                if (selectedModel) selectModel(selectedModel);
+            }
+        }
+
+        async function deleteModel(modelId) {
+            if (!confirm(`Delete ${modelId}? This will remove the model from your system.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/ollama/models/${modelId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`${modelId} deleted`, 'success');
+                    closeDetail();
+                    await refreshModels();
+                } else {
+                    showToast(`Failed to delete: ${data.error}`, 'error');
+                }
+            } catch (err) {
+                showToast('Delete failed: ' + err.message, 'error');
+            }
+        }
+
+        // ---- UTILITIES ----
+        function esc(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast toast-${type} visible`;
+
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

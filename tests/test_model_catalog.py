@@ -134,6 +134,88 @@ class TestModelCatalogOllamaFiltering:
             assert model['size_gb'] < ModelCatalog.SIZE_TIERS['small']
 
 
+class TestModelCatalogBrowseView:
+    """Test enriching catalog models with installed status for browser UI."""
+
+    def test_enrich_marks_installed_models(self):
+        """Installed models should be marked with installed=True."""
+        # Arrange
+        catalog_models = [
+            {'id': 'gemma3:4b', 'name': 'Gemma 3 (4B)', 'size_gb': 3.3,
+             'category': 'general', 'description': 'Fast and efficient.'},
+            {'id': 'llama3:8b', 'name': 'Llama 3 (8B)', 'size_gb': 4.7,
+             'category': 'general', 'description': 'Great for most tasks.'},
+        ]
+        installed_ids = {'gemma3:4b'}
+
+        # Act
+        result = ModelCatalog.enrich_with_installed_status(catalog_models, installed_ids)
+
+        # Assert
+        assert result[0]['installed'] is True
+        assert result[1]['installed'] is False
+
+    def test_enrich_preserves_all_catalog_fields(self):
+        """Enrichment should not lose any original catalog fields."""
+        # Arrange
+        catalog_models = [
+            {'id': 'gemma3:4b', 'name': 'Gemma 3 (4B)', 'size_gb': 3.3,
+             'category': 'general', 'description': 'Fast and efficient.'},
+        ]
+
+        # Act
+        result = ModelCatalog.enrich_with_installed_status(catalog_models, set())
+
+        # Assert
+        model = result[0]
+        assert model['id'] == 'gemma3:4b'
+        assert model['name'] == 'Gemma 3 (4B)'
+        assert model['size_gb'] == 3.3
+        assert model['category'] == 'general'
+        assert model['description'] == 'Fast and efficient.'
+
+    def test_enrich_with_empty_catalog(self):
+        """Should return empty list for empty catalog."""
+        result = ModelCatalog.enrich_with_installed_status([], {'gemma3:4b'})
+        assert result == []
+
+    def test_enrich_with_no_installed_models(self):
+        """All models should be marked not installed when none are downloaded."""
+        catalog_models = ModelCatalog.get_ollama_models()
+
+        result = ModelCatalog.enrich_with_installed_status(catalog_models, set())
+
+        assert all(m['installed'] is False for m in result)
+
+    def test_enrich_does_not_mutate_original(self):
+        """Enrichment should not modify the original catalog models."""
+        catalog_models = [
+            {'id': 'gemma3:4b', 'name': 'Gemma 3 (4B)', 'size_gb': 3.3,
+             'category': 'general', 'description': 'Fast.'},
+        ]
+
+        ModelCatalog.enrich_with_installed_status(catalog_models, {'gemma3:4b'})
+
+        assert 'installed' not in catalog_models[0]
+
+    def test_enrich_adds_size_tier(self):
+        """Enriched models should include their size tier."""
+        catalog_models = [
+            {'id': 'tinyllama', 'name': 'TinyLlama', 'size_gb': 0.6,
+             'category': 'general', 'description': 'Tiny.'},
+            {'id': 'gemma3:4b', 'name': 'Gemma 3', 'size_gb': 3.3,
+             'category': 'general', 'description': 'Medium.'},
+            {'id': 'llama3:70b', 'name': 'Llama 3 70B', 'size_gb': 39.0,
+             'category': 'general', 'description': 'Large.'},
+        ]
+
+        result = ModelCatalog.enrich_with_installed_status(catalog_models, set())
+
+        assert result[0]['size_tier'] == 'small'
+        assert result[1]['size_tier'] == 'medium'
+        assert result[2]['size_tier'] == 'large'
+
+
 class TestModelCatalogExistingProviders:
     """Ensure existing provider methods still work."""
 

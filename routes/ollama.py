@@ -2,7 +2,7 @@
 Ollama-specific routes for the Prompt Manager application.
 """
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template
 from src.prompt_manager.business.ollama_discovery import OllamaDiscovery
 from src.prompt_manager.domain.model_catalog import ModelCatalog
 
@@ -10,6 +10,12 @@ ollama_bp = Blueprint('ollama', __name__)
 
 # Initialize discovery service
 ollama_discovery = OllamaDiscovery()
+
+
+@ollama_bp.route('/models')
+def model_browser():
+    """Serve the model browser page."""
+    return render_template('model_browser.html')
 
 
 @ollama_bp.route('/api/ollama/models', methods=['GET'])
@@ -66,6 +72,45 @@ def pull_model():
         return jsonify(result)
     else:
         return jsonify(result), 400
+
+
+@ollama_bp.route('/api/ollama/models/browse', methods=['GET'])
+def browse_models():
+    """Browse catalog models enriched with installed status.
+
+    Merges the static model catalog with live installed status from Ollama.
+    Returns catalog models with 'installed' boolean and 'size_tier' fields.
+
+    Query Parameters:
+        max_size: Maximum model size in GB (optional)
+        category: Filter by category (optional)
+
+    Returns:
+        JSON with models list and server_running status
+    """
+    max_size = request.args.get('max_size', type=float)
+    category = request.args.get('category')
+
+    catalog_models = ModelCatalog.get_ollama_models(
+        max_size_gb=max_size, category=category
+    )
+
+    # Get installed model IDs from live server
+    installed_ids = set()
+    server_running = False
+    try:
+        downloaded = ollama_discovery.list_downloaded_models()
+        installed_ids = {m.full_name for m in downloaded}
+        server_running = True
+    except Exception:
+        server_running = ollama_discovery.is_server_running()
+
+    enriched = ModelCatalog.enrich_with_installed_status(catalog_models, installed_ids)
+
+    return jsonify({
+        'models': enriched,
+        'server_running': server_running
+    })
 
 
 @ollama_bp.route('/api/ollama/models/available', methods=['GET'])

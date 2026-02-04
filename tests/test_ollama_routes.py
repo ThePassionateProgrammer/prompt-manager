@@ -13,7 +13,11 @@ from src.prompt_manager.domain.ollama_model import OllamaModel
 @pytest.fixture
 def app():
     """Create Flask test app with Ollama blueprint."""
-    app = Flask(__name__)
+    import os
+    template_dir = os.path.join(
+        os.path.dirname(__file__), '..', 'src', 'prompt_manager', 'templates'
+    )
+    app = Flask(__name__, template_folder=os.path.abspath(template_dir))
     app.config['TESTING'] = True
     app.register_blueprint(ollama_bp)
     return app
@@ -23,6 +27,26 @@ def app():
 def client(app):
     """Create test client."""
     return app.test_client()
+
+
+class TestModelBrowserPage:
+    """Test the model browser page route."""
+
+    def test_model_browser_page_returns_html(self, client):
+        """GET /models should return the model browser HTML page."""
+        response = client.get('/models')
+
+        assert response.status_code == 200
+        assert b'Model Browser' in response.data
+        assert b'model-grid' in response.data
+
+    def test_model_browser_page_has_filter_controls(self, client):
+        """Model browser page should have filter UI elements."""
+        response = client.get('/models')
+
+        assert b'search-input' in response.data
+        assert b'category-filters' in response.data
+        assert b'size-filters' in response.data
 
 
 class TestOllamaModelsAPI:
@@ -159,6 +183,102 @@ class TestOllamaDeleteModelAPI:
         data = response.get_json()
         assert data['success'] is False
         assert 'error' in data
+
+
+class TestOllamaModelBrowseAPI:
+    """Test API endpoint for browsing models with installed status."""
+
+    @patch('routes.ollama.ollama_discovery')
+    def test_browse_returns_enriched_models(self, mock_discovery, client):
+        """GET /api/ollama/models/browse should return catalog models with installed status."""
+        # Arrange
+        mock_model = OllamaModel('gemma3:4b')
+        mock_discovery.list_downloaded_models.return_value = [mock_model]
+
+        # Act
+        response = client.get('/api/ollama/models/browse')
+
+        # Assert
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'models' in data
+        assert len(data['models']) > 0
+        # Each model should have installed field
+        for model in data['models']:
+            assert 'installed' in model
+            assert 'size_tier' in model
+
+    @patch('routes.ollama.ollama_discovery')
+    def test_browse_marks_installed_correctly(self, mock_discovery, client):
+        """Browse should correctly identify which catalog models are installed."""
+        # Arrange
+        mock_model = OllamaModel('gemma3:4b')
+        mock_discovery.list_downloaded_models.return_value = [mock_model]
+
+        # Act
+        response = client.get('/api/ollama/models/browse')
+        data = response.get_json()
+
+        # Assert - find gemma3:4b in results
+        gemma = next((m for m in data['models'] if m['id'] == 'gemma3:4b'), None)
+        assert gemma is not None
+        assert gemma['installed'] is True
+
+        # Other models should not be installed
+        llama = next((m for m in data['models'] if m['id'] == 'llama3:8b'), None)
+        assert llama is not None
+        assert llama['installed'] is False
+
+    @patch('routes.ollama.ollama_discovery')
+    def test_browse_with_category_filter(self, mock_discovery, client):
+        """Browse should support category filtering."""
+        mock_discovery.list_downloaded_models.return_value = []
+
+        response = client.get('/api/ollama/models/browse?category=code')
+
+        assert response.status_code == 200
+        data = response.get_json()
+        for model in data['models']:
+            assert model['category'] == 'code'
+
+    @patch('routes.ollama.ollama_discovery')
+    def test_browse_with_size_filter(self, mock_discovery, client):
+        """Browse should support max_size filtering."""
+        mock_discovery.list_downloaded_models.return_value = []
+
+        response = client.get('/api/ollama/models/browse?max_size=3')
+
+        assert response.status_code == 200
+        data = response.get_json()
+        for model in data['models']:
+            assert model['size_gb'] <= 3
+
+    @patch('routes.ollama.ollama_discovery')
+    def test_browse_includes_server_status(self, mock_discovery, client):
+        """Browse response should include Ollama server status."""
+        mock_discovery.list_downloaded_models.return_value = []
+        mock_discovery.is_server_running.return_value = True
+
+        response = client.get('/api/ollama/models/browse')
+        data = response.get_json()
+
+        assert 'server_running' in data
+        assert data['server_running'] is True
+
+    @patch('routes.ollama.ollama_discovery')
+    def test_browse_when_server_down(self, mock_discovery, client):
+        """Browse should still return catalog when Ollama server is down."""
+        mock_discovery.list_downloaded_models.side_effect = Exception("Connection refused")
+        mock_discovery.is_server_running.return_value = False
+
+        response = client.get('/api/ollama/models/browse')
+
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['server_running'] is False
+        assert len(data['models']) > 0
+        # All should be marked not installed
+        assert all(m['installed'] is False for m in data['models'])
 
 
 class TestOllamaAvailableModelsAPI:

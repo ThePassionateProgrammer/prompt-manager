@@ -3,208 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Prompt Manager</title>
+    <title>Settings - Prompt Studio</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Studio Vibe - Dark Theme */
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-elevated: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-primary: #7c3aed;
+            --accent-secondary: #a78bfa;
+            --accent-glow: rgba(124, 58, 237, 0.3);
+            --success: #3fb950;
+            --warning: #d29922;
+            --error: #f85149;
+            --info: #58a6ff;
+            --border-default: #30363d;
+            --border-muted: #21262d;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px var(--accent-glow);
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
+        }
+
+        /* ---- NAVBAR ---- */
+        .navbar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-default);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            box-shadow: var(--shadow-md);
         }
 
-        .container {
-            max-width: 600px;
-            width: 100%;
-        }
-
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.5s ease;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .header-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
+        .nav-left {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 40px;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            gap: 16px;
         }
 
-        h1 {
-            font-size: 28px;
-            color: #1a202c;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
-
-        .subtitle {
-            color: #718096;
-            font-size: 15px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
+        .nav-title {
+            font-size: 18px;
             font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
             font-size: 14px;
-            letter-spacing: 0.3px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        /* ---- MAIN CONTENT ---- */
+        .main-content {
+            flex: 1;
+            max-width: 720px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* ---- SECTIONS ---- */
+        .section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .section-icon {
+            font-size: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .section-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        /* ---- FORMS ---- */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+            cursor: pointer;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
         }
 
         .input-wrapper {
             position: relative;
         }
 
-        select, input {
-            width: 100%;
-            padding: 15px 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            background: #f7fafc;
-            color: #2d3748;
-            font-family: inherit;
-        }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: #4299e1;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-        }
-
-        select {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234299e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 15px center;
-            background-size: 20px;
-            padding-right: 45px;
-            cursor: pointer;
-        }
-
-        input[type="password"] {
-            font-family: 'Courier New', monospace;
+        .input-wrapper input[type="password"] {
+            font-family: 'SF Mono', 'Fira Code', monospace;
             letter-spacing: 2px;
         }
 
         .toggle-password {
             position: absolute;
-            right: 15px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
-            color: #718096;
+            color: var(--text-muted);
             cursor: pointer;
-            font-size: 20px;
-            padding: 5px;
-            transition: color 0.3s ease;
+            font-size: 16px;
+            padding: 4px;
         }
 
         .toggle-password:hover {
-            color: #4299e1;
+            color: var(--text-primary);
         }
 
+        /* ---- BUTTONS ---- */
         .btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            padding: 10px 20px;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
         }
 
-        .btn:active {
-            transform: translateY(0);
+        .btn-primary:hover {
+            background: #6d28d9;
+            box-shadow: var(--shadow-glow);
         }
 
-        .btn-back {
-            background: #718096;
-            margin-bottom: 15px;
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-default);
         }
 
-        .btn-back:hover {
-            background: #4a5568;
+        .btn-secondary:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
         }
 
-        .saved-keys {
-            margin-top: 40px;
-            padding-top: 30px;
-            border-top: 2px solid #e2e8f0;
+        .btn-danger {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--error);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            padding: 6px 12px;
+            font-size: 12px;
         }
 
-        .saved-keys h2 {
-            font-size: 18px;
-            color: #2d3748;
-            margin-bottom: 20px;
-            font-weight: 600;
+        .btn-danger:hover {
+            background: rgba(248, 81, 73, 0.25);
         }
 
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* ---- KEY ITEMS ---- */
         .key-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px;
-            background: #f7fafc;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .key-item:hover {
-            background: #edf2f7;
-            border-color: #cbd5e0;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-muted);
         }
 
         .key-info {
@@ -214,158 +266,129 @@
         }
 
         .key-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            border-radius: 10px;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 16px;
         }
 
-        .key-details {
-            display: flex;
-            flex-direction: column;
-        }
+        .key-icon-openai { background: linear-gradient(135deg, #3fb950 0%, #2ea043 100%); }
+        .key-icon-anthropic { background: linear-gradient(135deg, #58a6ff 0%, #388bfd 100%); }
+        .key-icon-google { background: linear-gradient(135deg, #d29922 0%, #bb8009 100%); }
+        .key-icon-ollama { background: linear-gradient(135deg, var(--accent-primary) 0%, #6d28d9 100%); }
 
         .key-name {
-            font-weight: 600;
-            color: #2d3748;
-            font-size: 15px;
+            font-size: 14px;
+            font-weight: 500;
         }
 
         .key-status {
-            font-size: 13px;
-            color: #48bb78;
+            font-size: 12px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
 
-        .key-status.unavailable {
-            color: #fc8181;
-        }
+        .key-status.active { color: var(--success); }
+        .key-status.inactive { color: var(--error); }
 
         .status-dot {
             width: 6px;
             height: 6px;
-            background: #48bb78;
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
 
-        .status-dot.unavailable {
-            background: #fc8181;
-        }
+        .status-dot.active { background: var(--success); }
+        .status-dot.inactive { background: var(--error); }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
 
-        .btn-delete {
-            padding: 8px 16px;
-            background: #fc8181;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-delete:hover {
-            background: #f56565;
-            transform: translateY(-1px);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #a0aec0;
-        }
-
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
-
+        /* ---- INFO BOX ---- */
         .info-box {
-            background: #ebf8ff;
-            border-left: 4px solid #4299e1;
-            padding: 15px 20px;
+            background: rgba(88, 166, 255, 0.08);
+            border: 1px solid rgba(88, 166, 255, 0.2);
             border-radius: 8px;
-            margin-bottom: 25px;
-        }
-
-        .info-box-title {
-            font-weight: 600;
-            color: #2c5282;
-            margin-bottom: 5px;
-            font-size: 14px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
         }
 
         .info-box-text {
-            color: #2c5282;
             font-size: 13px;
-            line-height: 1.6;
+            color: var(--text-secondary);
+            line-height: 1.5;
         }
 
-        .notification {
+        .info-box-text a {
+            color: var(--info);
+            text-decoration: none;
+        }
+
+        .info-box-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* ---- TOAST NOTIFICATION ---- */
+        .toast {
             position: fixed;
-            top: 20px;
+            bottom: 20px;
             right: 20px;
-            padding: 16px 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
             z-index: 1000;
-            animation: slideIn 0.3s ease;
-            max-width: 400px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            box-shadow: var(--shadow-lg);
         }
 
-        @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
-        .notification.success {
-            border-left: 4px solid #48bb78;
+        .toast-success { background: rgba(63, 185, 80, 0.9); color: white; }
+        .toast-error { background: rgba(248, 81, 73, 0.9); color: white; }
+
+        .empty-state {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 13px;
         }
 
-        .notification.error {
-            border-left: 4px solid #fc8181;
-        }
-
-        @media (max-width: 640px) {
-            .card {
-                padding: 30px 20px;
-            }
-            
-            h1 {
-                font-size: 24px;
-            }
+        .empty-state-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <div class="header">
-                <div class="header-icon">🔐</div>
-                <h1>Settings</h1>
-                <p class="subtitle">Manage your API keys and preferences</p>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <span class="nav-title">Settings</span>
+            <a href="/chat" class="nav-link">Chat</a>
+            <a href="/models" class="nav-link">Models</a>
+            <a href="/" class="nav-link">Prompts</a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <!-- API KEYS SECTION -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-icon">&#x1f511;</span>
+                <span class="section-title">API Keys</span>
             </div>
-
-            <button class="btn btn-back" onclick="window.location.href='/chat'">
-                ← Back to Chat
-            </button>
-
             <div class="info-box">
-                <div class="info-box-title">🛡️ Secure Storage</div>
                 <div class="info-box-text">
                     Your API keys are encrypted and stored locally. They never leave your device.
                 </div>
@@ -373,8 +396,8 @@
 
             <form id="key-form">
                 <div class="form-group">
-                    <label for="provider">Select Provider</label>
-                    <select id="provider" required>
+                    <label class="form-label" for="provider">Provider</label>
+                    <select id="provider" class="form-select" required>
                         <option value="">Choose a provider...</option>
                         <option value="openai">OpenAI (ChatGPT)</option>
                         <option value="anthropic">Anthropic (Claude)</option>
@@ -383,230 +406,131 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="api-key">API Key</label>
+                    <label class="form-label" for="api-key">API Key</label>
                     <div class="input-wrapper">
-                        <input 
-                            type="password" 
-                            id="api-key" 
-                            placeholder="sk-..." 
-                            required
-                        >
-                        <button type="button" class="toggle-password" onclick="togglePassword()">
-                            👁️
-                        </button>
+                        <input type="password" id="api-key" class="form-input" placeholder="sk-..." required>
+                        <button type="button" class="toggle-password" onclick="togglePassword()">&#x1f441;</button>
                     </div>
                 </div>
 
-                <button type="submit" class="btn">
-                    💾 Save API Key
-                </button>
+                <button type="submit" class="btn btn-primary btn-block">Save API Key</button>
             </form>
 
-            <div class="saved-keys" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e2e8f0;">
-                <h2>System Prompt</h2>
-                <div class="info-box" style="margin-bottom: 15px;">
-                    <div class="info-box-title">💭 What is a system prompt?</div>
-                    <div class="info-box-text">
-                        The system prompt sets the AI's behavior and personality for all conversations.
-                    </div>
-                </div>
-                
-                <form id="system-prompt-form">
-                    <div class="form-group">
-                        <label for="system-prompt">Custom System Prompt</label>
-                        <textarea 
-                            id="system-prompt" 
-                            rows="4"
-                            style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-family: inherit; resize: vertical;"
-                            placeholder="You are a helpful assistant..."
-                        ></textarea>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px;">
-                        <button type="submit" class="btn" style="flex: 1;">
-                            💾 Save System Prompt
-                        </button>
-                        <button type="button" class="btn" style="flex: 1; background: #718096;" onclick="loadDefaultSystemPrompt()">
-                            🔄 Reset to Default
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="saved-keys">
-                <h2>Saved API Keys</h2>
-                <div id="keys-list">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🔑</div>
-                        <p>No API keys saved yet</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="saved-keys" id="ollama-section">
-                <h2>🦙 Ollama Local Models</h2>
-                <div class="info-box" style="margin-bottom: 15px;">
-                    <div class="info-box-title">💻 Run AI Locally</div>
-                    <div class="info-box-text">
-                        Ollama lets you run AI models on your own computer. No API keys or internet required.
-                        <a href="https://ollama.ai" target="_blank" style="color: #4299e1;">Install Ollama →</a>
-                    </div>
-                </div>
-
-                <div id="ollama-status" class="key-item" style="margin-bottom: 20px;">
-                    <div class="key-info">
-                        <div class="key-icon" style="background: linear-gradient(135deg, #718096 0%, #4a5568 100%);">
-                            🦙
-                        </div>
-                        <div class="key-details">
-                            <div class="key-name">Ollama Server</div>
-                            <div class="key-status unavailable">
-                                <span class="status-dot unavailable"></span>
-                                Checking...
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="ollama-pull-form" style="margin-bottom: 20px; display: none;">
-                    <button type="button" class="btn" onclick="openModelSelector()">
-                        📦 Browse Available Models
-                    </button>
-                </div>
-
-                <div id="ollama-models">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🦙</div>
-                        <p>Checking for local models...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Model Selection Modal -->
-    <div id="model-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h2 style="margin: 0; font-size: 20px; color: #2d3748;">📦 Available Models</h2>
-                <button onclick="closeModelSelector()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #718096;">&times;</button>
-            </div>
-
-            <!-- Filter Controls -->
-            <div style="background: #f7fafc; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
-                    <!-- Size Filter -->
-                    <div style="display: flex; flex-direction: column; gap: 6px;">
-                        <label style="font-size: 11px; font-weight: 600; color: #718096; text-transform: uppercase;">Size</label>
-                        <div style="display: flex; gap: 6px;">
-                            <button class="filter-btn active" data-size="all" onclick="filterModels('size', 'all')">All</button>
-                            <button class="filter-btn" data-size="3" onclick="filterModels('size', 3)" title="< 3GB - Runs on most laptops">Small</button>
-                            <button class="filter-btn" data-size="6" onclick="filterModels('size', 6)" title="3-6GB - Needs 16GB+ RAM">Medium</button>
-                            <button class="filter-btn" data-size="100" onclick="filterModels('size', 100)" title="> 6GB - Needs 32GB+ RAM">Large</button>
-                        </div>
-                    </div>
-
-                    <!-- Category Filter -->
-                    <div style="display: flex; flex-direction: column; gap: 6px; margin-left: 20px;">
-                        <label style="font-size: 11px; font-weight: 600; color: #718096; text-transform: uppercase;">Category</label>
-                        <div style="display: flex; gap: 6px;">
-                            <button class="filter-btn active" data-category="all" onclick="filterModels('category', 'all')">All</button>
-                            <button class="filter-btn" data-category="general" onclick="filterModels('category', 'general')">💬 General</button>
-                            <button class="filter-btn" data-category="code" onclick="filterModels('category', 'code')">💻 Code</button>
-                            <button class="filter-btn" data-category="multilingual" onclick="filterModels('category', 'multilingual')">🌍 Multi</button>
-                        </div>
-                    </div>
-                </div>
-                <p style="color: #718096; font-size: 12px; margin-top: 12px; margin-bottom: 0;">
-                    💡 Small models run on most laptops. Medium requires 16GB+ RAM. Large requires 32GB+ RAM.
-                </p>
-            </div>
-
-            <div id="available-models-list">
+            <div style="margin-top: 20px;" id="keys-list">
                 <div class="empty-state">
-                    <p>Loading available models...</p>
+                    <div class="empty-state-icon">&#x1f511;</div>
+                    <p>No API keys saved yet</p>
                 </div>
             </div>
         </div>
+
+        <!-- SYSTEM PROMPT SECTION -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-icon">&#x1f4ac;</span>
+                <span class="section-title">System Prompt</span>
+            </div>
+            <div class="section-description">
+                The system prompt sets the AI's behavior and personality for all conversations.
+            </div>
+
+            <form id="system-prompt-form">
+                <div class="form-group">
+                    <label class="form-label" for="system-prompt">Custom System Prompt</label>
+                    <textarea id="system-prompt" class="form-textarea" rows="4"
+                              placeholder="You are a helpful assistant..."></textarea>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" class="btn btn-primary" style="flex:1;">Save System Prompt</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadDefaultSystemPrompt()">Reset to Default</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- OLLAMA SECTION -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-icon">&#x1f999;</span>
+                <span class="section-title">Ollama Local Models</span>
+            </div>
+            <div class="info-box">
+                <div class="info-box-text">
+                    Ollama lets you run AI models on your own computer. No API keys or internet required.
+                    <a href="https://ollama.ai" target="_blank">Install Ollama</a>
+                </div>
+            </div>
+
+            <div id="ollama-status" class="key-item">
+                <div class="key-info">
+                    <div class="key-icon key-icon-ollama">&#x1f999;</div>
+                    <div>
+                        <div class="key-name">Ollama Server</div>
+                        <div class="key-status inactive" id="ollama-status-text">
+                            <span class="status-dot inactive"></span>
+                            Checking...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <a href="/models" class="btn btn-primary btn-block" style="text-decoration: none; margin-top: 12px;">
+                Browse &amp; Manage Models
+            </a>
+        </div>
     </div>
 
-    <style>
-        .filter-btn {
-            padding: 6px 12px;
-            border: 1px solid #e2e8f0;
-            background: white;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            color: #4a5568;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .filter-btn:hover {
-            background: #f7fafc;
-            border-color: #cbd5e0;
-        }
-        .filter-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
-        }
-    </style>
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
 
     <script>
-        // Load saved keys and system prompt on page load
+        // ---- INITIALIZATION ----
         document.addEventListener('DOMContentLoaded', function() {
             loadSavedKeys();
             loadSystemPrompt();
+            checkOllamaStatus();
         });
 
+        // ---- PASSWORD TOGGLE ----
         function togglePassword() {
             const input = document.getElementById('api-key');
-            const button = event.target;
-            
             if (input.type === 'password') {
                 input.type = 'text';
-                button.textContent = '🙈';
             } else {
                 input.type = 'password';
-                button.textContent = '👁️';
             }
         }
 
+        // ---- API KEY MANAGEMENT ----
         document.getElementById('key-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const provider = document.getElementById('provider').value;
             const apiKey = document.getElementById('api-key').value;
 
             if (!provider || !apiKey) {
-                showNotification('Please fill in all fields', 'error');
+                showToast('Please fill in all fields', 'error');
                 return;
             }
 
             try {
                 const response = await fetch('/api/providers/add', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: provider,
-                        api_key: apiKey
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: provider, api_key: apiKey })
                 });
 
                 if (response.ok) {
-                    showNotification(`${provider} API key saved successfully!`, 'success');
+                    showToast(`${provider} API key saved`, 'success');
                     document.getElementById('provider').value = '';
                     document.getElementById('api-key').value = '';
                     loadSavedKeys();
                 } else {
                     const error = await response.json();
-                    showNotification(error.error || 'Failed to save API key', 'error');
+                    showToast(error.error || 'Failed to save API key', 'error');
                 }
             } catch (error) {
-                showNotification('Network error: ' + error.message, 'error');
+                showToast('Network error: ' + error.message, 'error');
             }
         });
 
@@ -624,11 +548,11 @@
 
         function displayKeys(providers) {
             const container = document.getElementById('keys-list');
-            
+
             if (Object.keys(providers).length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">🔑</div>
+                        <div class="empty-state-icon">&#x1f511;</div>
                         <p>No API keys saved yet</p>
                     </div>
                 `;
@@ -638,67 +562,49 @@
             let html = '';
             for (const [name, provider] of Object.entries(providers)) {
                 const isAvailable = provider.is_available;
-                const statusClass = isAvailable ? '' : 'unavailable';
-                const iconBg = name === 'openai' ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)' :
-                              name === 'anthropic' ? 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)' :
-                              'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)';
-                
+                const statusClass = isAvailable ? 'active' : 'inactive';
+                const iconClass = 'key-icon-' + name;
+                const icons = { openai: '&#x1f916;', anthropic: '&#x1f9e0;', google: '&#x2728;' };
+                const icon = icons[name] || '&#x1f511;';
+
                 html += `
                     <div class="key-item">
                         <div class="key-info">
-                            <div class="key-icon" style="background: ${iconBg};">
-                                ${name === 'openai' ? '🤖' : name === 'anthropic' ? '🧠' : '✨'}
-                            </div>
-                            <div class="key-details">
+                            <div class="key-icon ${iconClass}">${icon}</div>
+                            <div>
                                 <div class="key-name">${name.charAt(0).toUpperCase() + name.slice(1)}</div>
                                 <div class="key-status ${statusClass}">
                                     <span class="status-dot ${statusClass}"></span>
-                                    ${isAvailable ? 'Active & Verified' : 'Unavailable'}
+                                    ${isAvailable ? 'Active' : 'Unavailable'}
                                 </div>
                             </div>
                         </div>
-                        <button class="btn-delete" onclick="deleteKey('${name}')">Delete</button>
+                        <button class="btn btn-danger" onclick="deleteKey('${name}')">Delete</button>
                     </div>
                 `;
             }
-
             container.innerHTML = html;
         }
 
         async function deleteKey(provider) {
-            if (!confirm(`Are you sure you want to remove ${provider} API key?`)) {
-                return;
-            }
+            if (!confirm('Remove ' + provider + ' API key?')) return;
 
             try {
-                const response = await fetch(`/api/providers/remove/${provider}`, {
-                    method: 'DELETE'
-                });
+                const response = await fetch('/api/providers/remove/' + provider, { method: 'DELETE' });
 
                 if (response.ok) {
-                    showNotification(`${provider} API key removed successfully!`, 'success');
+                    showToast(provider + ' API key removed', 'success');
                     loadSavedKeys();
                 } else {
                     const error = await response.json();
-                    showNotification(error.error || 'Failed to remove API key', 'error');
+                    showToast(error.error || 'Failed to remove API key', 'error');
                 }
             } catch (error) {
-                showNotification('Network error: ' + error.message, 'error');
+                showToast('Network error: ' + error.message, 'error');
             }
         }
 
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        // System prompt management
+        // ---- SYSTEM PROMPT ----
         async function loadSystemPrompt() {
             try {
                 const response = await fetch('/api/settings/system-prompt');
@@ -717,53 +623,47 @@
                 if (response.ok) {
                     const data = await response.json();
                     document.getElementById('system-prompt').value = data.prompt;
-                    showNotification('System prompt reset to default', 'success');
+                    showToast('System prompt reset to default', 'success');
                 }
             } catch (error) {
-                showNotification('Error loading default prompt', 'error');
+                showToast('Error loading default prompt', 'error');
             }
         }
 
         document.getElementById('system-prompt-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            const prompt = document.getElementById('system-prompt').value.trim();
 
+            const prompt = document.getElementById('system-prompt').value.trim();
             if (!prompt) {
-                showNotification('Please enter a system prompt', 'error');
+                showToast('Please enter a system prompt', 'error');
                 return;
             }
 
             try {
                 const response = await fetch('/api/settings/system-prompt', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: prompt })
                 });
 
                 if (response.ok) {
-                    showNotification('System prompt saved successfully!', 'success');
+                    showToast('System prompt saved', 'success');
                 } else {
                     const error = await response.json();
-                    showNotification(error.error || 'Failed to save system prompt', 'error');
+                    showToast(error.error || 'Failed to save', 'error');
                 }
             } catch (error) {
-                showNotification('Network error: ' + error.message, 'error');
+                showToast('Network error: ' + error.message, 'error');
             }
         });
 
-        // Ollama management
+        // ---- OLLAMA STATUS ----
         async function checkOllamaStatus() {
             try {
                 const response = await fetch('/api/ollama/status');
                 if (response.ok) {
                     const data = await response.json();
                     updateOllamaStatus(data.running);
-                    if (data.running) {
-                        loadOllamaModels();
-                    }
                 }
             } catch (error) {
                 updateOllamaStatus(false);
@@ -771,261 +671,25 @@
         }
 
         function updateOllamaStatus(isRunning) {
-            const statusEl = document.getElementById('ollama-status');
-            const pullForm = document.getElementById('ollama-pull-form');
-            const modelsEl = document.getElementById('ollama-models');
+            const statusText = document.getElementById('ollama-status-text');
+            const statusClass = isRunning ? 'active' : 'inactive';
+            const label = isRunning ? 'Connected' : 'Not Running';
 
-            const statusClass = isRunning ? '' : 'unavailable';
-            const iconBg = isRunning
-                ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)'
-                : 'linear-gradient(135deg, #718096 0%, #4a5568 100%)';
-            const statusText = isRunning ? 'Connected' : 'Not Running';
-
-            statusEl.innerHTML = `
-                <div class="key-info">
-                    <div class="key-icon" style="background: ${iconBg};">
-                        🦙
-                    </div>
-                    <div class="key-details">
-                        <div class="key-name">Ollama Server</div>
-                        <div class="key-status ${statusClass}">
-                            <span class="status-dot ${statusClass}"></span>
-                            ${statusText}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            pullForm.style.display = isRunning ? 'block' : 'none';
-
-            if (!isRunning) {
-                modelsEl.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🦙</div>
-                        <p>Ollama is not running</p>
-                        <p style="font-size: 13px; margin-top: 10px; color: #718096;">
-                            Start Ollama to manage local models
-                        </p>
-                    </div>
-                `;
-            }
+            statusText.className = 'key-status ' + statusClass;
+            statusText.innerHTML = '<span class="status-dot ' + statusClass + '"></span> ' + label;
         }
 
-        async function loadOllamaModels() {
-            try {
-                const response = await fetch('/api/ollama/models');
-                if (response.ok) {
-                    const data = await response.json();
-                    displayOllamaModels(data.models || []);
-                }
-            } catch (error) {
-                console.error('Error loading Ollama models:', error);
-            }
+        // ---- TOAST ----
+        function showToast(message, type) {
+            type = type || 'success';
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast toast-' + type + ' visible';
+
+            setTimeout(function() {
+                toast.classList.remove('visible');
+            }, 3000);
         }
-
-        function displayOllamaModels(models) {
-            const container = document.getElementById('ollama-models');
-
-            if (models.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📦</div>
-                        <p>No models downloaded yet</p>
-                        <p style="font-size: 13px; margin-top: 10px; color: #718096;">
-                            Use the form above to download a model
-                        </p>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = '<h3 style="font-size: 14px; color: #718096; margin-bottom: 15px;">Downloaded Models</h3>';
-            for (const model of models) {
-                html += `
-                    <div class="key-item">
-                        <div class="key-info">
-                            <div class="key-icon" style="background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);">
-                                🤖
-                            </div>
-                            <div class="key-details">
-                                <div class="key-name">${model.full_name}</div>
-                                <div class="key-status">
-                                    ${model.size_display} • ${model.parameter_size || 'Unknown params'}
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn-delete" onclick="deleteOllamaModel('${model.full_name}')">Delete</button>
-                    </div>
-                `;
-            }
-            container.innerHTML = html;
-        }
-
-        // Current filter state
-        let currentFilters = { size: 'all', category: 'all' };
-
-        function openModelSelector() {
-            const modal = document.getElementById('model-modal');
-            modal.style.display = 'flex';
-            // Reset filters when opening
-            currentFilters = { size: 'all', category: 'all' };
-            resetFilterButtons();
-            loadAvailableModels();
-        }
-
-        function closeModelSelector() {
-            document.getElementById('model-modal').style.display = 'none';
-        }
-
-        function resetFilterButtons() {
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.size === 'all' || btn.dataset.category === 'all') {
-                    btn.classList.add('active');
-                }
-            });
-        }
-
-        function filterModels(filterType, value) {
-            // Update filter state
-            currentFilters[filterType] = value;
-
-            // Update button states
-            document.querySelectorAll(`.filter-btn[data-${filterType}]`).forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset[filterType] == value) {
-                    btn.classList.add('active');
-                }
-            });
-
-            // Reload with new filters
-            loadAvailableModels();
-        }
-
-        async function loadAvailableModels() {
-            const container = document.getElementById('available-models-list');
-            container.innerHTML = '<div class="empty-state"><p>Loading...</p></div>';
-
-            try {
-                // Build query string from filters
-                const params = new URLSearchParams();
-                if (currentFilters.size !== 'all') {
-                    params.append('max_size', currentFilters.size);
-                }
-                if (currentFilters.category !== 'all') {
-                    params.append('category', currentFilters.category);
-                }
-
-                const url = '/api/ollama/models/available' + (params.toString() ? '?' + params.toString() : '');
-                const response = await fetch(url);
-
-                if (response.ok) {
-                    const data = await response.json();
-                    displayAvailableModels(data.models || []);
-                }
-            } catch (error) {
-                container.innerHTML = '<p style="color: #fc8181;">Failed to load available models</p>';
-            }
-        }
-
-        function displayAvailableModels(models) {
-            const container = document.getElementById('available-models-list');
-
-            if (models.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="padding: 40px; text-align: center;">
-                        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-                        <p style="color: #718096;">No models match your filters</p>
-                        <p style="font-size: 13px; color: #a0aec0; margin-top: 8px;">Try adjusting the size or category filters</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = `<p style="color: #718096; font-size: 13px; margin-bottom: 16px;">${models.length} model${models.length !== 1 ? 's' : ''} available</p>`;
-
-            for (const model of models) {
-                const sizeColor = model.size_gb < 3 ? '#48bb78' : model.size_gb < 6 ? '#ed8936' : '#fc8181';
-                const categoryEmoji = {
-                    'general': '💬',
-                    'code': '💻',
-                    'multilingual': '🌍',
-                    'reasoning': '🧠'
-                }[model.category] || '🤖';
-                const categoryBadge = model.category ? `<span style="background: #f7fafc; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: #4a5568;">${categoryEmoji} ${model.category}</span>` : '';
-
-                html += `
-                    <div class="key-item" style="margin-bottom: 12px;">
-                        <div class="key-info" style="flex: 1;">
-                            <div class="key-icon" style="background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);">
-                                ${categoryEmoji}
-                            </div>
-                            <div class="key-details">
-                                <div class="key-name" style="display: flex; align-items: center; gap: 8px;">
-                                    ${model.name}
-                                    ${categoryBadge}
-                                </div>
-                                <div class="key-status" style="color: #718096;">
-                                    <span style="color: ${sizeColor}; font-weight: 600;">${model.size_gb} GB</span> • ${model.description}
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn" style="width: auto; padding: 10px 20px; font-size: 14px;" onclick="downloadModel('${model.id}', '${model.name}')">
-                            ⬇️ Download
-                        </button>
-                    </div>
-                `;
-            }
-            container.innerHTML = html;
-        }
-
-        async function downloadModel(modelId, modelName) {
-            closeModelSelector();
-            showNotification(`Downloading ${modelName}... This may take a while.`, 'success');
-
-            try {
-                const response = await fetch('/api/ollama/models/pull', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: modelId })
-                });
-
-                if (response.ok) {
-                    showNotification(`${modelName} downloaded successfully!`, 'success');
-                    loadOllamaModels();
-                } else {
-                    const error = await response.json();
-                    showNotification(error.error || 'Failed to download model', 'error');
-                }
-            } catch (error) {
-                showNotification('Network error: ' + error.message, 'error');
-            }
-        }
-
-        async function deleteOllamaModel(modelName) {
-            if (!confirm(`Are you sure you want to delete ${modelName}?`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/ollama/models/${encodeURIComponent(modelName)}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    showNotification(`${modelName} deleted successfully!`, 'success');
-                    loadOllamaModels();
-                } else {
-                    const error = await response.json();
-                    showNotification(error.error || 'Failed to delete model', 'error');
-                }
-            } catch (error) {
-                showNotification('Network error: ' + error.message, 'error');
-            }
-        }
-
-        // Initialize Ollama status check
-        checkOllamaStatus();
     </script>
 </body>
 </html>

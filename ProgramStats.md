@@ -1,108 +1,108 @@
-# Program Statistics
+# Prompt Studio - Program Statistics
 
-## 🎯 **Current Status: Phase 3 Complete - Major Codebase Simplification Achieved**
+## Current Status
 
-### **📅 Session Progress (December 20, 2024)**
-- **Duration**: 6+ hours of focused refactoring and cleanup
-- **Phase**: Phase 3 Complete - "Codebase Simplification and Clean Architecture"
-- **Status**: ✅ Green bar, 275 passing tests, clean modular architecture
+**Test Suite**: 603 passing, 133 skipped | **Branch**: main | **Commits**: 233
 
-### **🚀 Major Achievements This Session**
-1. **✅ Stage A: Server Consolidation** - Transformed 2,193-line monolith into clean modular architecture
-2. **✅ Stage B: Business Logic Simplification** - Removed 8 unused/overlapped files, 53% reduction
-3. **✅ Stage C: Test Cleanup** - Removed 13 obsolete test files, focused on working functionality
-4. **✅ Clean Architecture** - Proper separation of concerns with blueprint pattern
-5. **✅ Preserved Core Functionality** - Linkage system working perfectly
-6. **✅ Ready for New Features** - Clean foundation for LLM integration
+Prompt Studio is a multi-provider LLM chat application with prompt management,
+voice interaction, and local model browsing. Built with Flask, domain-driven
+design, and test-first methodology.
 
-### **📊 Code Metrics - Massive Simplification**
-- **Main Server File**: 2,193 lines → 99 lines (95% reduction!)
-- **Business Logic Files**: 15 files → 7 files (53% reduction)
-- **Test Files**: 42 files → 29 files (31% reduction)
-- **Total Lines Removed**: 3,549 lines deleted
-- **Total Lines Added**: 959 lines (clean, focused code)
-- **Net Reduction**: 2,590 lines (73% reduction in complexity)
+---
 
-### **🏗️ New Clean Architecture**
-```
-app.py (99 lines) - Clean entry point
-├── routes/
-│   ├── linkage.py - Working linkage system (template builder + persistence)
-│   └── static.py - Static asset serving
-├── src/prompt_manager/business/ (7 essential files)
-│   ├── custom_combo_box_integration.py (simplified)
-│   ├── prompt_validator.py
-│   ├── search_service.py
-│   ├── llm_provider.py
-│   ├── key_loader.py
-│   ├── prompt_builder.py
-│   └── prompt_manager.py
-└── tests/ (29 focused test files)
-```
+## Architecture
 
-### **🔧 Technical Achievements**
-- **Modular Blueprint Architecture** - Clean separation of concerns
-- **No Duplicate Functionality** - Removed all overlapping code
-- **Simplified Business Logic** - Only essential files remain
-- **Clean Test Suite** - 275 passing tests, focused on working functionality
-- **Preserved Core Features** - Template builder, linkage system, API CRUD all working
-- **Ready for Extensions** - Clean foundation for new LLM features
+| Layer | Files | Lines | Purpose |
+|-------|------:|------:|---------|
+| Domain | 9 | 1,394 | Pure business logic, zero dependencies |
+| Business | 19 | 2,669 | Services, providers, orchestration |
+| Routes | 6 | 2,148 | Flask blueprints, thin HTTP layer |
+| Templates | 18 | 9,153 | Jinja2 HTML pages |
+| JavaScript | 7 | 3,451 | Client-side UI logic |
+| CSS | 4 | 729 | Studio Vibe dark theme |
+| Tests | 59 | 11,493 | Unit + integration tests |
+| App entry | 1 | 157 | Flask app factory |
 
-### **📋 Core Functionality Preserved**
-- **✅ Template Builder** - Custom combo boxes with dynamic options
-- **✅ Linkage System** - Save/load templates with combo box data
-- **✅ API CRUD Operations** - Full prompt management
-- **✅ Business Logic Validation** - Input validation and error handling
-- **✅ Search Functionality** - Prompt search and filtering
-- **✅ Static Asset Serving** - JavaScript files properly served
+**Total production code**: ~17,544 lines across 64 files
+**Total test code**: 11,493 lines across 59 files
 
-### **💡 Key Learnings - Simplification Journey**
-1. **Identify Working Code First** - Preserve what works before refactoring
-2. **Remove Before Adding** - Clean up before building new features
-3. **Modular Architecture** - Blueprint pattern enables clean separation
-4. **Test-Driven Cleanup** - Remove tests for deleted functionality
-5. **Preserve Core Functionality** - Don't break working features during cleanup
-6. **Simple Over Complex** - JavaScript handles UI, Python handles business logic
-7. **No Duplicate Routes** - Single source of truth for each functionality
-8. **Clean Imports** - Remove unused dependencies immediately
-9. **Focused Test Suite** - Test what matters, remove what doesn't
-10. **Ready for Growth** - Clean architecture enables easy feature addition
+---
 
-### **🎯 Git Status**
-- **Branch**: `feature/custom-combo-box`
-- **Last Commit**: ✓ Major codebase simplification and cleanup
-- **Checkpoint**: `v2.0-clean-architecture`
-- **Status**: Ready for new feature development
+## LLM Providers
 
-### **🏆 Success Metrics**
-- **✅ 95% Reduction in Main File Size** - From 2,193 to 99 lines
-- **✅ 53% Reduction in Business Logic Complexity** - From 15 to 7 files
-- **✅ 275 Passing Tests** - Clean, focused test suite
-- **✅ Zero Breaking Changes** - All core functionality preserved
-- **✅ Modular Architecture** - Easy to maintain and extend
-- **✅ No Duplicate Code** - Single source of truth for each feature
-- **✅ Clean Separation of Concerns** - UI, business logic, and data properly separated
-- **✅ Ready for LLM Integration** - Clean foundation for new features
+| Provider | Type | Models | Status |
+|----------|------|--------|--------|
+| Ollama | Local | 17 catalog models | Full support + model browser |
+| OpenAI | Cloud API | 4 models (GPT-4, GPT-3.5) | Full support |
+| Anthropic | Cloud API | 5 models (Claude 4, 3.5) | Full support |
+| Google | Cloud API | 4 models (Gemini 2.x) | Full support |
 
-### **🎬 Video Content Status**
-- **Codebase Simplification Journey**: ✅ Ready for recording
-- **Clean Architecture Patterns**: ✅ Ready for recording
-- **Refactoring Large Codebases**: ✅ Ready for recording
-- **Test-Driven Cleanup**: ✅ Ready for recording
-- **Modular Flask Architecture**: ✅ Ready for recording
+---
 
-### **🚀 Next Phase Ready**
-The codebase is now clean, modular, and ready for the next phase:
-- **LLM Integration** - Chat functionality with secure API key management
-- **Enhanced Template Features** - More sophisticated template building
-- **User Interface Improvements** - Better UX for template management
-- **Performance Optimizations** - Faster template processing
-- **Advanced Search** - Semantic search capabilities
+## Domain Models
 
-### **📈 Architecture Quality Metrics**
-- **Cyclomatic Complexity**: Significantly reduced
-- **Code Duplication**: Eliminated
-- **Test Coverage**: Focused on working functionality
-- **Maintainability**: Dramatically improved
-- **Extensibility**: Ready for new features
-- **Readability**: Clean, well-organized code
+| Model | File | Purpose |
+|-------|------|---------|
+| ChatMessage | chat_message.py | Message entity with role/content/timestamp |
+| ChatSession | chat_session.py | Session aggregate for chat interactions |
+| Conversation | conversation.py | Conversation aggregate with auto-titling |
+| ConversationBuilder | conversation.py | Builds LLM message arrays |
+| ContextWindowManager | conversation.py | Token limit management |
+| ConversationMode | conversation_mode.py | Chat mode state (creative, precise, etc.) |
+| LinkageManager | linkage_manager.py | Template linkage persistence |
+| ModelCatalog | model_catalog.py | Provider model catalogs with enrichment |
+| OllamaModel | ollama_model.py | Local model with name:tag parsing |
+| VoiceInteractionManager | voice_interaction.py | Voice input/output state |
+
+---
+
+## Business Services
+
+| Service | Purpose |
+|---------|---------|
+| AnthropicProvider | Claude API integration |
+| ChatService | Chat orchestration |
+| ConversationManager | Conversation CRUD |
+| ConversationStorage | JSON file persistence |
+| CustomComboBoxIntegration | Template combo box logic |
+| FeatureFlags | Feature toggle management |
+| GoogleProvider | Gemini API integration |
+| KeyLoader | Secure API key loading |
+| LLMProvider / OpenAIProvider | OpenAI API integration |
+| LLMProviderManager | Multi-provider management |
+| OllamaDiscovery | Local model list/pull/delete |
+| OllamaProvider | Ollama API integration + streaming |
+| PromptBuilder | Prompt template assembly |
+| PromptValidator | Input validation |
+| ProviderFactory | Provider instantiation |
+| SearchService | Prompt search and filtering |
+| TokenManager | Context window token tracking |
+| UserSettingsManager | User preferences persistence |
+
+---
+
+## Pages
+
+| Page | Route | Description |
+|------|-------|-------------|
+| Chat | / | Main chat interface with SSE streaming |
+| Chat Dashboard | /chat | Multi-provider chat dashboard |
+| Model Browser | /models | Ollama model catalog with filtering |
+| Settings | /settings | API keys, system prompt, provider config |
+| Prompts Library | /prompts | Prompt template management |
+| Template Builder | /builder | Custom combo box template builder |
+| Setup | /setup | First-run configuration |
+
+---
+
+## Key Features
+
+- **Multi-provider chat** with OpenAI, Anthropic, Google, and Ollama
+- **SSE streaming** for real-time response rendering
+- **Model browser** with category/size filtering and install status
+- **Secure API key management** with keychain integration
+- **Voice interaction** (speech-to-text and text-to-speech)
+- **Conversation history** with auto-titling
+- **Prompt template system** with linkage persistence
+- **Studio Vibe dark theme** across all pages
+- **Context window management** with automatic trimming

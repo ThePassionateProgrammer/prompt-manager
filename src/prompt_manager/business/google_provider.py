@@ -1,7 +1,7 @@
 """
 Google Gemini LLM Provider.
 
-Provides integration with Google's Gemini models.
+Provides integration with Google's Gemini models using the google-genai SDK.
 """
 from typing import Optional
 from .llm_provider import LLMProvider
@@ -10,7 +10,7 @@ from .llm_provider import LLMProvider
 class GoogleProvider(LLMProvider):
     """Provider for Google Gemini models.
 
-    Uses lazy initialization pattern matching OllamaProvider.
+    Uses the google-genai SDK with lazy initialization.
     """
 
     def __init__(self, api_key: Optional[str] = None):
@@ -22,9 +22,10 @@ class GoogleProvider(LLMProvider):
         self._name = "google"
         self.api_key = api_key
         self._initialized = False
+        self._client = None
 
     def _initialize_client(self):
-        """Initialize the Google Generative AI client (lazy initialization)."""
+        """Initialize the Google GenAI client (lazy initialization)."""
         if self._initialized:
             return
 
@@ -36,8 +37,8 @@ class GoogleProvider(LLMProvider):
                 raise ValueError("Google API key is required")
 
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.api_key)
+            from google import genai
+            self._client = genai.Client(api_key=self.api_key)
             self._initialized = True
         except Exception as e:
             raise RuntimeError(f"Failed to initialize Google client: {e}")
@@ -48,11 +49,7 @@ class GoogleProvider(LLMProvider):
         return self._name
 
     def is_available(self) -> bool:
-        """Check if Google API key is configured.
-
-        Returns:
-            True if API key is available, False otherwise
-        """
+        """Check if Google API key is configured."""
         try:
             if self.api_key:
                 return True
@@ -66,7 +63,7 @@ class GoogleProvider(LLMProvider):
         """Generate text using Gemini.
 
         Args:
-            prompt: Single prompt string (legacy)
+            prompt: Single prompt string
             messages: Array of message dicts with role and content
             **kwargs: model, temperature, max_tokens
 
@@ -75,21 +72,20 @@ class GoogleProvider(LLMProvider):
         """
         try:
             self._initialize_client()
-            import google.generativeai as genai
+            from google.genai import types
 
-            model_name = kwargs.get('model', 'models/gemini-2.0-flash')
+            model_name = kwargs.get('model', 'gemini-2.0-flash')
 
             # Build generation config
-            generation_config = {
+            config_kwargs = {
                 'temperature': kwargs.get('temperature', 0.7),
                 'max_output_tokens': kwargs.get('max_tokens', 1024),
             }
 
-            # Convert messages to Gemini format
             if messages:
-                # Gemini uses 'user' and 'model' roles
-                history = []
+                # Extract system instruction and build contents
                 system_instruction = None
+                contents = []
 
                 for msg in messages:
                     role = msg.get('role', 'user')
@@ -98,39 +94,33 @@ class GoogleProvider(LLMProvider):
                     if role == 'system':
                         system_instruction = content
                     elif role == 'assistant':
-                        history.append({'role': 'model', 'parts': [content]})
+                        contents.append(types.Content(
+                            role='model',
+                            parts=[types.Part.from_text(text=content)]
+                        ))
                     else:
-                        history.append({'role': 'user', 'parts': [content]})
+                        contents.append(types.Content(
+                            role='user',
+                            parts=[types.Part.from_text(text=content)]
+                        ))
 
-                # Create model with system instruction if present
                 if system_instruction:
-                    model = genai.GenerativeModel(
-                        model_name,
-                        system_instruction=system_instruction
-                    )
-                else:
-                    model = genai.GenerativeModel(model_name)
+                    config_kwargs['system_instruction'] = system_instruction
 
-                # Start chat with history (excluding last message)
-                if len(history) > 1:
-                    chat = model.start_chat(history=history[:-1])
-                    response = chat.send_message(
-                        history[-1]['parts'][0],
-                        generation_config=generation_config
-                    )
-                elif history:
-                    response = model.generate_content(
-                        history[0]['parts'][0],
-                        generation_config=generation_config
-                    )
-                else:
+                if not contents:
                     raise ValueError("Messages array is empty")
 
+                response = self._client.models.generate_content(
+                    model=model_name,
+                    contents=contents,
+                    config=types.GenerateContentConfig(**config_kwargs)
+                )
+
             elif prompt:
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content(
-                    prompt,
-                    generation_config=generation_config
+                response = self._client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(**config_kwargs)
                 )
             else:
                 raise ValueError("Either prompt or messages must be provided")

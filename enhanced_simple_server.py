@@ -9,7 +9,7 @@ from flask import Flask, render_template_string, render_template, request, redir
 from src.prompt_manager.prompt_manager import PromptManager
 from src.prompt_manager.business.chat_service import ChatService
 from src.prompt_manager.business.conversation_storage import ConversationStorage
-from src.prompt_manager.business.llm_provider import OllamaProvider
+from src.prompt_manager.business.ollama_provider import OllamaProvider
 import json
 import socket
 import subprocess

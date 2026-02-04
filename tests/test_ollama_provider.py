@@ -7,32 +7,43 @@ generate() interface and the streaming send_message_stream() interface.
 """
 import pytest
 from unittest.mock import Mock, MagicMock, patch, call
-from src.prompt_manager.business.llm_provider import OllamaProvider
+from src.prompt_manager.business.ollama_provider import OllamaProvider
 
 
 class TestOllamaProviderInitialization:
     """Test OllamaProvider initialization and configuration."""
 
-    @patch('ollama.Client')
-    def test_create_provider_with_defaults(self, mock_client_class):
+    def test_create_provider_with_defaults(self):
         """Test creating provider with default settings."""
         provider = OllamaProvider()
 
         assert provider.base_url == "http://localhost:11434"
         assert provider.default_model == "gemma3:4b"
-        mock_client_class.assert_called_once_with(host="http://localhost:11434")
+        assert provider.name == "ollama"
 
-    @patch('ollama.Client')
-    def test_create_provider_with_custom_settings(self, mock_client_class):
+    def test_create_provider_with_custom_settings(self):
         """Test creating provider with custom base URL and model."""
         provider = OllamaProvider(
             base_url="http://custom:8080",
-            default_model="llama3.1:8b"
+            model="llama3.1:8b"
         )
 
         assert provider.base_url == "http://custom:8080"
         assert provider.default_model == "llama3.1:8b"
-        mock_client_class.assert_called_once_with(host="http://custom:8080")
+
+    @patch('ollama.Client')
+    def test_lazy_initialization(self, mock_client_class):
+        """Client should not be created until first use."""
+        provider = OllamaProvider()
+
+        # Client not created yet
+        assert provider._initialized is False
+
+        # Trigger lazy init
+        provider._get_client()
+
+        assert provider._initialized is True
+        mock_client_class.assert_called_once_with(host="http://localhost:11434")
 
 
 class TestOllamaProviderSendPrompt:
@@ -89,6 +100,20 @@ class TestOllamaProviderSendPrompt:
 
         assert "Ollama Error" in str(exc_info.value)
         assert "Connection refused" in str(exc_info.value)
+
+    @patch('ollama.Client')
+    def test_generate_delegates_to_send_prompt(self, mock_client_class):
+        """generate() should produce the same result as send_prompt()."""
+        mock_client = MagicMock()
+        mock_client_class.return_value = mock_client
+        mock_client.chat.return_value = {
+            'message': {'content': 'Generated response'}
+        }
+
+        provider = OllamaProvider()
+        response = provider.generate(prompt="Hello")
+
+        assert response == 'Generated response'
 
 
 class TestOllamaProviderStreaming:

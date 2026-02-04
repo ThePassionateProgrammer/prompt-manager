@@ -2,8 +2,9 @@
 Ollama LLM Provider.
 
 Provides integration with local Ollama models.
+Supports both synchronous generation and streaming responses.
 """
-from typing import Optional
+from typing import Optional, List, Dict, Generator
 import ollama
 from .llm_provider import LLMProvider
 
@@ -83,3 +84,85 @@ class OllamaProvider(LLMProvider):
         response = client.chat(model=model, messages=msg_array)
 
         return response['message']['content']
+
+    def send_prompt(self, prompt: str, **kwargs) -> str:
+        """Send a single prompt (non-streaming).
+
+        Args:
+            prompt: The prompt text
+            **kwargs: Additional parameters (model)
+
+        Returns:
+            Generated text response
+        """
+        model = kwargs.get('model', self.default_model)
+        messages = [{'role': 'user', 'content': prompt}]
+
+        try:
+            client = self._get_client()
+            response = client.chat(model=model, messages=messages, stream=False)
+            return response['message']['content']
+        except Exception as e:
+            raise RuntimeError(f"Ollama Error: {e}")
+
+    def send_message_stream(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        **kwargs
+    ) -> Generator[str, None, None]:
+        """Stream response chunks for a message sequence.
+
+        Args:
+            messages: List of message dicts with role and content
+            model: Model to use (defaults to self.default_model)
+
+        Yields:
+            Response text chunks as they arrive
+        """
+        model = model or self.default_model
+
+        try:
+            client = self._get_client()
+            stream = client.chat(model=model, messages=messages, stream=True)
+
+            for chunk in stream:
+                if 'message' in chunk and 'content' in chunk['message']:
+                    yield chunk['message']['content']
+        except Exception as e:
+            raise RuntimeError(f"Ollama Stream Error: {e}")
+
+    def list_models(self) -> List[str]:
+        """List available Ollama models.
+
+        Returns:
+            List of model name strings
+        """
+        try:
+            client = self._get_client()
+            models_response = client.list()
+            return [model['name'] for model in models_response.get('models', [])]
+        except Exception as e:
+            raise RuntimeError(f"Failed to list models: {e}")
+
+    def check_ollama_health(self) -> Dict[str, any]:
+        """Check Ollama server health and model availability.
+
+        Returns:
+            Dict with connection status and available models
+        """
+        try:
+            models = self.list_models()
+            has_default = self.default_model in models
+
+            return {
+                'connected': True,
+                'available_models': models,
+                'default_model': self.default_model,
+                'default_model_available': has_default
+            }
+        except Exception as e:
+            return {
+                'connected': False,
+                'error': str(e)
+            }

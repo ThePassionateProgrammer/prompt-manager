@@ -313,62 +313,107 @@ async function sendMessage(providedMessage = null) {
     document.getElementById('loading-indicator').classList.add('active');
     document.getElementById('send-btn').disabled = true;
 
+    // Get provider from dropdown to ensure it's current
+    const providerSelect = document.getElementById('provider-select');
+    const selectedProvider = providerSelect.value || currentProvider;
+
+    console.log('Sending message with provider:', selectedProvider, 'model:', model);
+
+    const payload = {
+        message: message,
+        provider: selectedProvider,
+        model: model,
+        temperature: temperature,
+        max_tokens: maxTokens,
+        history: history,
+        system_prompt: systemPrompt,
+        auto_trim: true
+    };
+
     try {
-        // Get provider from dropdown to ensure it's current
-        const providerSelect = document.getElementById('provider-select');
-        const selectedProvider = providerSelect.value || currentProvider;
-
-        console.log('Sending message with provider:', selectedProvider, 'model:', model);
-
-        const response = await fetch('/api/chat/send', {
+        // Try streaming first
+        const streamResponse = await fetch('/api/chat/stream', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: message,
-                provider: selectedProvider,
-                model: model,
-                temperature: temperature,
-                max_tokens: maxTokens,
-                history: history,
-                system_prompt: systemPrompt,
-                auto_trim: true
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
 
-        if (response.ok) {
-            const result = await response.json();
-            addMessage('assistant', result.response);
+        if (streamResponse.ok && streamResponse.headers.get('content-type')?.includes('text/event-stream')) {
+            // Streaming mode: create empty message bubble and fill it
+            const { messageDiv, textEl } = addStreamingMessage();
+            let fullResponse = '';
 
-            // Store response for "Ember, repeat that" command
-            VoiceInteraction.storeLastResponse(result.response);
+            const reader = streamResponse.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
 
-            // Conversation mode: transition to PLAYING and auto-play response
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // Keep incomplete line in buffer
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6);
+                        if (data === '[DONE]') continue;
+                        if (data.startsWith('[ERROR]')) {
+                            addMessage('system', `Error: ${data.slice(8)}`);
+                            continue;
+                        }
+                        fullResponse += data;
+                        textEl.textContent = fullResponse;
+                        messageDiv.closest('.chat-container')?.scrollTo(0, 99999);
+                    }
+                }
+            }
+
+            // Finalize the message in our messages array
+            messages.push({ type: 'assistant', content: fullResponse, time: new Date().toISOString() });
+
+            // Store for voice replay
+            VoiceInteraction.storeLastResponse(fullResponse);
+
             if (conversationMode.shouldAutoPlay()) {
                 conversationMode.receiveResponse();
-                // Auto-play the response
-                VoiceInteraction.autoPlayResponse(result.response);
+                VoiceInteraction.autoPlayResponse(fullResponse);
             }
 
-            // Update token usage display
-            updateTokenUsage(result.token_usage);
-
-            // Show warning if context is filling
-            if (result.token_usage.warning) {
-                Notifications.showNotification(result.token_usage.warning, 'warning');
-            }
-
-            // Show trimming notice
-            if (result.trimmed) {
-                Notifications.showNotification(`Auto-trimmed ${result.trimmed} old messages to fit context`, 'success');
-            }
-
-            // Auto-save conversation
             await saveConversationAuto();
         } else {
-            const error = await response.json();
-            addMessage('system', `Error: ${error.error || 'Failed to send message'}`);
+            // Fall back to non-streaming endpoint
+            const response = await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                addMessage('assistant', result.response);
+                VoiceInteraction.storeLastResponse(result.response);
+
+                if (conversationMode.shouldAutoPlay()) {
+                    conversationMode.receiveResponse();
+                    VoiceInteraction.autoPlayResponse(result.response);
+                }
+
+                updateTokenUsage(result.token_usage);
+
+                if (result.token_usage?.warning) {
+                    Notifications.showNotification(result.token_usage.warning, 'warning');
+                }
+                if (result.trimmed) {
+                    Notifications.showNotification(`Auto-trimmed ${result.trimmed} old messages to fit context`, 'success');
+                }
+
+                await saveConversationAuto();
+            } else {
+                const error = await response.json();
+                addMessage('system', `Error: ${error.error || 'Failed to send message'}`);
+            }
         }
     } catch (error) {
         addMessage('system', `Network error: ${error.message}`);
@@ -377,6 +422,36 @@ async function sendMessage(providedMessage = null) {
         document.getElementById('loading-indicator').classList.remove('active');
         document.getElementById('send-btn').disabled = false;
     }
+}
+
+function addStreamingMessage() {
+    const messagesArea = document.getElementById('messages-area');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant';
+
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    messageDiv.innerHTML = `
+        <div class="message-avatar assistant-avatar">🤖</div>
+        <div class="message-content">
+            <div class="message-header">
+                <span class="message-sender">Assistant</span>
+                <span class="message-time">${time}</span>
+            </div>
+            <div class="message-text streaming"></div>
+            <div class="message-actions">
+                <button class="btn-msg-action" onclick="copyMessage(this)">📋 Copy</button>
+                <button class="btn-play" onclick="playMessage(this)">▶️ Play</button>
+                <button class="btn-msg-action" onclick="saveAsPrompt(this)">💾 Save as Prompt</button>
+            </div>
+        </div>
+    `;
+
+    messagesArea.appendChild(messageDiv);
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+
+    const textEl = messageDiv.querySelector('.message-text');
+    return { messageDiv, textEl };
 }
 
 function addMessage(type, content) {

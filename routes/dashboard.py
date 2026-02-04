@@ -2,7 +2,7 @@
 Dashboard routes for the Prompt Manager application.
 """
 
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, Response
 from src.prompt_manager.business.llm_provider_manager import LLMProviderManager
 from src.prompt_manager.business.provider_factory import ProviderFactory
 from src.prompt_manager.business.ollama_discovery import OllamaDiscovery
@@ -290,6 +290,46 @@ def send_chat_message():
     except Exception as e:
         # Unexpected errors
         return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/chat/stream', methods=['POST'])
+def stream_chat_message():
+    """Stream a chat response using Server-Sent Events."""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Request body is required'}), 400
+
+    message = data.get('message')
+    provider_name = data.get('provider', 'ollama')
+    model = data.get('model', 'gemma3:4b')
+    history = data.get('history', [])
+    system_prompt = data.get('system_prompt', DEFAULT_SYSTEM_PROMPT)
+
+    if not message or not isinstance(message, str):
+        return jsonify({'error': 'Message is required and must be a string'}), 400
+
+    provider = provider_manager.get_provider(provider_name)
+    if not provider:
+        return jsonify({'error': f'Provider {provider_name} not found'}), 404
+
+    # Build messages array for the provider
+    messages = [{'role': 'system', 'content': system_prompt}]
+    messages.extend(history)
+    messages.append({'role': 'user', 'content': message})
+
+    def generate():
+        try:
+            for chunk in provider.send_message_stream(messages, model=model):
+                yield f"data: {chunk}\n\n"
+            yield "data: [DONE]\n\n"
+        except NotImplementedError:
+            yield f"data: [ERROR] Streaming not supported for {provider_name}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as e:
+            yield f"data: [ERROR] {str(e)}\n\n"
+            yield "data: [DONE]\n\n"
+
+    return Response(generate(), mimetype='text/event-stream')
+
 
 @dashboard_bp.route('/api/providers/set-default', methods=['POST'])
 def set_default_provider():

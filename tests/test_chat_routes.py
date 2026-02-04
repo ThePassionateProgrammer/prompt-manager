@@ -434,5 +434,80 @@ class TestChatIntegration:
         assert calls[1][1]['model'] == 'gpt-4'
 
 
+class TestChatStreamAPI:
+    """Test streaming chat endpoint."""
+
+    @patch('routes.dashboard.provider_manager')
+    def test_stream_returns_event_stream_content_type(self, mock_manager, client):
+        """Streaming endpoint should return text/event-stream."""
+        mock_provider = MagicMock()
+        mock_provider.send_message_stream.return_value = iter(['Hello'])
+        mock_manager.get_provider.return_value = mock_provider
+
+        response = client.post('/api/chat/stream', json={
+            'message': 'Hi',
+            'provider': 'ollama',
+            'model': 'gemma3:4b'
+        })
+
+        assert response.status_code == 200
+        assert 'text/event-stream' in response.content_type
+
+    @patch('routes.dashboard.provider_manager')
+    def test_stream_yields_sse_formatted_chunks(self, mock_manager, client):
+        """Streaming should yield data: prefixed SSE events."""
+        mock_provider = MagicMock()
+        mock_provider.send_message_stream.return_value = iter(['Hello ', 'world!'])
+        mock_manager.get_provider.return_value = mock_provider
+
+        response = client.post('/api/chat/stream', json={
+            'message': 'Hi',
+            'provider': 'ollama',
+            'model': 'gemma3:4b'
+        })
+
+        data = response.get_data(as_text=True)
+        assert 'data: Hello ' in data
+        assert 'data: world!' in data
+
+    @patch('routes.dashboard.provider_manager')
+    def test_stream_ends_with_done_event(self, mock_manager, client):
+        """Streaming should end with [DONE] event."""
+        mock_provider = MagicMock()
+        mock_provider.send_message_stream.return_value = iter(['Hi'])
+        mock_manager.get_provider.return_value = mock_provider
+
+        response = client.post('/api/chat/stream', json={
+            'message': 'Hi',
+            'provider': 'ollama',
+            'model': 'gemma3:4b'
+        })
+
+        data = response.get_data(as_text=True)
+        assert 'data: [DONE]' in data
+
+    def test_stream_requires_message(self, client):
+        """Streaming endpoint should require a message."""
+        response = client.post('/api/chat/stream', json={
+            'provider': 'ollama',
+            'model': 'gemma3:4b'
+        })
+
+        assert response.status_code == 400
+
+    @patch('routes.dashboard.provider_manager')
+    def test_stream_returns_error_for_missing_provider(self, mock_manager, client):
+        """Streaming should return error when provider not found."""
+        mock_manager.get_provider.return_value = None
+
+        response = client.post('/api/chat/stream', json={
+            'message': 'Hi',
+            'provider': 'nonexistent',
+            'model': 'test'
+        })
+
+        assert response.status_code == 404
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

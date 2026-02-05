@@ -343,6 +343,23 @@ async function sendMessage(providedMessage = null) {
             const { messageDiv, textEl } = addStreamingMessage();
             let fullResponse = '';
 
+            // Start incremental speech if in conversation mode
+            const shouldSpeak = conversationMode.shouldAutoPlay();
+            if (shouldSpeak) {
+                conversationMode.receiveResponse();
+                VoiceInteraction.startIncrementalSpeech(() => {
+                    // Speech finished - restart listening if appropriate
+                    if (conversationMode.shouldAutoRestart()) {
+                        conversationMode.finishPlayback();
+                        setTimeout(() => {
+                            if (conversationMode.shouldBeListening() && !isLoading) {
+                                VoiceInteraction.startListening();
+                            }
+                        }, 1000);
+                    }
+                });
+            }
+
             const reader = streamResponse.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
@@ -366,8 +383,18 @@ async function sendMessage(providedMessage = null) {
                         fullResponse += data;
                         textEl.textContent = fullResponse;
                         messageDiv.closest('.chat-container')?.scrollTo(0, 99999);
+
+                        // Feed chunk to incremental speech
+                        if (shouldSpeak) {
+                            VoiceInteraction.addSpeechChunk(data);
+                        }
                     }
                 }
+            }
+
+            // Finalize incremental speech
+            if (shouldSpeak) {
+                VoiceInteraction.finalizeSpeech();
             }
 
             // Finalize the message in our messages array
@@ -375,11 +402,6 @@ async function sendMessage(providedMessage = null) {
 
             // Store for voice replay
             VoiceInteraction.storeLastResponse(fullResponse);
-
-            if (conversationMode.shouldAutoPlay()) {
-                conversationMode.receiveResponse();
-                VoiceInteraction.autoPlayResponse(fullResponse);
-            }
 
             await saveConversationAuto();
         } else {
@@ -666,7 +688,7 @@ function renderPromptsList(prompts) {
             </div>
             <div style="display: flex; gap: 8px;">
                 <button onclick="insertPrompt('${prompt.id}')"
-                        style="flex: 1; padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 13px;">
+                        style="flex: 1; padding: 8px 16px; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 13px;">
                     ✏️ Insert
                 </button>
                 <button onclick="viewPromptDetails('${prompt.id}')"

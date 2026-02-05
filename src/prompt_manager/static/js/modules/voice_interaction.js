@@ -16,6 +16,7 @@ import { CommandDetector } from './command_detector.js';
 import { TranscriptProcessor } from './transcript_processor.js';
 import { SilenceCheckingService } from './silence_checking_service.js';
 import * as VoiceSettings from './voice_settings.js';
+import * as IncrementalSpeech from './incremental_speech.js';
 
 // Voice interaction state
 let voiceRecognition = null;
@@ -602,4 +603,58 @@ export function cancelSpeech() {
 export function storeLastResponse(responseText) {
     lastAIResponse = responseText;
     console.log('[Voice] Stored last AI response for repeat command');
+}
+
+// ============================================================
+// INCREMENTAL SPEECH - Speak as text streams in
+// ============================================================
+
+/**
+ * Start incremental speech for a streaming response.
+ * Call this before starting to receive streaming chunks.
+ *
+ * @param {Function} onComplete - Optional callback when all speech finishes
+ */
+export function startIncrementalSpeech(onComplete) {
+    IncrementalSpeech.initialize();
+
+    // Set up completion handler for conversation mode
+    if (onComplete) {
+        IncrementalSpeech.setOnComplete(() => {
+            isSpeaking = false;
+            onComplete();
+        });
+    } else {
+        IncrementalSpeech.setOnComplete(() => {
+            isSpeaking = false;
+        });
+    }
+
+    isSpeaking = true;
+}
+
+/**
+ * Add a streaming chunk to the incremental speech buffer.
+ * Will automatically speak complete sentences.
+ *
+ * @param {string} chunk - Text chunk from streaming response
+ */
+export function addSpeechChunk(chunk) {
+    IncrementalSpeech.addChunk(chunk);
+}
+
+/**
+ * Finalize incremental speech when streaming completes.
+ * Speaks any remaining buffered text.
+ */
+export function finalizeSpeech() {
+    IncrementalSpeech.finalize();
+}
+
+/**
+ * Stop incremental speech and clear buffers.
+ */
+export function stopIncrementalSpeech() {
+    IncrementalSpeech.stop();
+    isSpeaking = false;
 }

@@ -405,28 +405,34 @@ function getLanguageDisplayName(langCode) {
 
 /**
  * Load available voices into the voice select dropdown.
- * Groups voices by language and highlights high-quality voices.
+ * Only shows voices matching the current language setting.
+ * Highlights high-quality voices.
  *
  * @param {HTMLElement} panel - Settings panel element
  */
 async function loadVoicesIntoSelect(panel) {
     const voiceSelect = panel.querySelector('#tts-voice');
     const voices = await getAvailableVoices();
+    const currentLang = settings.tts.lang; // e.g., 'en-US'
+    const currentLangPrefix = currentLang.split('-')[0]; // e.g., 'en'
 
     // Clear existing options
     voiceSelect.innerHTML = '<option value="">System Default</option>';
 
+    // Filter voices to only show those matching current language
+    const matchingVoices = voices.filter(voice => {
+        const voiceLangPrefix = voice.lang.split('-')[0];
+        return voiceLangPrefix === currentLangPrefix;
+    });
+
     // Sort voices: high-quality first, then alphabetically by name
-    const sortedVoices = [...voices].sort((a, b) => {
+    const sortedVoices = [...matchingVoices].sort((a, b) => {
         const aHQ = isHighQualityVoice(a);
         const bHQ = isHighQualityVoice(b);
         if (aHQ && !bHQ) return -1;
         if (!aHQ && bHQ) return 1;
         return a.name.localeCompare(b.name);
     });
-
-    // Group by language
-    const grouped = groupVoicesByLanguage(sortedVoices);
 
     // Add high-quality voices first as a special group
     const highQualityVoices = sortedVoices.filter(isHighQualityVoice);
@@ -437,7 +443,7 @@ async function loadVoicesIntoSelect(panel) {
             const option = document.createElement('option');
             option.value = voice.name;
             const qualityLabel = getVoiceQualityLabel(voice);
-            option.textContent = `${voice.name} (${voice.lang}) ${qualityLabel}`;
+            option.textContent = `${voice.name} ${qualityLabel}`;
             if (voice.name === settings.tts.voice) {
                 option.selected = true;
             }
@@ -446,24 +452,25 @@ async function loadVoicesIntoSelect(panel) {
         voiceSelect.appendChild(hqGroup);
     }
 
-    // Add remaining voices grouped by language
-    Object.keys(grouped).sort().forEach(langCode => {
-        const langVoices = grouped[langCode].filter(v => !isHighQualityVoice(v));
-        if (langVoices.length === 0) return;
+    // Add remaining standard voices
+    const standardVoices = sortedVoices.filter(v => !isHighQualityVoice(v));
+    if (standardVoices.length > 0) {
+        const stdGroup = document.createElement('optgroup');
+        stdGroup.label = 'Standard Voices';
 
-        const optgroup = document.createElement('optgroup');
-        optgroup.label = getLanguageDisplayName(langCode);
-
-        langVoices.forEach(voice => {
+        standardVoices.forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.name;
-            option.textContent = `${voice.name} (${voice.lang})`;
+            option.textContent = voice.name;
             if (voice.name === settings.tts.voice) {
                 option.selected = true;
             }
-            optgroup.appendChild(option);
+            stdGroup.appendChild(option);
         });
 
-        voiceSelect.appendChild(optgroup);
-    });
+        voiceSelect.appendChild(stdGroup);
+    }
+
+    // Show count of available voices for this language
+    console.log(`[VoiceSettings] Loaded ${matchingVoices.length} voices for ${currentLang}`);
 }

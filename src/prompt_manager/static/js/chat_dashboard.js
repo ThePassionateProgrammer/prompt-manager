@@ -363,15 +363,9 @@ async function sendMessage(providedMessage = null) {
             if (shouldSpeak) {
                 conversationMode.receiveResponse();
 
-                // Start listening for barge-in (user can interrupt by speaking)
-                // Small delay to avoid picking up UI sounds
-                setTimeout(() => {
-                    console.log('[Barge-in] Checking if should start listening, state:', conversationMode.state);
-                    if (conversationMode.state === 'PLAYING') {
-                        console.log('[Barge-in] Starting listening for interruption');
-                        VoiceInteraction.startListening();
-                    }
-                }, 300);
+                // NOTE: We don't start listening during PLAYING state because
+                // the mic picks up the AI's speech and transcribes it as user input.
+                // Use Escape key or mute button to interrupt instead.
 
                 await VoiceInteraction.startIncrementalSpeech(() => {
                     // Speech finished - transition to LISTENING and restart

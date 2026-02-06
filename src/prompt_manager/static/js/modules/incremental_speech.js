@@ -158,6 +158,7 @@ function speakNext() {
 
     // Apply user's voice settings synchronously (get fresh settings each time)
     const ttsSettings = VoiceSettings.getTTSSettings();
+    console.log('[IncrementalSpeech] Applying TTS settings:', ttsSettings);
     utterance.rate = ttsSettings.rate;
     utterance.pitch = ttsSettings.pitch;
     utterance.volume = ttsSettings.volume;

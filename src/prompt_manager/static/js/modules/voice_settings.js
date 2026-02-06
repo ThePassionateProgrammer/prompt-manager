@@ -26,7 +26,11 @@ const defaultSettings = {
 };
 
 // Current settings (loaded from storage or defaults)
-let settings = { ...defaultSettings };
+// Deep copy to avoid mutation of defaultSettings
+let settings = {
+    tts: { ...defaultSettings.tts },
+    stt: { ...defaultSettings.stt }
+};
 
 /**
  * Initialize voice settings module.
@@ -42,12 +46,16 @@ export function initializeVoiceSettings() {
 function loadSettings() {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
+        console.log('[VoiceSettings] Loading from localStorage:', stored);
         if (stored) {
             const parsed = JSON.parse(stored);
             settings = {
                 tts: { ...defaultSettings.tts, ...parsed.tts },
                 stt: { ...defaultSettings.stt, ...parsed.stt }
             };
+            console.log('[VoiceSettings] Loaded settings:', settings);
+        } else {
+            console.log('[VoiceSettings] No stored settings, using defaults');
         }
     } catch (error) {
         console.error('Error loading voice settings:', error);
@@ -72,6 +80,7 @@ function saveSettings() {
  * @returns {Object} TTS settings
  */
 export function getTTSSettings() {
+    console.log('[VoiceSettings] getTTSSettings called, returning:', settings.tts);
     return { ...settings.tts };
 }
 
@@ -90,7 +99,9 @@ export function getSTTSettings() {
  * @param {Object} newSettings - New TTS settings (partial)
  */
 export function updateTTSSettings(newSettings) {
+    console.log('[VoiceSettings] Updating TTS settings with:', newSettings);
     settings.tts = { ...settings.tts, ...newSettings };
+    console.log('[VoiceSettings] New TTS settings:', settings.tts);
     saveSettings();
 }
 

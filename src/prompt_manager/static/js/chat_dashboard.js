@@ -347,6 +347,17 @@ async function sendMessage(providedMessage = null) {
             const shouldSpeak = conversationMode.shouldAutoPlay();
             if (shouldSpeak) {
                 conversationMode.receiveResponse();
+
+                // Start listening for barge-in (user can interrupt by speaking)
+                // Small delay to avoid picking up UI sounds
+                setTimeout(() => {
+                    console.log('[Barge-in] Checking if should start listening, state:', conversationMode.state);
+                    if (conversationMode.state === 'PLAYING') {
+                        console.log('[Barge-in] Starting listening for interruption');
+                        VoiceInteraction.startListening();
+                    }
+                }, 300);
+
                 VoiceInteraction.startIncrementalSpeech(() => {
                     // Speech finished - transition to LISTENING and restart
                     // Only if we're still in PLAYING state (not interrupted by barge-in)

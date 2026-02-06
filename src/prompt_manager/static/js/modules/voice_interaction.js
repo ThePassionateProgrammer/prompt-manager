@@ -377,6 +377,7 @@ export function startListening() {
     }
 
     if (isListening) {
+        console.log('[Voice] startListening called but already listening');
         return;
     }
 
@@ -388,6 +389,7 @@ export function startListening() {
         processedResultIndex = 0;
 
         isListening = true;
+        console.log('[Voice] Starting listening, state:', conversationMode?.state);
         voiceRecognition.start();
 
         const voiceBtn = document.getElementById('voice-btn');

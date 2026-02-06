@@ -18,6 +18,23 @@ let textBuffer = '';
 let isEnabled = true;
 let onSpeechComplete = null;
 
+// Cached voices (loaded asynchronously by browser)
+let cachedVoices = [];
+
+// Pre-load voices on module load
+function loadVoices() {
+    cachedVoices = window.speechSynthesis.getVoices();
+    console.log('[IncrementalSpeech] Loaded', cachedVoices.length, 'voices');
+}
+
+// Load voices immediately if available
+loadVoices();
+
+// Also listen for voiceschanged event (voices load asynchronously in some browsers)
+if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
 // Sentence detection pattern: ends with . ! ? followed by space or end of string
 const SENTENCE_END_PATTERN = /[.!?](?:\s|$)/;
 
@@ -166,10 +183,13 @@ function speakNext() {
 
     // Apply selected voice if specified
     if (ttsSettings.voice) {
-        const voices = window.speechSynthesis.getVoices();
-        const selectedVoice = voices.find(v => v.name === ttsSettings.voice);
+        // Use cached voices (pre-loaded at module init)
+        const selectedVoice = cachedVoices.find(v => v.name === ttsSettings.voice);
         if (selectedVoice) {
             utterance.voice = selectedVoice;
+            console.log('[IncrementalSpeech] Using voice:', selectedVoice.name);
+        } else {
+            console.log('[IncrementalSpeech] Voice not found:', ttsSettings.voice, 'Available:', cachedVoices.length);
         }
     }
 

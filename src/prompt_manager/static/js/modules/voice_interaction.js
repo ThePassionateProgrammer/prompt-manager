@@ -371,13 +371,14 @@ export function toggleVoiceInput() {
  * Uses continuous mode when in conversation mode.
  */
 export function startListening() {
+    console.log('[Voice] startListening called, isListening:', isListening);
     if (!voiceRecognition) {
         showNotification('Voice recognition not available', 'error');
         return;
     }
 
     if (isListening) {
-        console.log('[Voice] startListening called but already listening');
+        console.log('[Voice] startListening called but already listening, skipping');
         return;
     }
 
@@ -410,11 +411,13 @@ export function startListening() {
  * Stop listening for speech input.
  */
 export function stopListening() {
+    console.log('[Voice] stopListening called, isListening:', isListening);
     if (!isListening) {
         return;
     }
 
     isListening = false;
+    console.log('[Voice] Stopped listening');
 
     // Stop silence checking service
     if (silenceCheckingService) {

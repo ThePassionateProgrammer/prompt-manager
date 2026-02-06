@@ -13,6 +13,7 @@ let currentProvider = 'openai';
 let isLoading = false;
 let currentConversationId = null;
 let systemPrompt = null;
+let isSpeakerMuted = false;
 
 // Get conversation mode state machine from module
 const conversationMode = ConversationMode.getConversationMode();
@@ -120,6 +121,12 @@ function setupEventListeners() {
     const voiceSettingsBtn = document.getElementById('voice-settings-btn');
     if (voiceSettingsBtn) {
         voiceSettingsBtn.addEventListener('click', openVoiceSettingsModal);
+    }
+
+    // Speaker mute button
+    const speakerBtn = document.getElementById('speaker-btn');
+    if (speakerBtn) {
+        speakerBtn.addEventListener('click', toggleSpeakerMute);
     }
 
     // Auto-save settings when they change
@@ -343,8 +350,8 @@ async function sendMessage(providedMessage = null) {
             const { messageDiv, textEl } = addStreamingMessage();
             let fullResponse = '';
 
-            // Start incremental speech if in conversation mode
-            const shouldSpeak = conversationMode.shouldAutoPlay();
+            // Start incremental speech if in conversation mode and not muted
+            const shouldSpeak = conversationMode.shouldAutoPlay() && !isSpeakerMuted;
             if (shouldSpeak) {
                 conversationMode.receiveResponse();
 
@@ -1212,6 +1219,30 @@ async function saveConversationWithTitle() {
 // Voice Settings Modal Functions
 let voiceSettingsPanelCreated = false;
 
+/**
+ * Toggle speaker mute for AI voice output.
+ * When muted, stops any current speech and prevents future speech.
+ */
+function toggleSpeakerMute() {
+    isSpeakerMuted = !isSpeakerMuted;
+    const speakerBtn = document.getElementById('speaker-btn');
+
+    if (isSpeakerMuted) {
+        // Mute: stop any current speech
+        VoiceInteraction.stopIncrementalSpeech();
+        window.speechSynthesis.cancel();
+        speakerBtn.textContent = '🔇';
+        speakerBtn.classList.add('muted');
+        speakerBtn.title = 'Unmute AI Speech';
+        Notifications.showNotification('AI speech muted', 'info');
+    } else {
+        speakerBtn.textContent = '🔊';
+        speakerBtn.classList.remove('muted');
+        speakerBtn.title = 'Mute AI Speech';
+        Notifications.showNotification('AI speech unmuted', 'info');
+    }
+}
+
 function openVoiceSettingsModal() {
     const modal = document.getElementById('voice-settings-modal');
     const container = document.getElementById('voice-settings-container');
@@ -1281,3 +1312,4 @@ window.deleteConversationFromHistory = deleteConversationFromHistory;
 window.playMessage = playMessage;
 window.openVoiceSettingsModal = openVoiceSettingsModal;
 window.closeVoiceSettingsModal = closeVoiceSettingsModal;
+window.toggleSpeakerMute = toggleSpeakerMute;

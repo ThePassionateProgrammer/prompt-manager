@@ -214,11 +214,12 @@ function speakNext() {
 
     // Apply user's voice settings synchronously (get fresh settings each time)
     const ttsSettings = VoiceSettings.getTTSSettings();
-    console.log('[IncrementalSpeech] Applying TTS settings:', ttsSettings);
+    console.log('[IncrementalSpeech] Applying TTS - rate:', ttsSettings.rate, 'pitch:', ttsSettings.pitch, 'volume:', ttsSettings.volume, 'voice:', ttsSettings.voice);
     utterance.rate = ttsSettings.rate;
     utterance.pitch = ttsSettings.pitch;
     utterance.volume = ttsSettings.volume;
     utterance.lang = ttsSettings.lang;
+    console.log('[IncrementalSpeech] Utterance after settings - rate:', utterance.rate, 'pitch:', utterance.pitch);
 
     // Apply selected voice if specified
     if (ttsSettings.voice) {

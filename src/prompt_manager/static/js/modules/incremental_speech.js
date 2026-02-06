@@ -20,20 +20,56 @@ let onSpeechComplete = null;
 
 // Cached voices (loaded asynchronously by browser)
 let cachedVoices = [];
+let voicesLoaded = false;
 
-// Pre-load voices on module load
-function loadVoices() {
-    cachedVoices = window.speechSynthesis.getVoices();
-    console.log('[IncrementalSpeech] Loaded', cachedVoices.length, 'voices');
+/**
+ * Ensure voices are loaded before speaking.
+ * Returns a promise that resolves when voices are available.
+ */
+function ensureVoicesLoaded() {
+    return new Promise((resolve) => {
+        // If already loaded, return immediately
+        if (voicesLoaded && cachedVoices.length > 0) {
+            resolve(cachedVoices);
+            return;
+        }
+
+        // Try to get voices
+        cachedVoices = window.speechSynthesis.getVoices();
+        if (cachedVoices.length > 0) {
+            voicesLoaded = true;
+            console.log('[IncrementalSpeech] Voices loaded:', cachedVoices.length);
+            resolve(cachedVoices);
+            return;
+        }
+
+        // Voices not ready yet - wait for voiceschanged event
+        console.log('[IncrementalSpeech] Waiting for voices to load...');
+        const handleVoicesChanged = () => {
+            cachedVoices = window.speechSynthesis.getVoices();
+            if (cachedVoices.length > 0) {
+                voicesLoaded = true;
+                console.log('[IncrementalSpeech] Voices loaded after wait:', cachedVoices.length);
+                window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+                resolve(cachedVoices);
+            }
+        };
+        window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+
+        // Fallback timeout - resolve anyway after 2 seconds
+        setTimeout(() => {
+            if (!voicesLoaded) {
+                cachedVoices = window.speechSynthesis.getVoices();
+                voicesLoaded = true;
+                console.log('[IncrementalSpeech] Voices timeout, have:', cachedVoices.length);
+                resolve(cachedVoices);
+            }
+        }, 2000);
+    });
 }
 
-// Load voices immediately if available
-loadVoices();
-
-// Also listen for voiceschanged event (voices load asynchronously in some browsers)
-if (window.speechSynthesis.onvoiceschanged !== undefined) {
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-}
+// Start loading voices immediately
+ensureVoicesLoaded();
 
 // Sentence detection pattern: ends with . ! ? followed by space or end of string
 const SENTENCE_END_PATTERN = /[.!?](?:\s|$)/;
@@ -43,12 +79,15 @@ const MIN_CHUNK_SIZE = 150;
 
 /**
  * Initialize the incremental speech module.
- * Call this on page load.
+ * Call this before starting to receive streaming chunks.
  */
-export function initialize() {
+export async function initialize() {
     speechQueue = [];
     isSpeaking = false;
     textBuffer = '';
+
+    // Ensure voices are loaded before speaking
+    await ensureVoicesLoaded();
 }
 
 /**
@@ -183,13 +222,18 @@ function speakNext() {
 
     // Apply selected voice if specified
     if (ttsSettings.voice) {
-        // Use cached voices (pre-loaded at module init)
+        // Refresh voice cache if empty (fallback)
+        if (cachedVoices.length === 0) {
+            cachedVoices = window.speechSynthesis.getVoices();
+            console.log('[IncrementalSpeech] Refreshed voices:', cachedVoices.length);
+        }
+
         const selectedVoice = cachedVoices.find(v => v.name === ttsSettings.voice);
         if (selectedVoice) {
             utterance.voice = selectedVoice;
             console.log('[IncrementalSpeech] Using voice:', selectedVoice.name);
         } else {
-            console.log('[IncrementalSpeech] Voice not found:', ttsSettings.voice, 'Available:', cachedVoices.length);
+            console.log('[IncrementalSpeech] Voice not found:', ttsSettings.voice, 'Available:', cachedVoices.length, cachedVoices.map(v => v.name).slice(0, 5));
         }
     }
 

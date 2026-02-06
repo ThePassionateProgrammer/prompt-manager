@@ -129,6 +129,14 @@ function setupEventListeners() {
         speakerBtn.addEventListener('click', toggleSpeakerMute);
     }
 
+    // Escape key to interrupt AI speech
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && conversationMode.state === 'PLAYING') {
+            e.preventDefault();
+            interruptAISpeech();
+        }
+    });
+
     // Auto-save settings when they change
     document.getElementById('provider-select').addEventListener('change', saveDashboardSettings);
     document.getElementById('model-select').addEventListener('change', saveDashboardSettings);
@@ -365,7 +373,7 @@ async function sendMessage(providedMessage = null) {
                     }
                 }, 300);
 
-                VoiceInteraction.startIncrementalSpeech(() => {
+                await VoiceInteraction.startIncrementalSpeech(() => {
                     // Speech finished - transition to LISTENING and restart
                     // Only if we're still in PLAYING state (not interrupted by barge-in)
                     if (conversationMode.isActive && conversationMode.state === 'PLAYING') {
@@ -1218,6 +1226,26 @@ async function saveConversationWithTitle() {
 
 // Voice Settings Modal Functions
 let voiceSettingsPanelCreated = false;
+
+/**
+ * Interrupt AI speech immediately.
+ * Used for Escape key and barge-in.
+ */
+function interruptAISpeech() {
+    console.log('[Interrupt] Interrupting AI speech');
+    VoiceInteraction.stopIncrementalSpeech();
+    window.speechSynthesis.cancel();
+
+    // Transition to LISTENING state
+    if (conversationMode.isActive && conversationMode.state === 'PLAYING') {
+        try {
+            conversationMode.interruptPlayback();
+            Notifications.showNotification('Interrupted - listening...', 'info');
+        } catch (e) {
+            console.error('Failed to interrupt playback:', e);
+        }
+    }
+}
 
 /**
  * Toggle speaker mute for AI voice output.

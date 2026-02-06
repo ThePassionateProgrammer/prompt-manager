@@ -636,8 +636,8 @@ export function storeLastResponse(responseText) {
  *
  * @param {Function} onComplete - Optional callback when all speech finishes
  */
-export function startIncrementalSpeech(onComplete) {
-    IncrementalSpeech.initialize();
+export async function startIncrementalSpeech(onComplete) {
+    await IncrementalSpeech.initialize();
 
     // Set up completion handler for conversation mode
     if (onComplete) {

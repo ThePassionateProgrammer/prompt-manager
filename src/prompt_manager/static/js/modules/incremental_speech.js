@@ -138,8 +138,9 @@ function queueSentence(sentence) {
 
 /**
  * Speak the next sentence in the queue.
+ * Applies voice settings synchronously to avoid async timing issues.
  */
-async function speakNext() {
+function speakNext() {
     if (speechQueue.length === 0) {
         isSpeaking = false;
 
@@ -155,8 +156,21 @@ async function speakNext() {
 
     const utterance = new SpeechSynthesisUtterance(text);
 
-    // Apply user's voice settings
-    await VoiceSettings.applyTTSSettings(utterance);
+    // Apply user's voice settings synchronously (get fresh settings each time)
+    const ttsSettings = VoiceSettings.getTTSSettings();
+    utterance.rate = ttsSettings.rate;
+    utterance.pitch = ttsSettings.pitch;
+    utterance.volume = ttsSettings.volume;
+    utterance.lang = ttsSettings.lang;
+
+    // Apply selected voice if specified
+    if (ttsSettings.voice) {
+        const voices = window.speechSynthesis.getVoices();
+        const selectedVoice = voices.find(v => v.name === ttsSettings.voice);
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
+    }
 
     utterance.onend = () => {
         // Speak next sentence

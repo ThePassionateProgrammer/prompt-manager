@@ -348,14 +348,18 @@ async function sendMessage(providedMessage = null) {
             if (shouldSpeak) {
                 conversationMode.receiveResponse();
                 VoiceInteraction.startIncrementalSpeech(() => {
-                    // Speech finished - restart listening if appropriate
-                    if (conversationMode.shouldAutoRestart()) {
+                    // Speech finished - transition to LISTENING and restart
+                    // Only if we're still in PLAYING state (not interrupted by barge-in)
+                    if (conversationMode.isActive && conversationMode.state === 'PLAYING') {
                         conversationMode.finishPlayback();
+                    }
+                    // Always restart listening if conversation mode is active
+                    if (conversationMode.isActive && conversationMode.shouldBeListening()) {
                         setTimeout(() => {
                             if (conversationMode.shouldBeListening() && !isLoading) {
                                 VoiceInteraction.startListening();
                             }
-                        }, 1000);
+                        }, 500);
                     }
                 });
             }

@@ -99,6 +99,22 @@ export function initializeVoiceRecognition() {
     voiceRecognition.onresult = function(event) {
         const chatInput = document.getElementById('chat-input');
 
+        // BARGE-IN: If AI is speaking and user speaks, interrupt the AI
+        if (conversationMode && conversationMode.isActive && conversationMode.state === 'PLAYING') {
+            console.log('[Voice] Barge-in detected - interrupting AI speech');
+            // Stop the AI speech
+            IncrementalSpeech.stop();
+            voiceSynthesis.cancel();
+            isSpeaking = false;
+            // Transition to LISTENING state
+            try {
+                conversationMode.interruptPlayback();
+                showNotification('Interrupted - listening...', 'info');
+            } catch (e) {
+                console.error('Failed to interrupt playback:', e);
+            }
+        }
+
         // In hands-free mode, ANY result (interim or final) indicates ongoing speech
         // Reset the silence timer to prevent premature auto-send
         if (conversationMode && conversationMode.handsFreeModeEnabled) {

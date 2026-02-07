@@ -1,0 +1,615 @@
+{
+  "null": {
+    "id": null,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello! How can I assist you today?"
+      },
+      {
+        "role": "user",
+        "content": "Please give me a creative answer for what 'Temperature' is."
+      },
+      {
+        "role": "assistant",
+        "content": "Temperature is nature's quirky way of letting us know if the fiery dragons have harmonized or fumed over control of Earth's thermostat."
+      },
+      {
+        "role": "user",
+        "content": "Can you restate that more concretely?"
+      },
+      {
+        "role": "assistant",
+        "content": "Can you provide a specific example or detail to clarify your statement?"
+      },
+      {
+        "role": "user",
+        "content": "Temperature is the an adjustable setting for the amount of randomness in word selection of an LLM. Is that correct?"
+      },
+      {
+        "role": "assistant",
+        "content": "No, that is not correct. Temperature in the context of a language model refers to a parameter that controls the level of uncertainty or randomness in the model's output. A higher temperature value results in more diverse and unpredictable word choices, while a lower temperature value leads to more conservative and predictable word choices."
+      },
+      {
+        "role": "user",
+        "content": "Can you give me an example?"
+      },
+      {
+        "role": "assistant",
+        "content": "Sure! Here is an example:\n\nExample: The teacher gave the students a challenging math problem to solve."
+      },
+      {
+        "role": "user",
+        "content": "What were we just talking about?"
+      },
+      {
+        "role": "assistant",
+        "content": "We were discussing the topic of artificial intelligence and its potential impact on society."
+      },
+      {
+        "role": "user",
+        "content": "Remember this sequence 12ab"
+      },
+      {
+        "role": "assistant",
+        "content": "12ab"
+      },
+      {
+        "role": "user",
+        "content": "What was it?"
+      },
+      {
+        "role": "assistant",
+        "content": "I'm sorry, could you please provide more context or clarify your question so I can better understand and provide a helpful response?"
+      },
+      {
+        "role": "user",
+        "content": "What was the sequence I asked you to just remember?"
+      },
+      {
+        "role": "assistant",
+        "content": "You asked me to remember the sequence: 4, 8, 15, 16, 23, 42."
+      },
+      {
+        "role": "user",
+        "content": "Hello"
+      },
+      {
+        "role": "user",
+        "content": "Hello"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello! How can I assist you today?"
+      },
+      {
+        "role": "user",
+        "content": "Please give me a creative answer for what 'Temperature' is."
+      },
+      {
+        "role": "assistant",
+        "content": "Temperature is nature's quirky way of letting us know if the fiery dragons have harmonized or fumed over control of Earth's thermostat."
+      },
+      {
+        "role": "user",
+        "content": "Can you restate that more concretely?"
+      },
+      {
+        "role": "assistant",
+        "content": "Can you provide a specific example or detail to clarify your statement?"
+      },
+      {
+        "role": "user",
+        "content": "Temperature is the an adjustable setting for the amount of randomness in word selection of an LLM. Is that correct?"
+      },
+      {
+        "role": "assistant",
+        "content": "No, that is not correct. Temperature in the context of a language model refers to a parameter that controls the level of uncertainty or randomness in the model's output. A higher temperature value results in more diverse and unpredictable word choices, while a lower temperature value leads to more conservative and predictable word choices."
+      },
+      {
+        "role": "user",
+        "content": "Can you give me an example?"
+      },
+      {
+        "role": "assistant",
+        "content": "Sure! Here is an example:\n\nExample: The teacher gave the students a challenging math problem to solve."
+      },
+      {
+        "role": "user",
+        "content": "What were we just talking about?"
+      },
+      {
+        "role": "assistant",
+        "content": "We were discussing the topic of artificial intelligence and its potential impact on society."
+      },
+      {
+        "role": "user",
+        "content": "Remember this sequence 12ab"
+      },
+      {
+        "role": "assistant",
+        "content": "12ab"
+      },
+      {
+        "role": "user",
+        "content": "What was it?"
+      },
+      {
+        "role": "assistant",
+        "content": "I'm sorry, could you please provide more context or clarify your question so I can better understand and provide a helpful response?"
+      },
+      {
+        "role": "user",
+        "content": "What was the sequence I asked you to just remember?"
+      },
+      {
+        "role": "assistant",
+        "content": "You asked me to remember the sequence: 4, 8, 15, 16, 23, 42."
+      },
+      {
+        "role": "user",
+        "content": "Hello"
+      },
+      {
+        "role": "user",
+        "content": "Hello"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello! How can I assist you today?"
+      }
+    ],
+    "model": "gpt-3.5-turbo",
+    "system_prompt": "You are a helpful, knowledgeable, and friendly AI assistant. Provide clear, accurate, and concise responses.",
+    "title": "Hello",
+    "created_at": "2025-10-16T10:51:28.763451",
+    "updated_at": "2025-10-16T10:51:28.763468"
+  },
+  "conv-123": {
+    "id": "conv-123",
+    "messages": [
+      {
+        "content": "Hello",
+        "role": "user"
+      },
+      {
+        "content": "Hi there!",
+        "role": "assistant"
+      }
+    ],
+    "model": "gpt-3.5-turbo",
+    "system_prompt": "You are helpful",
+    "title": "Test Conversation",
+    "created_at": "2025-10-17T18:05:27.672689",
+    "updated_at": "2025-10-17T18:05:27.672708"
+  },
+  "conv-456": {
+    "id": "conv-456",
+    "messages": [
+      {
+        "content": "Test",
+        "role": "user"
+      }
+    ],
+    "title": "Loaded Conversation",
+    "created_at": "2025-10-17T18:05:27.738184",
+    "updated_at": "2025-10-17T18:05:27.738215"
+  },
+  "conv-0": {
+    "id": "conv-0",
+    "messages": [],
+    "title": "Conversation 0",
+    "created_at": "2025-10-17T18:05:27.915930",
+    "updated_at": "2025-10-17T18:05:27.915952"
+  },
+  "conv-1": {
+    "id": "conv-1",
+    "messages": [],
+    "title": "Conversation 1",
+    "created_at": "2025-10-17T18:05:27.924125",
+    "updated_at": "2025-10-17T18:05:27.924145"
+  },
+  "conv-2": {
+    "id": "conv-2",
+    "messages": [],
+    "title": "Conversation 2",
+    "created_at": "2025-10-17T18:05:27.932629",
+    "updated_at": "2025-10-17T18:05:27.932645"
+  },
+  "conv-0e8f9ce44c75": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-0e8f9ce44c75",
+    "title": "What is Python?",
+    "created_at": "2025-10-16T10:37:30.473626",
+    "updated_at": "2025-10-16T10:37:30.473642"
+  },
+  "update-test": {
+    "id": "update-test",
+    "messages": [
+      {
+        "content": "First",
+        "role": "user"
+      },
+      {
+        "content": "Response",
+        "role": "assistant"
+      },
+      {
+        "content": "Second",
+        "role": "user"
+      }
+    ],
+    "title": "Original",
+    "created_at": "2025-10-17T18:05:28.066393",
+    "updated_at": "2025-10-17T18:05:28.066411"
+  },
+  "conv-3021e1db13b9": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-3021e1db13b9",
+    "created_at": "2025-10-16T10:37:30.523141",
+    "updated_at": "2025-10-16T10:37:30.523154"
+  },
+  "conv-63982a95e35f": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-63982a95e35f",
+    "title": "Test message",
+    "created_at": "2025-10-16T10:37:30.544493",
+    "updated_at": "2025-10-16T10:37:30.544513"
+  },
+  "conv-794c752cd5a6": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-794c752cd5a6",
+    "created_at": "2025-10-16T10:37:30.565463",
+    "updated_at": "2025-10-16T10:37:30.565497"
+  },
+  "conv-74e02b381e5e": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-74e02b381e5e",
+    "created_at": "2025-10-16T10:37:30.621993",
+    "updated_at": "2025-10-16T10:37:30.622020"
+  },
+  "conv-5f7cc24b8263": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-5f7cc24b8263",
+    "title": "What is Python?",
+    "created_at": "2025-10-16T10:37:50.834529",
+    "updated_at": "2025-10-16T10:37:50.834543"
+  },
+  "conv-e87813c3bfca": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-e87813c3bfca",
+    "created_at": "2025-10-16T10:37:50.896498",
+    "updated_at": "2025-10-16T10:37:50.896510"
+  },
+  "conv-2a6fa9c63ab4": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-2a6fa9c63ab4",
+    "title": "Test message",
+    "created_at": "2025-10-16T10:37:50.922027",
+    "updated_at": "2025-10-16T10:37:50.922039"
+  },
+  "conv-c41c8aa45176": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-c41c8aa45176",
+    "created_at": "2025-10-16T10:37:50.955782",
+    "updated_at": "2025-10-16T10:37:50.955798"
+  },
+  "conv-57dcbbdb0cd0": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-57dcbbdb0cd0",
+    "created_at": "2025-10-16T10:37:51.016854",
+    "updated_at": "2025-10-16T10:37:51.016870"
+  },
+  "conv-9b4dce8614d0": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-9b4dce8614d0",
+    "title": "What is Python?",
+    "created_at": "2025-10-16T10:42:19.167071",
+    "updated_at": "2025-10-16T10:42:19.167074"
+  },
+  "conv-96c5509aaeab": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-96c5509aaeab",
+    "created_at": "2025-10-16T10:42:19.192990",
+    "updated_at": "2025-10-16T10:42:19.192997"
+  },
+  "conv-660281eca7a2": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-660281eca7a2",
+    "title": "Test message",
+    "created_at": "2025-10-16T10:42:19.206581",
+    "updated_at": "2025-10-16T10:42:19.206589"
+  },
+  "conv-24a60b3243dd": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-24a60b3243dd",
+    "created_at": "2025-10-16T10:42:19.220868",
+    "updated_at": "2025-10-16T10:42:19.220875"
+  },
+  "conv-a84771e01e13": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-a84771e01e13",
+    "created_at": "2025-10-16T10:42:19.278669",
+    "updated_at": "2025-10-16T10:42:19.278686"
+  },
+  "conv-00cfb3bcaa87": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-00cfb3bcaa87",
+    "title": "What is Python?",
+    "created_at": "2025-10-16T10:43:32.627412",
+    "updated_at": "2025-10-16T10:43:32.627422"
+  },
+  "conv-36b65916cbd6": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-36b65916cbd6",
+    "created_at": "2025-10-16T10:43:32.660919",
+    "updated_at": "2025-10-16T10:43:32.660924"
+  },
+  "conv-3d7f0632e049": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-3d7f0632e049",
+    "title": "Test message",
+    "created_at": "2025-10-16T10:43:32.675183",
+    "updated_at": "2025-10-16T10:43:32.675193"
+  },
+  "conv-03642dfab96f": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-03642dfab96f",
+    "created_at": "2025-10-16T10:43:32.689600",
+    "updated_at": "2025-10-16T10:43:32.689603"
+  },
+  "conv-913864d95c2c": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-913864d95c2c",
+    "created_at": "2025-10-16T10:43:32.718237",
+    "updated_at": "2025-10-16T10:43:32.718242"
+  },
+  "conv-5bd161b1afa7": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-5bd161b1afa7",
+    "title": "What is Python?",
+    "created_at": "2025-10-17T17:55:17.469010",
+    "updated_at": "2025-10-17T17:55:17.469025"
+  },
+  "conv-dd1da950b40a": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-dd1da950b40a",
+    "created_at": "2025-10-17T17:55:17.625641",
+    "updated_at": "2025-10-17T17:55:17.625654"
+  },
+  "conv-5ad219eb749d": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-5ad219eb749d",
+    "title": "Test message",
+    "created_at": "2025-10-17T17:55:17.723135",
+    "updated_at": "2025-10-17T17:55:17.723148"
+  },
+  "conv-6e933ef43797": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-6e933ef43797",
+    "created_at": "2025-10-17T17:55:17.745429",
+    "updated_at": "2025-10-17T17:55:17.745448"
+  },
+  "conv-c7f1194b9d20": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-c7f1194b9d20",
+    "created_at": "2025-10-17T17:55:17.796439",
+    "updated_at": "2025-10-17T17:55:17.796463"
+  },
+  "conv-46f800dff6ff": {
+    "messages": [
+      {
+        "content": "What is Python?",
+        "role": "user"
+      },
+      {
+        "content": "Python is a programming language",
+        "role": "assistant"
+      }
+    ],
+    "id": "conv-46f800dff6ff",
+    "title": "What is Python?",
+    "created_at": "2025-10-17T18:05:28.014604",
+    "updated_at": "2025-10-17T18:05:28.014625"
+  },
+  "conv-cdd202fb6f19": {
+    "messages": [],
+    "title": "Time Test",
+    "id": "conv-cdd202fb6f19",
+    "created_at": "2025-10-17T18:05:28.091258",
+    "updated_at": "2025-10-17T18:05:28.091294"
+  },
+  "conv-c5f89ab38575": {
+    "messages": [
+      {
+        "content": "Test message",
+        "role": "user"
+      }
+    ],
+    "token_usage": {
+      "total_tokens": 100
+    },
+    "id": "conv-c5f89ab38575",
+    "title": "Test message",
+    "created_at": "2025-10-17T18:05:28.116314",
+    "updated_at": "2025-10-17T18:05:28.116332"
+  },
+  "conv-56a184556868": {
+    "messages": [
+      {
+        "content": "This is a preview message",
+        "role": "user"
+      }
+    ],
+    "title": "Preview Test",
+    "id": "conv-56a184556868",
+    "created_at": "2025-10-17T18:05:28.147944",
+    "updated_at": "2025-10-17T18:05:28.147965"
+  },
+  "conv-5c721eb6ba76": {
+    "messages": [
+      {
+        "content": "Teach me Python",
+        "role": "user"
+      }
+    ],
+    "title": "Python Tutorial",
+    "id": "conv-5c721eb6ba76",
+    "created_at": "2025-10-17T18:05:28.204580",
+    "updated_at": "2025-10-17T18:05:28.204599"
+  }
+}

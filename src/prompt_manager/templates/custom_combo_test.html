@@ -1,0 +1,610 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">🧪 Custom Combo Box Test</h2>
+                    <p class="text-muted mb-0">Testing dual-mode custom combo box functionality</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-warning" id="mode-toggle">
+                        <i class="fas fa-edit me-1"></i>Mode: DISPLAY
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="reset-test">
+                        <i class="fas fa-eraser me-1"></i>Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Left Panel: Test Controls -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Test Controls</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="test-template" class="form-label fw-bold">Test Template</label>
+                        <textarea class="form-control" id="test-template" rows="3" 
+                                  placeholder="Enter template with tags...">As a [Role], I want to [What], so that [Why]</textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" id="generate-test">
+                            <i class="fas fa-magic me-1"></i>Generate Test Combo Boxes
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="run-tests">
+                            <i class="fas fa-vial me-1"></i>Run Tests
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test Results -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Test Results</h5>
+                </div>
+                <div class="card-body">
+                    <div id="test-results">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-play fa-2x mb-3"></i>
+                            <p>Click "Run Tests" to see results</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel: Custom Combo Box Test -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Custom Combo Box Test</h5>
+                </div>
+                <div class="card-body">
+                    <div id="combo-box-test-container">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-arrow-up fa-2x mb-3"></i>
+                            <p>Click "Generate Test Combo Boxes" to start testing</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let isEditMode = false;
+let testComboBoxes = [];
+let testResults = [];
+
+// Load test page
+document.addEventListener('DOMContentLoaded', function() {
+    setupTestEventListeners();
+});
+
+function setupTestEventListeners() {
+    // Mode toggle button
+    document.getElementById('mode-toggle').addEventListener('click', toggleMode);
+    
+    // Generate test combo boxes
+    document.getElementById('generate-test').addEventListener('click', generateTestComboBoxes);
+    
+    // Run tests
+    document.getElementById('run-tests').addEventListener('click', runTests);
+    
+    // Reset test
+    document.getElementById('reset-test').addEventListener('click', resetTest);
+}
+
+function toggleMode() {
+    isEditMode = !isEditMode;
+    updateModeButton();
+    
+    // Regenerate combo boxes with new mode
+    if (testComboBoxes.length > 0) {
+        generateTestComboBoxes();
+    }
+    
+    showAlert(`Mode switched to ${isEditMode ? 'EDIT' : 'DISPLAY'}`, 'info');
+}
+
+function updateModeButton() {
+    const button = document.getElementById('mode-toggle');
+    const icon = button.querySelector('i');
+    
+    if (isEditMode) {
+        button.className = 'btn btn-warning';
+        icon.className = 'fas fa-edit me-1';
+        button.innerHTML = '<i class="fas fa-edit me-1"></i>Mode: EDIT';
+    } else {
+        button.className = 'btn btn-outline-warning';
+        icon.className = 'fas fa-edit me-1';
+        button.innerHTML = '<i class="fas fa-edit me-1"></i>Mode: DISPLAY';
+    }
+}
+
+function generateTestComboBoxes() {
+    const template = document.getElementById('test-template').value.trim();
+    
+    if (!template) {
+        showAlert('Please enter a template', 'error');
+        return;
+    }
+    
+    // Extract variables from template
+    const variables = extractVariables(template);
+    
+    // Generate test combo boxes
+    testComboBoxes = [];
+    variables.forEach((variable, index) => {
+        testComboBoxes.push({
+            tag: variable,
+            index: index,
+            enabled: index === 0, // Only first is enabled initially
+            value: '',
+            options: generateTestOptions(variable),
+            is_custom: true
+        });
+    });
+    
+    renderTestComboBoxes();
+}
+
+function extractVariables(template) {
+    const pattern = /\[([^\]]+)\]/g;
+    const matches = [];
+    let match;
+    while ((match = pattern.exec(template)) !== null) {
+        matches.push(match[1]);
+    }
+    return matches;
+}
+
+function generateTestOptions(tag) {
+    // Generate test options based on tag
+    const testOptions = {
+        'Role': ['Manager', 'Programmer', 'Designer', 'Tester'],
+        'What': ['Write code', 'Create tests', 'Review code', 'Fix bugs'],
+        'Why': ['Improve quality', 'Save time', 'Reduce errors', 'Enhance performance']
+    };
+    
+    return testOptions[tag] || [`Option 1 for ${tag}`, `Option 2 for ${tag}`];
+}
+
+function renderTestComboBoxes() {
+    const container = document.getElementById('combo-box-test-container');
+    
+    if (testComboBoxes.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-arrow-up fa-2x mb-3"></i>
+                <p>Click "Generate Test Combo Boxes" to start testing</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    testComboBoxes.forEach((comboBox, index) => {
+        const isFirst = index === 0;
+        const isLast = index === testComboBoxes.length - 1;
+        
+        // Determine mode-specific options and placeholder
+        const modeOptions = getModeOptions(comboBox.tag, comboBox.options);
+        const placeholder = getModePlaceholder(comboBox.tag);
+        
+        html += `
+            <div class="mb-3 border rounded p-3 bg-light">
+                <label for="test-combo-${index}" class="form-label fw-bold">
+                    ${comboBox.tag} ${isFirst ? '(Start here)' : ''} ${isLast ? '(Final selection)' : ''}
+                </label>
+                <div class="input-group">
+                    <input type="text" class="form-control" 
+                           id="test-combo-${index}" 
+                           placeholder="${placeholder}"
+                           ${comboBox.enabled ? '' : 'disabled'}
+                           data-index="${index}"
+                           data-tag="${comboBox.tag}">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown" 
+                            ${comboBox.enabled ? '' : 'disabled'}>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu" id="test-dropdown-${index}">
+                        ${modeOptions.map(option => 
+                            `<li><a class="dropdown-item" href="#" data-value="${option}">${option}</a></li>`
+                        ).join('')}
+                    </ul>
+                </div>
+                <div class="form-text">
+                    ${comboBox.enabled ? 'Ready for selection' : 'Waiting for previous selection'}
+                    <br><small class="text-muted">Mode: ${isEditMode ? 'EDIT' : 'DISPLAY'}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // Add event listeners to test combo boxes
+    testComboBoxes.forEach((comboBox, index) => {
+        const input = document.getElementById(`test-combo-${index}`);
+        const dropdown = document.getElementById(`test-dropdown-${index}`);
+        
+        // Handle input changes
+        input.addEventListener('input', function() {
+            handleTestComboBoxChange(index, this.value);
+        });
+        
+        // Handle Enter key for add/edit/delete
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleEnterKey(index, this.value);
+            }
+        });
+        
+        // Handle focus/blur for dropdown behavior
+        input.addEventListener('focus', function() {
+            showDropdown(index);
+        });
+        
+        input.addEventListener('blur', function() {
+            // Delay hiding to allow dropdown clicks
+            setTimeout(() => hideDropdown(index), 150);
+        });
+        
+        // Handle dropdown selections
+        dropdown.addEventListener('click', function(e) {
+            if (e.target.classList.contains('dropdown-item')) {
+                e.preventDefault();
+                const value = e.target.getAttribute('data-value');
+                input.value = value;
+                handleTestComboBoxChange(index, value);
+            }
+        });
+    });
+}
+
+function getModeOptions(tag, baseOptions) {
+    if (isEditMode) {
+        // Edit mode: First item is "Add item"
+        return ['Add item', ...baseOptions];
+    } else {
+        // Display mode: First item is "Select item"
+        return ['Select item', ...baseOptions];
+    }
+}
+
+function getModePlaceholder(tag) {
+    if (isEditMode) {
+        return `Enter ${tag}`;
+    } else {
+        return `Select ${tag}`;
+    }
+}
+
+function handleTestComboBoxChange(index, value) {
+    testComboBoxes[index].value = value;
+    
+    // Handle mode-specific behavior
+    if (isEditMode) {
+        handleEditModeChange(index, value);
+    } else {
+        handleDisplayModeChange(index, value);
+    }
+    
+    // Update cascading selections
+    updateTestCascadingSelections(index);
+}
+
+function handleEditModeChange(index, value) {
+    // In edit mode, if "Add item" is selected, add the current input value to options
+    if (value === 'Add item') {
+        const input = document.getElementById(`test-combo-${index}`);
+        const inputValue = input.value.trim();
+        
+        if (inputValue && inputValue !== 'Add item') {
+            // Add to options (this would be more complex in real implementation)
+            showAlert(`Would add "${inputValue}" to ${testComboBoxes[index].tag} options`, 'info');
+        }
+    }
+}
+
+function handleDisplayModeChange(index, value) {
+    // In display mode, if "Select item" is selected, clear the input
+    if (value === 'Select item') {
+        const input = document.getElementById(`test-combo-${index}`);
+        input.value = '';
+        testComboBoxes[index].value = '';
+    }
+}
+
+function updateTestCascadingSelections(changedIndex) {
+    // Reset downstream combo boxes
+    for (let i = changedIndex + 1; i < testComboBoxes.length; i++) {
+        testComboBoxes[i].value = "";
+        testComboBoxes[i].enabled = false;
+        
+        const input = document.getElementById(`test-combo-${i}`);
+        if (input) {
+            input.value = "";
+            input.disabled = true;
+        }
+    }
+    
+    // Enable next combo box if there is one
+    if (changedIndex + 1 < testComboBoxes.length) {
+        testComboBoxes[changedIndex + 1].enabled = true;
+        
+        const input = document.getElementById(`test-combo-${changedIndex + 1}`);
+        if (input) {
+            input.disabled = false;
+        }
+    }
+}
+
+function runTests() {
+    testResults = [];
+    
+    // Test 1: Mode switching
+    testResults.push({
+        name: 'Mode Switching',
+        passed: testModeSwitching(),
+        details: 'Can switch between EDIT and DISPLAY modes'
+    });
+    
+    // Test 2: Edit mode behavior
+    testResults.push({
+        name: 'Edit Mode Behavior',
+        passed: testEditModeBehavior(),
+        details: 'Edit mode shows "Add item" as first option and "Enter X" placeholder'
+    });
+    
+    // Test 3: Display mode behavior
+    testResults.push({
+        name: 'Display Mode Behavior',
+        passed: testDisplayModeBehavior(),
+        details: 'Display mode shows "Select item" as first option and "Select X" placeholder'
+    });
+    
+    // Test 4: Cascading behavior
+    testResults.push({
+        name: 'Cascading Behavior',
+        passed: testCascadingBehavior(),
+        details: 'Downstream combo boxes are disabled until upstream selection'
+    });
+    
+    displayTestResults();
+}
+
+function testModeSwitching() {
+    // Test that we can switch between modes
+    const originalMode = isEditMode;
+    
+    // Switch to edit mode
+    isEditMode = true;
+    updateModeButton();
+    const editModeButton = document.getElementById('mode-toggle');
+    const editModeCorrect = editModeButton.textContent.includes('EDIT');
+    
+    // Switch to display mode
+    isEditMode = false;
+    updateModeButton();
+    const displayModeButton = document.getElementById('mode-toggle');
+    const displayModeCorrect = displayModeButton.textContent.includes('DISPLAY');
+    
+    // Restore original mode
+    isEditMode = originalMode;
+    updateModeButton();
+    
+    return editModeCorrect && displayModeCorrect;
+}
+
+function testEditModeBehavior() {
+    if (testComboBoxes.length === 0) return false;
+    
+    // Switch to edit mode
+    isEditMode = true;
+    generateTestComboBoxes();
+    
+    // Check first combo box
+    const firstComboBox = testComboBoxes[0];
+    const dropdown = document.getElementById('test-dropdown-0');
+    const input = document.getElementById('test-combo-0');
+    
+    if (!dropdown || !input) return false;
+    
+    // Check that first option is "Add item"
+    const firstOption = dropdown.querySelector('.dropdown-item');
+    const hasAddItem = firstOption && firstOption.textContent.includes('Add item');
+    
+    // Check placeholder
+    const hasCorrectPlaceholder = input.placeholder.includes('Enter');
+    
+    return hasAddItem && hasCorrectPlaceholder;
+}
+
+function testDisplayModeBehavior() {
+    if (testComboBoxes.length === 0) return false;
+    
+    // Switch to display mode
+    isEditMode = false;
+    generateTestComboBoxes();
+    
+    // Check first combo box
+    const firstComboBox = testComboBoxes[0];
+    const dropdown = document.getElementById('test-dropdown-0');
+    const input = document.getElementById('test-combo-0');
+    
+    if (!dropdown || !input) return false;
+    
+    // Check that first option is "Select item"
+    const firstOption = dropdown.querySelector('.dropdown-item');
+    const hasSelectItem = firstOption && firstOption.textContent.includes('Select item');
+    
+    // Check placeholder
+    const hasCorrectPlaceholder = input.placeholder.includes('Select');
+    
+    return hasSelectItem && hasCorrectPlaceholder;
+}
+
+function testCascadingBehavior() {
+    if (testComboBoxes.length < 2) return true; // Not applicable for single combo box
+    
+    // Check that first combo box is enabled and others are disabled
+    const firstInput = document.getElementById('test-combo-0');
+    const secondInput = document.getElementById('test-combo-1');
+    
+    if (!firstInput || !secondInput) return false;
+    
+    const firstEnabled = !firstInput.disabled;
+    const secondDisabled = secondInput.disabled;
+    
+    return firstEnabled && secondDisabled;
+}
+
+function displayTestResults() {
+    const container = document.getElementById('test-results');
+    
+    let html = '';
+    testResults.forEach(result => {
+        const statusClass = result.passed ? 'success' : 'danger';
+        const statusIcon = result.passed ? 'check-circle' : 'times-circle';
+        
+        html += `
+            <div class="alert alert-${statusClass} d-flex align-items-center">
+                <i class="fas fa-${statusIcon} me-2"></i>
+                <div>
+                    <strong>${result.name}</strong>
+                    <br><small>${result.details}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function resetTest() {
+    testComboBoxes = [];
+    testResults = [];
+    isEditMode = false;
+    updateModeButton();
+    
+    document.getElementById('test-template').value = 'As a [Role], I want to [What], so that [Why]';
+    document.getElementById('combo-box-test-container').innerHTML = `
+        <div class="text-center text-muted">
+            <i class="fas fa-arrow-up fa-2x mb-3"></i>
+            <p>Click "Generate Test Combo Boxes" to start testing</p>
+        </div>
+    `;
+    document.getElementById('test-results').innerHTML = `
+        <div class="text-center text-muted">
+            <i class="fas fa-play fa-2x mb-3"></i>
+            <p>Click "Run Tests" to see results</p>
+        </div>
+    `;
+}
+
+// Custom Combo Box Behavior Functions
+
+function handleEnterKey(index, value) {
+    const comboBox = testComboBoxes[index];
+    const input = document.getElementById(`test-combo-${index}`);
+    
+    if (isEditMode) {
+        // Edit mode: Add, edit, or delete items
+        if (value.trim() === '') {
+            // Empty value: delete selected item
+            deleteSelectedItem(index);
+        } else {
+            // Has value: add or update item
+            addOrUpdateItem(index, value.trim());
+        }
+    } else {
+        // Display mode: just select the item
+        selectItem(index, value);
+    }
+}
+
+function addOrUpdateItem(index, value) {
+    const comboBox = testComboBoxes[index];
+    const input = document.getElementById(`test-combo-${index}`);
+    
+    // Add to options if not already there
+    if (!comboBox.options.includes(value)) {
+        comboBox.options.push(value);
+    }
+    
+    // Clear input and regenerate dropdown
+    input.value = '';
+    renderTestComboBoxes();
+    
+    showAlert(`Added "${value}" to ${comboBox.tag}`, 'success');
+}
+
+function deleteSelectedItem(index) {
+    const comboBox = testComboBoxes[index];
+    const input = document.getElementById(`test-combo-${index}`);
+    
+    // Find and remove the selected item
+    const selectedValue = input.value;
+    if (selectedValue && comboBox.options.includes(selectedValue)) {
+        comboBox.options = comboBox.options.filter(opt => opt !== selectedValue);
+        input.value = '';
+        renderTestComboBoxes();
+        showAlert(`Deleted "${selectedValue}" from ${comboBox.tag}`, 'info');
+    }
+}
+
+function selectItem(index, value) {
+    const comboBox = testComboBoxes[index];
+    const input = document.getElementById(`test-combo-${index}`);
+    
+    // Just select the item (display mode)
+    input.value = value;
+    showAlert(`Selected "${value}" in ${comboBox.tag}`, 'info');
+}
+
+function showDropdown(index) {
+    const dropdown = document.getElementById(`test-dropdown-${index}`);
+    if (dropdown) {
+        dropdown.style.display = 'block';
+    }
+}
+
+function hideDropdown(index) {
+    const dropdown = document.getElementById(`test-dropdown-${index}`);
+    if (dropdown) {
+        dropdown.style.display = 'none';
+    }
+}
+
+function showAlert(message, type) {
+    // Create a Bootstrap alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 3000);
+}
+</script>
+{% endblock %}

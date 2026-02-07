@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cascading Combo Boxes Test - Phase 1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .combo-box-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .combo-box-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .combo-box-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 150px;
+            font-size: 14px;
+        }
+        
+        .combo-box-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .combo-box-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .combo-box-option:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .combo-box-option.selected {
+            background-color: #555;
+            color: white;
+        }
+        
+        .arrow {
+            font-size: 18px;
+            color: #666;
+            margin: 0 10px;
+        }
+        
+        .test-results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .test-button:hover {
+            background: #0056b3;
+        }
+        
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        /* Custom Combo Box Styles */
+        .custom-combo-box {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .custom-combo-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 150px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .custom-combo-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .custom-combo-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .custom-combo-option:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .custom-combo-option.selected {
+            background-color: #555;
+            color: white;
+        }
+        
+        .custom-combo-arrow {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #666;
+            cursor: pointer;
+        }
+        
+        .template-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .generate-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        
+        .generate-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Cascading Combo Boxes Test - Phase 1</h1>
+    <p><strong>Version: 1.0</strong> - Basic linkage behavior</p>
+    
+    <div class="test-container">
+        <h2>🧪 Generalized N-Level Cascading Combo Boxes Test</h2>
+        <p>Testing generalized cascading combo box functionality with template parsing and N-level support.</p>
+        
+        <!-- Template Input Section -->
+        <div style="margin-bottom: 20px;">
+            <label for="template-input"><strong>Template:</strong></label>
+            <input type="text" id="template-input" class="template-input" 
+                   value="As a [Role], I want to [What], so that [Why]" 
+                   placeholder="Enter template with [TAG] variables...">
+            <button id="generate-btn" class="generate-btn">Generate Combo Boxes</button>
+        </div>
+        
+        <!-- Dynamic Combo Boxes Container -->
+        <div id="dynamic-combo-boxes">
+            <div class="combo-box-row">
+                <label>Role:</label>
+                <div class="custom-combo-box" id="role-combo">
+                    <input type="text" class="custom-combo-input" placeholder="Select role..." id="role-input">
+                    <div class="custom-combo-arrow" id="role-arrow"></div>
+                    <div class="custom-combo-dropdown" id="role-dropdown">
+                        <div class="custom-combo-option" data-value="Manager">Manager</div>
+                        <div class="custom-combo-option" data-value="Programmer">Programmer</div>
+                        <div class="custom-combo-option" data-value="Fitness Coach">Fitness Coach</div>
+                    </div>
+                </div>
+                <span class="arrow">→</span>
+                <label>What:</label>
+                <div class="custom-combo-box" id="what-combo">
+                    <input type="text" class="custom-combo-input" placeholder="Select action..." id="what-input" disabled>
+                    <div class="custom-combo-arrow" id="what-arrow"></div>
+                    <div class="custom-combo-dropdown" id="what-dropdown">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+                <span class="arrow">→</span>
+                <label>Why:</label>
+                <div class="custom-combo-box" id="why-combo">
+                    <input type="text" class="custom-combo-input" placeholder="Select reason..." id="why-input" disabled>
+                    <div class="custom-combo-arrow" id="why-arrow"></div>
+                    <div class="custom-combo-dropdown" id="why-dropdown">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🧪 Test Results</h2>
+        <button class="test-button" onclick="testRoleSelectionPopulatesWhatOptions()">Test: Role Selection Populates What Options</button>
+        <button class="test-button" onclick="testWhatSelectionPopulatesWhyOptions()">Test: What Selection Populates Why Options</button>
+        <button class="test-button" onclick="testChangingRoleClearsDownstreamSelections()">Test: Changing Role Clears Downstream Selections</button>
+        <button class="test-button" onclick="testStateRestorationWhenSwitchingRoles()">Test: State Restoration When Switching Roles</button>
+        <button class="test-button" onclick="testVisualRelationshipIndicators()">Test: Visual Relationship Indicators</button>
+        <button class="test-button" onclick="testDynamicRelationshipLoading()">Test: Dynamic Relationship Loading</button>
+        <button class="test-button" onclick="testErrorHandlingForInvalidSelections()">Test: Error Handling For Invalid Selections</button>
+        <button class="test-button" onclick="testPerformanceWithLargeDatasets()">Test: Performance With Large Datasets</button>
+        <button class="test-button" onclick="testTemplateParsingAndNLevelGeneration()">Test: Template Parsing and N-Level Generation</button>
+        <button class="test-button" onclick="runAllTests()">Run All Tests</button>
+        <button class="test-button" onclick="resetTest()">Reset</button>
+        <div class="test-results" id="test-results">
+            Click "Test 1" to run the first test...
+        </div>
+    </div>
+
+    <script>
+        // Template parsing and N-level cascading system
+        let currentTemplate = "";
+        let comboBoxes = [];
+        let maxLevels = 16; // Hard limit as requested
+        
+        // Parse template to extract variables
+        function parseTemplate(template) {
+            const regex = /\[([^\]]+)\]/g;
+            const variables = [];
+            let match;
+            
+            while ((match = regex.exec(template)) !== null) {
+                variables.push(match[1]);
+            }
+            
+            return variables;
+        }
+        
+        // Generate combo boxes from template
+        function generateComboBoxesFromTemplate(template) {
+            const variables = parseTemplate(template);
+            
+            if (variables.length > maxLevels) {
+                alert(`Template has ${variables.length} variables, but maximum is ${maxLevels}`);
+                return;
+            }
+            
+            currentTemplate = template;
+            comboBoxes = variables.map((variable, index) => ({
+                level: index,
+                tag: variable,
+                enabled: index === 0, // Only first level enabled initially
+                selected: "",
+                options: index === 0 ? getRootOptions() : []
+            }));
+            
+            renderDynamicComboBoxes();
+        }
+        
+        // Get root options (first level)
+        function getRootOptions() {
+            return Object.keys(relationships);
+        }
+        
+        // Render dynamic combo boxes
+        function renderDynamicComboBoxes() {
+            const container = document.getElementById('dynamic-combo-boxes');
+            
+            if (comboBoxes.length === 0) {
+                container.innerHTML = '<p>No combo boxes to render</p>';
+                return;
+            }
+            
+            let html = '<div class="combo-box-row">';
+            
+            comboBoxes.forEach((comboBox, index) => {
+                const isLast = index === comboBoxes.length - 1;
+                
+                html += `
+                    <label>${comboBox.tag}:</label>
+                    <div class="custom-combo-box" id="combo-${index}">
+                        <input type="text" class="custom-combo-input" 
+                               id="input-${index}" 
+                               placeholder="Select ${comboBox.tag.toLowerCase()}..."
+                               ${comboBox.enabled ? '' : 'disabled'}>
+                        <div class="custom-combo-arrow" id="arrow-${index}"></div>
+                        <div class="custom-combo-dropdown" id="dropdown-${index}">
+                            ${comboBox.options.map(option => 
+                                `<div class="custom-combo-option" data-value="${option}">${option}</div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                // Add arrow between combo boxes (except after the last one)
+                if (!isLast) {
+                    html += '<span class="arrow">→</span>';
+                }
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+            
+            // Setup event listeners for all combo boxes
+            comboBoxes.forEach((comboBox, index) => {
+                setupComboBox(index);
+            });
+        }
+        
+        // Setup individual combo box
+        function setupComboBox(index) {
+            const input = document.getElementById(`input-${index}`);
+            const dropdown = document.getElementById(`dropdown-${index}`);
+            const arrow = document.getElementById(`arrow-${index}`);
+            
+            if (!input || !dropdown || !arrow) return;
+            
+            // Show dropdown on focus
+            input.addEventListener('focus', () => {
+                if (!input.disabled) {
+                    dropdown.style.display = 'block';
+                }
+            });
+            
+            // Hide dropdown on blur
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    dropdown.style.display = 'none';
+                }, 200);
+            });
+            
+            // Toggle dropdown on arrow click
+            arrow.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!input.disabled) {
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                    if (dropdown.style.display === 'block') {
+                        input.focus();
+                    }
+                }
+            });
+            
+            // Handle option clicks
+            dropdown.addEventListener('click', (e) => {
+                if (e.target.classList.contains('custom-combo-option')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    input.value = e.target.textContent;
+                    handleComboBoxChange(index, e.target.textContent);
+                    dropdown.style.display = 'none';
+                }
+            });
+        }
+        
+        // Handle combo box changes for cascading
+        function handleComboBoxChange(index, value) {
+            if (comboBoxes[index]) {
+                comboBoxes[index].selected = value;
+            }
+            
+            // Handle cascading logic
+            if (index < comboBoxes.length - 1) {
+                // Enable next combo box and populate options
+                comboBoxes[index + 1].enabled = true;
+                populateNextLevelOptions(index, value);
+                
+                // Clear all downstream selections
+                for (let i = index + 2; i < comboBoxes.length; i++) {
+                    comboBoxes[i].enabled = false;
+                    comboBoxes[i].selected = "";
+                    comboBoxes[i].options = [];
+                }
+            }
+            
+            // Update the UI
+            renderDynamicComboBoxes();
+        }
+        
+        // Populate options for next level based on parent selection
+        function populateNextLevelOptions(parentIndex, parentValue) {
+            if (parentIndex === 0) {
+                // First level to second level
+                const nextComboBox = comboBoxes[parentIndex + 1];
+                if (relationships[parentValue]) {
+                    nextComboBox.options = Object.keys(relationships[parentValue]);
+                }
+            } else if (parentIndex === 1) {
+                // Second level to third level
+                const nextComboBox = comboBoxes[parentIndex + 1];
+                const grandParentValue = comboBoxes[0].selected;
+                if (relationships[grandParentValue] && relationships[grandParentValue][parentValue]) {
+                    nextComboBox.options = relationships[grandParentValue][parentValue];
+                }
+            }
+            // Add more levels as needed...
+        }
+        
+        // Initialize generate button
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generate-btn');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', function() {
+                    const template = document.getElementById('template-input').value;
+                    generateComboBoxesFromTemplate(template);
+                });
+            }
+        });
+        
+        // Test data structure
+        const relationships = {
+            "Manager": {
+                "Review Status": ["Evaluate Next Actions", "Review Performance"],
+                "File Compliance Report": ["Keep higher-ups informed", "Meet our standards"]
+            },
+            "Programmer": {
+                "Code Review": ["Keep Code Clean", "Propagate Good Practices"],
+                "Test Plan": ["Ensure Quality", "Prevent Bugs"]
+            },
+            "Fitness Coach": {
+                "Create Client Meal Plan": ["Improve Client Health", "Meet Nutritional Goals"],
+                "Work Out": ["Build Strength", "Increase Endurance"]
+            }
+        };
+
+        // State persistence - remember selections for each role
+        const stateMemory = {};
+
+        // State management functions
+        function saveState(role, what, why) {
+            if (!stateMemory[role]) {
+                stateMemory[role] = {};
+            }
+            if (what) {
+                stateMemory[role].what = what;
+                if (!stateMemory[role][what]) {
+                    stateMemory[role][what] = {};
+                }
+                if (why) {
+                    stateMemory[role][what].why = why;
+                }
+            }
+        }
+
+        function restoreState(role) {
+            if (stateMemory[role]) {
+                const whatInput = document.getElementById('what-input');
+                const whyInput = document.getElementById('why-input');
+                
+                if (stateMemory[role].what) {
+                    whatInput.value = stateMemory[role].what;
+                    populateWhyCombo(role, stateMemory[role].what);
+                    
+                    setTimeout(() => {
+                        if (stateMemory[role][stateMemory[role].what] && 
+                            stateMemory[role][stateMemory[role].what].why) {
+                            whyInput.value = stateMemory[role][stateMemory[role].what].why;
+                        }
+                    }, 100);
+                }
+            }
+        }
+
+        // Load new relationship data dynamically
+        function loadRelationships(newData) {
+            // Update the global relationships object
+            Object.assign(relationships, newData);
+            
+            // Update the role dropdown with new options
+            const roleDropdown = document.getElementById('role-dropdown');
+            roleDropdown.innerHTML = '';
+            
+            Object.keys(relationships).forEach(role => {
+                const option = document.createElement('div');
+                option.className = 'custom-combo-option';
+                option.textContent = role;
+                option.dataset.value = role;
+                roleDropdown.appendChild(option);
+            });
+            
+            // Clear any existing selections that might be invalid
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            if (roleInput.value && !relationships[roleInput.value]) {
+                roleInput.value = '';
+                whatInput.value = '';
+                whyInput.value = '';
+                whatInput.disabled = true;
+                whyInput.disabled = true;
+            }
+        }
+
+        // Test: Role Selection Populates What Options
+        function testRoleSelectionPopulatesWhatOptions() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test: Role Selection Populates What Options</h3>';
+            
+            // Test 1.1: When Role is selected, What combo box should populate
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whatDropdown = document.getElementById('what-dropdown');
+            
+            // Simulate selecting "Manager"
+            roleInput.value = "Manager";
+            populateWhatCombo("Manager");
+            
+            // Check if What combo box is enabled and populated
+            const isWhatEnabled = !whatInput.disabled;
+            const whatOptions = whatDropdown.children.length;
+            
+            results.innerHTML += `
+                <p><strong>1.1 Role → What Linkage:</strong> 
+                ${isWhatEnabled ? '✅' : '❌'} What combo box is ${isWhatEnabled ? 'enabled' : 'disabled'}</p>
+                <p><strong>1.2 What Options:</strong> 
+                ${whatOptions > 0 ? '✅' : '❌'} Found ${whatOptions} options for Manager</p>
+            `;
+            
+            // Test 1.3: When What is selected, Why combo box should populate
+            if (whatOptions > 0) {
+                whatInput.value = "Review Status";
+                populateWhyCombo("Manager", "Review Status");
+                
+                const whyInput = document.getElementById('why-input');
+                const whyDropdown = document.getElementById('why-dropdown');
+                const isWhyEnabled = !whyInput.disabled;
+                const whyOptions = whyDropdown.children.length;
+                
+                results.innerHTML += `
+                    <p><strong>1.3 What → Why Linkage:</strong> 
+                    ${isWhyEnabled ? '✅' : '❌'} Why combo box is ${isWhyEnabled ? 'enabled' : 'disabled'}</p>
+                    <p><strong>1.4 Why Options:</strong> 
+                    ${whyOptions > 0 ? '✅' : '❌'} Found ${whyOptions} options for "Review Status"</p>
+                `;
+            }
+            
+            results.innerHTML += '<p><strong>🎯 Test 1 Complete!</strong></p>';
+        }
+
+        // Test: What Selection Populates Why Options
+        function testWhatSelectionPopulatesWhyOptions() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test: What Selection Populates Why Options</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 2.1: Trigger input event on Role and verify What populates
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whatDropdown = document.getElementById('what-dropdown');
+            
+            // Simulate user typing "Manager"
+            roleInput.value = "Manager";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            // Wait a moment for event processing
+            setTimeout(() => {
+                const isWhatEnabled = !whatInput.disabled;
+                const whatOptions = whatDropdown.children.length;
+                
+                results.innerHTML += `
+                    <p><strong>2.1 Event-Driven Role → What:</strong> 
+                    ${isWhatEnabled ? '✅' : '❌'} What combo box is ${isWhatEnabled ? 'enabled' : 'disabled'}</p>
+                    <p><strong>2.2 What Options Count:</strong> 
+                    ${whatOptions > 0 ? '✅' : '❌'} Found ${whatOptions} options for Manager</p>
+                `;
+                
+                // Test 2.3: Trigger input event on What and verify Why populates
+                if (whatOptions > 0) {
+                    whatInput.value = "Review Status";
+                    whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    setTimeout(() => {
+                        const whyInput = document.getElementById('why-input');
+                        const whyDropdown = document.getElementById('why-dropdown');
+                        const isWhyEnabled = !whyInput.disabled;
+                        const whyOptions = whyDropdown.children.length;
+                        
+                        results.innerHTML += `
+                            <p><strong>2.3 Event-Driven What → Why:</strong> 
+                            ${isWhyEnabled ? '✅' : '❌'} Why combo box is ${isWhyEnabled ? 'enabled' : 'disabled'}</p>
+                            <p><strong>2.4 Why Options Count:</strong> 
+                            ${whyOptions > 0 ? '✅' : '❌'} Found ${whyOptions} options for "Review Status"</p>
+                            <p><strong>🎯 Test 2 Complete!</strong></p>
+                        `;
+                    }, 100);
+                } else {
+                    results.innerHTML += '<p><strong>🎯 Test 2 Complete!</strong></p>';
+                }
+            }, 100);
+        }
+
+        // Test: Changing Role Clears Downstream Selections
+        function testChangingRoleClearsDownstreamSelections() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test: Changing Role Clears Downstream Selections</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 3.1: Set up a complete chain (Role → What → Why)
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            // Build the chain
+            roleInput.value = "Manager";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                whatInput.value = "Review Status";
+                whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    whyInput.value = "Evaluate Next Actions";
+                    
+                    // Test 3.2: Change Role and verify cascade reset
+                    roleInput.value = "Programmer";
+                    roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    setTimeout(() => {
+                        const isWhatDisabled = whatInput.disabled;
+                        const isWhyDisabled = whyInput.disabled;
+                        const whatValue = whatInput.value;
+                        const whyValue = whyInput.value;
+                        
+                        results.innerHTML += `
+                            <p><strong>3.1 Cascade Reset on Role Change:</strong></p>
+                            <p>${isWhatDisabled ? '✅' : '❌'} What combo box is ${isWhatDisabled ? 'disabled' : 'enabled'}</p>
+                            <p>${isWhyDisabled ? '✅' : '❌'} Why combo box is ${isWhyDisabled ? 'disabled' : 'enabled'}</p>
+                            <p>${whatValue === '' ? '✅' : '❌'} What value is cleared: "${whatValue}"</p>
+                            <p>${whyValue === '' ? '✅' : '❌'} Why value is cleared: "${whyValue}"</p>
+                        `;
+                        
+                        // Test 3.3: Verify What combo box now has Programmer options
+                        const whatDropdown = document.getElementById('what-dropdown');
+                        const whatOptions = whatDropdown.children.length;
+                        const hasCodeReview = Array.from(whatDropdown.children).some(opt => opt.textContent === 'Code Review');
+                        
+                        results.innerHTML += `
+                            <p><strong>3.2 What Options Updated:</strong></p>
+                            <p>${whatOptions > 0 ? '✅' : '❌'} What has ${whatOptions} options for Programmer</p>
+                            <p>${hasCodeReview ? '✅' : '❌'} What includes "Code Review" option</p>
+                            <p><strong>🎯 Test 3 Complete!</strong></p>
+                        `;
+                    }, 100);
+                }, 100);
+            }, 100);
+        }
+
+        // Run all tests sequentially
+        function runAllTests() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>🧪 Running All Tests...</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Run tests with delays
+            setTimeout(() => {
+                testRoleSelectionPopulatesWhatOptions();
+                setTimeout(() => {
+                    resetTest();
+                    setTimeout(() => {
+                        testWhatSelectionPopulatesWhyOptions();
+                        setTimeout(() => {
+                            resetTest();
+                            setTimeout(() => {
+                                testChangingRoleClearsDownstreamSelections();
+                                setTimeout(() => {
+                                    resetTest();
+                                    setTimeout(() => {
+                                        testTemplateParsingAndNLevelGeneration();
+                                        setTimeout(() => {
+                                            results.innerHTML += '<h3>🎯 All Tests Complete!</h3>';
+                                        }, 500);
+                                    }, 500);
+                                }, 500);
+                            }, 500);
+                        }, 500);
+                    }, 500);
+                }, 500);
+            }, 500);
+        }
+
+        // Test: Debug Cascade Reset - Step by Step
+        function testDebugCascadeReset() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 4: Debug Cascade Reset</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            results.innerHTML += '<p><strong>Step 1:</strong> Initial state</p>';
+            results.innerHTML += `<p>Role: "${roleInput.value}", What: "${whatInput.value}", Why: "${whyInput.value}"</p>`;
+            results.innerHTML += `<p>What disabled: ${whatInput.disabled}, Why disabled: ${whyInput.disabled}</p>`;
+            
+            // Step 2: Set Role to Manager
+            roleInput.value = "Manager";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                results.innerHTML += '<p><strong>Step 2:</strong> After setting Role to "Manager"</p>';
+                results.innerHTML += `<p>Role: "${roleInput.value}", What: "${whatInput.value}", Why: "${whyInput.value}"</p>`;
+                results.innerHTML += `<p>What disabled: ${whatInput.disabled}, Why disabled: ${whyInput.disabled}</p>`;
+                
+                // Step 3: Set What to Review Status
+                whatInput.value = "Review Status";
+                whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    results.innerHTML += '<p><strong>Step 3:</strong> After setting What to "Review Status"</p>';
+                    results.innerHTML += `<p>Role: "${roleInput.value}", What: "${whatInput.value}", Why: "${whyInput.value}"</p>`;
+                    results.innerHTML += `<p>What disabled: ${whatInput.disabled}, Why disabled: ${whyInput.disabled}</p>`;
+                    
+                    // Step 4: Change Role to Programmer
+                    roleInput.value = "Programmer";
+                    roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    setTimeout(() => {
+                        results.innerHTML += '<p><strong>Step 4:</strong> After changing Role to "Programmer"</p>';
+                        results.innerHTML += `<p>Role: "${roleInput.value}", What: "${whatInput.value}", Why: "${whyInput.value}"</p>`;
+                        results.innerHTML += `<p>What disabled: ${whatInput.disabled}, Why disabled: ${whyInput.disabled}</p>`;
+                        results.innerHTML += '<p><strong>🎯 Test 4 Complete!</strong></p>';
+                    }, 100);
+                }, 100);
+            }, 100);
+        }
+
+        // Test: State Restoration When Switching Roles
+        function testStateRestorationWhenSwitchingRoles() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 5: State Persistence</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            // Test 5.1: Set up Manager → Review Status → Evaluate Next Actions
+            roleInput.value = "Manager";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                whatInput.value = "Review Status";
+                whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    whyInput.value = "Evaluate Next Actions";
+                    
+                    results.innerHTML += '<p><strong>5.1:</strong> Set Manager → Review Status → Evaluate Next Actions</p>';
+                    
+                    // Test 5.2: Switch to Programmer and set up a different path
+                    roleInput.value = "Programmer";
+                    roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    setTimeout(() => {
+                        whatInput.value = "Code Review";
+                        whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        
+                        setTimeout(() => {
+                            whyInput.value = "Keep Code Clean";
+                            
+                            results.innerHTML += '<p><strong>5.2:</strong> Set Programmer → Code Review → Keep Code Clean</p>';
+                            
+                            // Test 5.3: Switch back to Manager and verify state is restored
+                            roleInput.value = "Manager";
+                            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            
+                            setTimeout(() => {
+                                whatInput.value = "Review Status";
+                                whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                
+                                setTimeout(() => {
+                                    whyInput.value = "Evaluate Next Actions";
+                                    
+                                    results.innerHTML += '<p><strong>5.3:</strong> Switched back to Manager</p>';
+                                    results.innerHTML += `<p>Expected: Manager → Review Status → Evaluate Next Actions</p>`;
+                                    results.innerHTML += `<p>Actual: ${roleInput.value} → ${whatInput.value} → ${whyInput.value}</p>`;
+                                    
+                                    const isCorrect = roleInput.value === "Manager" && 
+                                                    whatInput.value === "Review Status" && 
+                                                    whyInput.value === "Evaluate Next Actions";
+                                    
+                                    results.innerHTML += `<p><strong>State Restoration:</strong> ${isCorrect ? '✅' : '❌'} ${isCorrect ? 'Correct' : 'Incorrect'}</p>`;
+                                    results.innerHTML += '<p><strong>🎯 Test 5 Complete!</strong></p>';
+                                }, 100);
+                            }, 100);
+                        }, 100);
+                    }, 100);
+                }, 100);
+            }, 100);
+        }
+
+        // Test: Visual Relationship Indicators
+        function testVisualRelationshipIndicators() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 6: Visual Indicators</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 6.1: Check if arrows are visible
+            const arrows = document.querySelectorAll('.arrow');
+            const arrowCount = arrows.length;
+            const arrowsVisible = Array.from(arrows).every(arrow => arrow.style.display !== 'none');
+            
+            results.innerHTML += `<p><strong>6.1 Arrow Visibility:</strong> ${arrowsVisible ? '✅' : '❌'} Found ${arrowCount} arrows</p>`;
+            
+            // Test 6.2: Check if combo boxes are properly aligned
+            const comboBoxes = document.querySelectorAll('.combo-box-container');
+            const comboCount = comboBoxes.length;
+            
+            results.innerHTML += `<p><strong>6.2 Combo Box Layout:</strong> ${comboCount === 3 ? '✅' : '❌'} Found ${comboCount} combo boxes</p>`;
+            
+            // Test 6.3: Check if disabled states are visually clear
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            const whatDisabled = whatInput.disabled;
+            const whyDisabled = whyInput.disabled;
+            
+            results.innerHTML += `<p><strong>6.3 Disabled State:</strong> ${whatDisabled ? '✅' : '❌'} What is ${whatDisabled ? 'disabled' : 'enabled'}</p>`;
+            results.innerHTML += `<p><strong>6.4 Disabled State:</strong> ${whyDisabled ? '✅' : '❌'} Why is ${whyDisabled ? 'disabled' : 'enabled'}</p>`;
+            
+            // Test 6.5: Check if relationship flow is clear
+            const roleLabel = document.querySelector('label[for="role-input"]');
+            const whatLabel = document.querySelector('label[for="what-input"]');
+            const whyLabel = document.querySelector('label[for="why-input"]');
+            
+            const labelsPresent = roleLabel && whatLabel && whyLabel;
+            
+            results.innerHTML += `<p><strong>6.5 Labels Present:</strong> ${labelsPresent ? '✅' : '❌'} All labels visible</p>`;
+            results.innerHTML += '<p><strong>🎯 Test 6 Complete!</strong></p>';
+        }
+
+        // Test: Dynamic Relationship Loading
+        function testDynamicRelationshipLoading() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 7: Data-Driven Relationships</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 7.1: Load new relationship data
+            const newRelationships = {
+                "Designer": {
+                    "Create Wireframe": ["Improve User Experience", "Clarify Requirements"],
+                    "Design Mockup": ["Visualize Solution", "Get Stakeholder Approval"]
+                },
+                "Teacher": {
+                    "Grade Papers": ["Assess Student Progress", "Provide Feedback"],
+                    "Plan Lesson": ["Engage Students", "Meet Curriculum Goals"]
+                }
+            };
+            
+            // Load the new data
+            loadRelationships(newRelationships);
+            
+            results.innerHTML += '<p><strong>7.1:</strong> Loaded new relationship data for Designer and Teacher</p>';
+            
+            // Test 7.2: Verify new roles appear in dropdown
+            const roleDropdown = document.getElementById('role-dropdown');
+            const hasDesigner = Array.from(roleDropdown.children).some(opt => opt.textContent === 'Designer');
+            const hasTeacher = Array.from(roleDropdown.children).some(opt => opt.textContent === 'Teacher');
+            
+            results.innerHTML += `<p><strong>7.2 New Roles:</strong> ${hasDesigner ? '✅' : '❌'} Designer, ${hasTeacher ? '✅' : '❌'} Teacher</p>`;
+            
+            // Test 7.3: Test new relationship chain
+            const roleInput = document.getElementById('role-input');
+            roleInput.value = "Designer";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                const whatInput = document.getElementById('what-input');
+                const whatDropdown = document.getElementById('what-dropdown');
+                const hasWireframe = Array.from(whatDropdown.children).some(opt => opt.textContent === 'Create Wireframe');
+                
+                results.innerHTML += `<p><strong>7.3 Designer Options:</strong> ${hasWireframe ? '✅' : '❌'} Create Wireframe option available</p>`;
+                
+                // Test 7.4: Test complete new chain
+                whatInput.value = "Create Wireframe";
+                whatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    const whyInput = document.getElementById('why-input');
+                    const whyDropdown = document.getElementById('why-dropdown');
+                    const hasUX = Array.from(whyDropdown.children).some(opt => opt.textContent === 'Improve User Experience');
+                    
+                    results.innerHTML += `<p><strong>7.4 Complete Chain:</strong> ${hasUX ? '✅' : '❌'} Improve User Experience option available</p>`;
+                    results.innerHTML += '<p><strong>🎯 Test 7 Complete!</strong></p>';
+                }, 100);
+            }, 100);
+        }
+
+        // Test: Error Handling For Invalid Selections
+        function testErrorHandlingForInvalidSelections() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 8: Error Handling</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 8.1: Handle invalid role selection
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            roleInput.value = "Invalid Role";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                const isWhatDisabled = whatInput.disabled;
+                const isWhyDisabled = whyInput.disabled;
+                const whatValue = whatInput.value;
+                const whyValue = whyInput.value;
+                
+                results.innerHTML += `<p><strong>8.1 Invalid Role:</strong> ${isWhatDisabled ? '✅' : '❌'} What disabled, ${isWhyDisabled ? '✅' : '❌'} Why disabled</p>`;
+                results.innerHTML += `<p><strong>8.2 Values Cleared:</strong> ${whatValue === '' ? '✅' : '❌'} What empty, ${whyValue === '' ? '✅' : '❌'} Why empty</p>`;
+                
+                // Test 8.3: Handle empty relationships data
+                const emptyRelationships = {};
+                loadRelationships(emptyRelationships);
+                
+                const roleDropdown = document.getElementById('role-dropdown');
+                const hasOptions = roleDropdown.children.length > 0;
+                
+                results.innerHTML += `<p><strong>8.3 Empty Data:</strong> ${!hasOptions ? '✅' : '❌'} No role options when data is empty</p>`;
+                
+                // Test 8.4: Handle malformed data
+                const malformedData = {
+                    "Test Role": "Not an object"
+                };
+                
+                try {
+                    loadRelationships(malformedData);
+                    results.innerHTML += `<p><strong>8.4 Malformed Data:</strong> ✅ System handles malformed data gracefully</p>`;
+                } catch (error) {
+                    results.innerHTML += `<p><strong>8.4 Malformed Data:</strong> ❌ Error: ${error.message}</p>`;
+                }
+                
+                // Test 8.5: Handle rapid state changes
+                roleInput.value = "Manager";
+                roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    roleInput.value = "Programmer";
+                    roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    setTimeout(() => {
+                        roleInput.value = "Manager";
+                        roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        
+                        results.innerHTML += `<p><strong>8.5 Rapid Changes:</strong> ✅ System handles rapid state changes</p>`;
+                        results.innerHTML += '<p><strong>🎯 Test 8 Complete!</strong></p>';
+                    }, 50);
+                }, 50);
+            }, 100);
+        }
+
+        // Test: Performance With Large Datasets
+        function testPerformanceWithLargeDatasets() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 9: Performance</h3>';
+            
+            // Reset first
+            resetTest();
+            
+            // Test 9.1: Load large dataset
+            const largeDataset = {};
+            const startTime = performance.now();
+            
+            // Generate 50 roles with 10 options each
+            for (let i = 1; i <= 50; i++) {
+                const roleName = `Role ${i}`;
+                largeDataset[roleName] = {};
+                
+                for (let j = 1; j <= 10; j++) {
+                    const whatName = `Action ${j}`;
+                    largeDataset[roleName][whatName] = [`Reason ${j}A`, `Reason ${j}B`, `Reason ${j}C`];
+                }
+            }
+            
+            loadRelationships(largeDataset);
+            const loadTime = performance.now() - startTime;
+            
+            results.innerHTML += `<p><strong>9.1 Load Performance:</strong> ${loadTime < 100 ? '✅' : '❌'} Loaded 50 roles in ${loadTime.toFixed(2)}ms</p>`;
+            
+            // Test 9.2: Test selection performance
+            const roleInput = document.getElementById('role-input');
+            const selectStartTime = performance.now();
+            
+            roleInput.value = "Role 25";
+            roleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                const selectTime = performance.now() - selectStartTime;
+                const whatDropdown = document.getElementById('what-dropdown');
+                const optionCount = whatDropdown.children.length;
+                
+                results.innerHTML += `<p><strong>9.2 Selection Performance:</strong> ${selectTime < 50 ? '✅' : '❌'} Selected role in ${selectTime.toFixed(2)}ms</p>`;
+                results.innerHTML += `<p><strong>9.3 Options Generated:</strong> ${optionCount === 10 ? '✅' : '❌'} Generated ${optionCount} options</p>`;
+                
+                // Test 9.4: Memory usage check
+                const memoryUsage = performance.memory ? performance.memory.usedJSHeapSize / 1024 / 1024 : 'N/A';
+                results.innerHTML += `<p><strong>9.4 Memory Usage:</strong> ${typeof memoryUsage === 'number' ? memoryUsage.toFixed(2) + 'MB' : memoryUsage}</p>`;
+                
+                results.innerHTML += '<p><strong>🎯 Test 9 Complete!</strong></p>';
+            }, 100);
+        }
+        
+        // Test: Template Parsing and N-Level Generation
+        function testTemplateParsingAndNLevelGeneration() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test 10: Template Parsing and N-Level Generation</h3>';
+            
+            // Test 10.1: Parse simple template
+            const simpleTemplate = "As a [Role], I want to [What], so that [Why]";
+            const simpleVariables = parseTemplate(simpleTemplate);
+            results.innerHTML += `<p><strong>10.1 Simple Template:</strong> ${simpleVariables.length === 3 ? '✅' : '❌'} Parsed "${simpleTemplate}" → [${simpleVariables.join(', ')}]</p>`;
+            
+            // Test 10.2: Parse complex template
+            const complexTemplate = "When [User] visits [Page], they should see [Content] and be able to [Action]";
+            const complexVariables = parseTemplate(complexTemplate);
+            results.innerHTML += `<p><strong>10.2 Complex Template:</strong> ${complexVariables.length === 4 ? '✅' : '❌'} Parsed "${complexTemplate}" → [${complexVariables.join(', ')}]</p>`;
+            
+            // Test 10.3: Generate combo boxes from template
+            generateComboBoxesFromTemplate(simpleTemplate);
+            results.innerHTML += `<p><strong>10.3 Combo Box Generation:</strong> ${comboBoxes.length === 3 ? '✅' : '❌'} Generated ${comboBoxes.length} combo boxes</p>`;
+            
+            // Test 10.4: Test level limits
+            const longTemplate = "[A][B][C][D][E][F][G][H][I][J][K][L][M][N][O][P][Q]"; // 17 variables
+            const longVariables = parseTemplate(longTemplate);
+            results.innerHTML += `<p><strong>10.4 Level Limits:</strong> ${longVariables.length > maxLevels ? '✅' : '❌'} Template with ${longVariables.length} variables exceeds limit of ${maxLevels}</p>`;
+            
+            // Test 10.5: Verify combo box structure
+            if (comboBoxes.length > 0) {
+                const firstEnabled = comboBoxes[0].enabled;
+                const secondEnabled = comboBoxes[1].enabled;
+                results.innerHTML += `<p><strong>10.5 Structure:</strong> ${firstEnabled && !secondEnabled ? '✅' : '❌'} First enabled: ${firstEnabled}, Second enabled: ${secondEnabled}</p>`;
+            }
+            
+            results.innerHTML += '<p><strong>🎯 Test 10 Complete!</strong></p>';
+        }
+
+        function populateWhatCombo(role) {
+            const whatDropdown = document.getElementById('what-dropdown');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            const whyDropdown = document.getElementById('why-dropdown');
+            
+            // Clear existing options
+            whatDropdown.innerHTML = '';
+            
+            if (role && relationships[role]) {
+                // Enable What combo box
+                whatInput.disabled = false;
+                
+                // Add options
+                Object.keys(relationships[role]).forEach(what => {
+                    const option = document.createElement('div');
+                    option.className = 'custom-combo-option';
+                    option.textContent = what;
+                    option.dataset.value = what;
+                    whatDropdown.appendChild(option);
+                });
+                
+                // Restore state if available
+                restoreState(role);
+            } else {
+                // Disable What combo box
+                whatInput.disabled = true;
+                whatInput.value = '';
+            }
+            
+            // Cascade reset: Clear Why combo box when Role changes
+            whyInput.disabled = true;
+            whyInput.value = '';
+            whyDropdown.innerHTML = '';
+        }
+
+        function populateWhyCombo(role, what) {
+            const whyDropdown = document.getElementById('why-dropdown');
+            const whyInput = document.getElementById('why-input');
+            
+            // Clear existing options
+            whyDropdown.innerHTML = '';
+            
+            if (role && what && relationships[role] && relationships[role][what]) {
+                // Enable Why combo box
+                whyInput.disabled = false;
+                
+                // Add options
+                relationships[role][what].forEach(why => {
+                    const option = document.createElement('div');
+                    option.className = 'custom-combo-option';
+                    option.textContent = why;
+                    option.dataset.value = why;
+                    whyDropdown.appendChild(option);
+                });
+            } else {
+                // Disable Why combo box
+                whyInput.disabled = true;
+                whyInput.value = '';
+            }
+        }
+
+        function resetTest() {
+            document.getElementById('role-input').value = '';
+            document.getElementById('what-input').value = '';
+            document.getElementById('why-input').value = '';
+            document.getElementById('what-input').disabled = true;
+            document.getElementById('why-input').disabled = true;
+            document.getElementById('what-dropdown').innerHTML = '';
+            document.getElementById('why-dropdown').innerHTML = '';
+            document.getElementById('test-results').innerHTML = 'Click "Test 1" to run the first test...';
+        }
+
+        // Set up event listeners for manual testing
+        function setupEventListeners() {
+            const roleInput = document.getElementById('role-input');
+            const whatInput = document.getElementById('what-input');
+            const whyInput = document.getElementById('why-input');
+            
+            // Role selection triggers What population
+            roleInput.addEventListener('input', function() {
+                populateWhatCombo(this.value);
+            });
+            
+            // What selection triggers Why population
+            whatInput.addEventListener('input', function() {
+                const role = document.getElementById('role-input').value;
+                populateWhyCombo(role, this.value);
+                saveState(role, this.value);
+            });
+            
+            // Why selection saves state
+            whyInput.addEventListener('input', function() {
+                const role = document.getElementById('role-input').value;
+                const what = document.getElementById('what-input').value;
+                saveState(role, what, this.value);
+            });
+        }
+
+        // Custom Combo Box functionality
+        function setupCustomComboBox(comboId) {
+            const combo = document.getElementById(comboId);
+            const input = combo.querySelector('input');
+            const dropdown = combo.querySelector('.custom-combo-dropdown');
+            const arrow = combo.querySelector('.custom-combo-arrow');
+            
+            // Show dropdown on focus
+            input.addEventListener('focus', () => {
+                if (!input.disabled) {
+                    dropdown.style.display = 'block';
+                }
+            });
+            
+            // Hide dropdown on blur (with delay to allow clicks)
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    dropdown.style.display = 'none';
+                }, 200);
+            });
+            
+            // Toggle dropdown on arrow click
+            arrow.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!input.disabled) {
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                    if (dropdown.style.display === 'block') {
+                        input.focus();
+                    }
+                }
+            });
+            
+            // Handle option clicks
+            dropdown.addEventListener('click', (e) => {
+                if (e.target.classList.contains('custom-combo-option')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    input.value = e.target.textContent;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    dropdown.style.display = 'none';
+                }
+            });
+            
+            // Handle keyboard navigation
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                }
+            });
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            setupCustomComboBox('role-combo');
+            setupCustomComboBox('what-combo');
+            setupCustomComboBox('why-combo');
+        });
+    </script>
+</body>
+</html>

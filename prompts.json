@@ -1,0 +1,204 @@
+{
+  "prompts": {
+    "67a536ac-9a22-4369-a51e-cfa55a6ab610": {
+      "id": "67a536ac-9a22-4369-a51e-cfa55a6ab610",
+      "name": "Prompt 2",
+      "text": "test prompt 2",
+      "category": "coding",
+      "created_at": "2025-07-25T21:34:06.533319",
+      "modified_at": "2025-09-06T20:28:33.574774"
+    },
+    "8e026151-e34a-4820-ab21-096787999478": {
+      "id": "8e026151-e34a-4820-ab21-096787999478",
+      "name": "Prompt 1",
+      "text": "Text 1",
+      "category": "cat1",
+      "created_at": "2025-07-25T21:34:06.558382",
+      "modified_at": "2025-07-25T21:34:06.558382"
+    },
+    "6ee91224-3df3-4677-81d7-12b9ac2720a4": {
+      "id": "6ee91224-3df3-4677-81d7-12b9ac2720a4",
+      "name": "Prompt 2",
+      "text": "Text 2",
+      "category": "cat1",
+      "created_at": "2025-07-25T21:34:06.558806",
+      "modified_at": "2025-07-25T21:34:06.558806"
+    },
+    "fec7a0ea-48dd-4c7d-8c23-0826632467d4": {
+      "id": "fec7a0ea-48dd-4c7d-8c23-0826632467d4",
+      "name": "Prompt 3",
+      "text": "Text 3",
+      "category": "cat2",
+      "created_at": "2025-07-25T21:34:06.559434",
+      "modified_at": "2025-07-25T21:34:06.559434"
+    },
+    "5fe4967c-000c-4f06-be32-da4da73e5695": {
+      "id": "5fe4967c-000c-4f06-be32-da4da73e5695",
+      "name": "New Name",
+      "text": "New Text",
+      "category": "new_cat",
+      "created_at": "2025-07-25T21:34:06.594125",
+      "modified_at": "2025-07-25T21:34:06.594609"
+    },
+    "53b41afb-160c-4767-a547-73af91c7874e": {
+      "id": "53b41afb-160c-4767-a547-73af91c7874e",
+      "name": "Original",
+      "text": "Updated Text",
+      "category": "original",
+      "created_at": "2025-07-25T21:34:06.598442",
+      "modified_at": "2025-07-25T21:34:06.599171"
+    },
+    "ad66d3e6-f4de-4cf6-8ff5-2e0a9308a85b": {
+      "id": "ad66d3e6-f4de-4cf6-8ff5-2e0a9308a85b",
+      "name": "Hello World",
+      "text": "Some text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.605887",
+      "modified_at": "2025-07-25T21:34:06.605887"
+    },
+    "effa8215-29c9-4058-b7d5-0a2869a13cfd": {
+      "id": "effa8215-29c9-4058-b7d5-0a2869a13cfd",
+      "name": "Goodbye",
+      "text": "Other text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.606610",
+      "modified_at": "2025-07-25T21:34:06.606610"
+    },
+    "0a4e3259-d2cd-47f7-80c9-27c968c2e4b4": {
+      "id": "0a4e3259-d2cd-47f7-80c9-27c968c2e4b4",
+      "name": "Prompt 1",
+      "text": "Hello world text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.621802",
+      "modified_at": "2025-07-25T21:34:06.621802"
+    },
+    "6395bfb9-e814-423c-8d29-8d9646a942b8": {
+      "id": "6395bfb9-e814-423c-8d29-8d9646a942b8",
+      "name": "Prompt 2",
+      "text": "Goodbye text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.622610",
+      "modified_at": "2025-07-25T21:34:06.622610"
+    },
+    "511c6d63-f0f8-4e09-b567-4dd132348bab": {
+      "id": "511c6d63-f0f8-4e09-b567-4dd132348bab",
+      "name": "HELLO WORLD",
+      "text": "Some text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.638466",
+      "modified_at": "2025-07-25T21:34:06.638466"
+    },
+    "e38710b1-994c-4182-89f6-4bc41355f81f": {
+      "id": "e38710b1-994c-4182-89f6-4bc41355f81f",
+      "name": "Test Prompt",
+      "text": "Some text",
+      "category": "test",
+      "created_at": "2025-07-25T21:34:06.651395",
+      "modified_at": "2025-07-25T21:34:06.651395"
+    },
+    "6046ca2c-e87c-48aa-a1a2-83a3d58da796": {
+      "id": "6046ca2c-e87c-48aa-a1a2-83a3d58da796",
+      "name": "Test Prompt",
+      "text": "This is a test prompt updated",
+      "category": "general",
+      "created_at": "2025-07-26T12:02:04.836348",
+      "modified_at": "2025-07-26T12:24:10.992241"
+    },
+    "3cd401c3-fafd-474d-a12e-00afc6ec515c": {
+      "id": "3cd401c3-fafd-474d-a12e-00afc6ec515c",
+      "name": "Hello",
+      "text": "This is my first prompt",
+      "category": "error",
+      "created_at": "2025-07-26T12:23:47.539238",
+      "modified_at": "2025-07-26T12:23:47.539238"
+    },
+    "97ce3b7f-2332-43aa-abcb-74644064fc89": {
+      "id": "97ce3b7f-2332-43aa-abcb-74644064fc89",
+      "name": "Hello",
+      "text": "This a prompt",
+      "category": "general",
+      "created_at": "2025-07-28T17:08:14.028220",
+      "modified_at": "2025-07-28T17:08:14.028220"
+    },
+    "e2f35dec-b948-47cb-83bd-e5fef1bbbbd4": {
+      "id": "e2f35dec-b948-47cb-83bd-e5fef1bbbbd4",
+      "name": "Hello",
+      "text": "My prompt",
+      "category": "Test",
+      "created_at": "2025-07-30T12:43:44.134381",
+      "modified_at": "2025-07-30T12:43:44.134381"
+    },
+    "0e4fec55-ff24-4ef0-bf90-15fb99094382": {
+      "id": "0e4fec55-ff24-4ef0-bf90-15fb99094382",
+      "name": "Test Prompt",
+      "text": "ffff",
+      "category": "general",
+      "created_at": "2025-07-30T12:44:05.198241",
+      "modified_at": "2025-07-30T12:44:05.198241"
+    },
+    "2b6bf0af-e2c6-4197-a8ae-c1e253d2032e": {
+      "id": "2b6bf0af-e2c6-4197-a8ae-c1e253d2032e",
+      "name": "Template Test",
+      "text": "AS A [ROLE], help me [ACTION]",
+      "category": "template",
+      "created_at": "2025-08-01T16:14:27.979105",
+      "modified_at": "2025-08-02T08:08:04.307296"
+    },
+    "f8b1e9b9-a0aa-476f-b4d2-6e18c6aa50a5": {
+      "id": "f8b1e9b9-a0aa-476f-b4d2-6e18c6aa50a5",
+      "name": "Test Prompt",
+      "text": "This is a test prompt",
+      "category": "test",
+      "created_at": "2025-08-02T08:06:52.302324",
+      "modified_at": "2025-08-02T08:06:52.302324"
+    },
+    "43bb35d7-4393-4d67-bfe6-b32b76f896be": {
+      "id": "43bb35d7-4393-4d67-bfe6-b32b76f896be",
+      "name": "Test Writing Prompt",
+      "text": "This is a writing prompt",
+      "category": "writing",
+      "created_at": "2025-08-02T08:36:26.290180",
+      "modified_at": "2025-08-02T08:36:26.290180"
+    },
+    "7b6d5207-b556-4290-91eb-5717d37b361d": {
+      "id": "7b6d5207-b556-4290-91eb-5717d37b361d",
+      "name": "David Bernstein",
+      "text": "hello",
+      "category": "general",
+      "created_at": "2025-08-02T09:37:57.139989",
+      "modified_at": "2025-08-02T09:37:57.139989"
+    },
+    "a01ec3af-cd37-478e-ba9a-a3d2146258dc": {
+      "id": "a01ec3af-cd37-478e-ba9a-a3d2146258dc",
+      "name": "Template: Role → What → Why",
+      "text": "As a Option 1 for Role, I want to Option for What, so that I can Option for Why.",
+      "category": "template",
+      "created_at": "2025-08-02T17:00:38.194292",
+      "modified_at": "2025-08-02T17:00:38.194292"
+    },
+    "34de7a48-9ea2-4201-a6e4-9eca3ce6e773": {
+      "id": "34de7a48-9ea2-4201-a6e4-9eca3ce6e773",
+      "name": "Template: Role",
+      "text": "As a Option 1 for Role, I want to [What], so that I can [Why].",
+      "category": "template",
+      "created_at": "2025-08-02T17:01:17.494739",
+      "modified_at": "2025-08-02T17:01:17.494739"
+    },
+    "fad31199-bba4-4eca-9055-1d9cc8cfeebe": {
+      "id": "fad31199-bba4-4eca-9055-1d9cc8cfeebe",
+      "name": "Template: Role → What → Why",
+      "text": "As a Option 1 for Role, I want to Option for What, so that I can Option for Why.",
+      "category": "template",
+      "created_at": "2025-08-06T17:10:16.774740",
+      "modified_at": "2025-08-06T17:21:05.931418"
+    },
+    "88fd215f-3e10-4856-9be4-0ca01f51b79e": {
+      "id": "88fd215f-3e10-4856-9be4-0ca01f51b79e",
+      "name": "Template: role → what → why",
+      "text": "As a Teacher, I want to Prepare lunch, so that I can Build better software.",
+      "category": "template",
+      "created_at": "2025-08-08T10:41:23.988413",
+      "modified_at": "2025-08-08T10:41:23.988413"
+    }
+  }
+}

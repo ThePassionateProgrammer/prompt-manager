@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .prompt { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .prompt h3 { margin: 0 0 10px 0; color: #333; }
+        .prompt p { margin: 5px 0; color: #666; }
+        .actions { margin-top: 20px; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+        .search { margin: 20px 0; }
+        .search input { padding: 10px; width: 300px; }
+        .search button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; }
+        .flash { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .flash.error { background: #f8d7da; color: #721c24; }
+        .flash.success { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Prompt Manager</h1>
+            <p>Manage and organize your AI prompts</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="actions">
+            <a href="{{ url_for('new_prompt') }}" class="btn">Create New Prompt</a>
+        </div>
+
+        <div class="search">
+            <form action="{{ url_for('search') }}" method="GET">
+                <input type="text" name="q" placeholder="Search prompts..." required>
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        <h2>All Prompts ({{ prompts|length }})</h2>
+        
+        {% if prompts %}
+            {% for prompt in prompts %}
+                <div class="prompt">
+                    <h3>{{ prompt.name }}</h3>
+                    <p><strong>Category:</strong> {{ prompt.category }}</p>
+                    <p><strong>Text:</strong> {{ prompt.text[:100] }}{% if prompt.text|length > 100 %}...{% endif %}</p>
+                    <p><strong>ID:</strong> {{ prompt.id }}</p>
+                    <p><strong>Created:</strong> {{ prompt.created_at }}</p>
+                    <a href="{{ url_for('view_prompt', prompt_id=prompt.id) }}">View Details</a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No prompts found. <a href="{{ url_for('new_prompt') }}">Create your first prompt</a>!</p>
+        {% endif %}
+    </div>
+</body>
+</html> 

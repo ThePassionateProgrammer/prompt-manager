@@ -1,0 +1,166 @@
+🚀 Starting Prompt Manager...
+📋 Version: 2.0 - Clean Architecture
+============================================================
+❌ Port 8000 is in use
+🛠️  Automatically killing processes on port 8000...
+Killing process 22402 on port 8000
+✅ Port 8000 is now available
+
+🌐 Web interface available at: http://localhost:8000
+📊 Main Dashboard: http://localhost:8000/dashboard
+📚 Prompts Library: http://localhost:8000/prompts
+🔧 Template Builder: http://localhost:8000/template-builder
+⚙️  Settings: http://localhost:8000/settings
+
+✨ Features:
+  - AI Chat with conversation history & persistence
+  - Multiple OpenAI models (GPT-4, GPT-3.5)
+  - Secure API key management (persistent)
+  - Prompt library with CRUD operations
+  - Template builder with custom combo boxes
+  - Linkage system for dynamic templates
+  - Token usage tracking & auto-trimming
+  - Clean, modular architecture
+
+🛑 Press Ctrl+C to stop the server
+============================================================
+ * Serving Flask app 'prompt_manager_app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8000
+ * Running on http://192.168.4.81:8000
+Press CTRL+C to quit
+127.0.0.1 - - [16/Oct/2025 08:08:55] "GET /dashboard HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:25:14] "GET /dashboard HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:25:14] "GET /api/settings/system-prompt HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:25:22] "GET /settings HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:25:22] "GET /api/providers/list HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:25:22] "GET /api/settings/system-prompt HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:25:28] "GET /chat HTTP/1.1" 302 -
+127.0.0.1 - - [16/Oct/2025 08:25:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:25:28] "GET /api/settings/system-prompt HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:25:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:25:33] "GET /api/settings/system-prompt HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:25:43] "GET /api/prompts HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:26:27] "POST /api/chat/send HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:26:27] "POST /api/conversations/save HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:26:57] "POST /api/chat/send HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 08:26:57] "POST /api/conversations/save HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:37:26] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:26] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:26] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:26] "GET /combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:30] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:30] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:30] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:30] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:31] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:47] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:47] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:47] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:48] "GET /combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:51] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:51] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:51] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:51] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:37:52] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:17] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:17] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:17] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:17] "GET /combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:19] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:19] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:19] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:19] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:42:20] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:31] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:31] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:31] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:31] "GET /combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:32] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:32] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:32] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:32] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:43:33] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [16/Oct/2025 10:49:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:49:00] "GET /api/settings/system-prompt HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:49:22] "GET /settings HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:49:22] "GET /api/providers/list HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:49:22] "GET /api/settings/system-prompt HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:49:31] "GET /chat HTTP/1.1" 302 -
+127.0.0.1 - - [16/Oct/2025 10:49:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:49:31] "GET /api/settings/system-prompt HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:50:19] "GET /settings HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:50:19] "GET /api/providers/list HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:50:19] "GET /api/settings/system-prompt HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:50:42] "GET /chat HTTP/1.1" 302 -
+127.0.0.1 - - [16/Oct/2025 10:50:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:50:42] "GET /api/settings/system-prompt HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:50:55] "POST /api/chat/send HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:50:55] "POST /api/conversations/save HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:51:14] "GET /api/prompts HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:51:28] "POST /api/chat/send HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:51:28] "POST /api/conversations/save HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:51:33] "GET /template-builder HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:51:33] "GET /static/css/custom-combo-box.css HTTP/1.1" 304 -
+127.0.0.1 - - [16/Oct/2025 10:51:33] "GET /static/js/custom-combo-box-working.js?v=2.5&t=1734567910&cache=bust HTTP/1.1" 304 -
+127.0.0.1 - - [16/Oct/2025 10:51:33] "GET /static/js/template-storage.js HTTP/1.1" 304 -
+127.0.0.1 - - [16/Oct/2025 10:51:33] "GET /static/js/linkage-manager-v3.js?v=3.1&t=1734567908&cache=bust HTTP/1.1" 304 -
+127.0.0.1 - - [16/Oct/2025 10:51:46] "GET /dashboard HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2025 10:51:46] "GET /api/settings/system-prompt HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2025 17:55:17] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:17] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:17] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:17] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /working-combo HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /custom-combo-test HTTP/1.1" 404 -
+127.0.0.1 - - [17/Oct/2025 17:55:18] "GET /custom-combo-test HTTP/1.1" 404 -

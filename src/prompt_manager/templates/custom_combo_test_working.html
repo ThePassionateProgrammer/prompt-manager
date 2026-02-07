@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Combo Box Test - Standalone v1.4</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        
+        .combo-box-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+        }
+        
+        .combo-box-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+            padding-right: 30px; /* Make room for arrow */
+        }
+        
+        .combo-box-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .combo-box-arrow {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #666;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .combo-box-arrow:hover {
+            border-top-color: #333;
+        }
+        
+        .combo-box-arrow.up {
+            border-top: none;
+            border-bottom: 5px solid #666;
+        }
+        
+        .combo-box-arrow.up:hover {
+            border-bottom-color: #333;
+        }
+        
+        .combo-box-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .combo-box-dropdown.show {
+            display: block;
+        }
+        
+        .combo-box-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .combo-box-option:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .combo-box-option.selected {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .combo-box-option.highlighted {
+            background-color: #e9ecef;
+        }
+        
+        .test-results {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border-left: 4px solid #007bff;
+        }
+        
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        .button:hover {
+            background-color: #0056b3;
+        }
+        
+        .button.secondary {
+            background-color: #6c757d;
+        }
+        
+        .button.secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .button.success {
+            background-color: #28a745;
+        }
+        
+        .button.success:hover {
+            background-color: #1e7e34;
+        }
+        
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        .button:hover {
+            background-color: #0056b3;
+        }
+        
+        .button.secondary {
+            background-color: #6c757d;
+        }
+        
+        .button.secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .instructions {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        
+        .instructions ul {
+            margin-bottom: 0;
+        }
+        
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Custom Combo Box Test - Standalone</h1>
+    <p><strong>Version: 1.5</strong> - Added Display/Edit mode toggle functionality</p>
+    
+    <!-- Mode Toggle Section -->
+    <div class="test-container">
+        <h2>🔄 Mode Control</h2>
+        <button id="mode-toggle" class="button">Edit Mode</button>
+        <p id="mode-status">Currently in Display mode</p>
+    </div>
+    
+    <div class="instructions">
+        <h3>📋 Test Instructions</h3>
+        <ul>
+            <li><strong>Focus</strong> on input field to show dropdown</li>
+            <li><strong>Type text</strong> and press <strong>Enter</strong> to replace selected option</li>
+            <li><strong>Empty text + Enter</strong> removes selected option</li>
+            <li><strong>Select "Add..."</strong> and press <strong>Enter</strong> to add new option</li>
+            <li><strong>Arrow keys</strong> to navigate dropdown</li>
+            <li><strong>Tab</strong> to move between combo boxes</li>
+            <li><strong>Escape</strong> to close dropdown</li>
+        </ul>
+    </div>
+    
+    <div class="test-container">
+        <h2>🧪 Test Scenario 1: Basic Combo Box</h2>
+        <div class="combo-box-container" id="combo1">
+            <input type="text" class="combo-box-input" placeholder="Type to add..." id="input1">
+            <div class="combo-box-arrow" id="arrow1"></div>
+            <div class="combo-box-dropdown" id="dropdown1">
+                <div class="combo-box-option" data-value="Add...">Add...</div>
+            </div>
+        </div>
+        <br>
+        <button class="button" onclick="testCombo1()">🔍 Test Combo 1</button>
+        <button class="button secondary" onclick="resetCombo1()">🔄 Reset</button>
+        <button class="button success" onclick="runAutomatedTest1()">🤖 Run Auto Test</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>🧪 Test Scenario 2: Multiple Combo Boxes (Tab Navigation)</h2>
+        <div class="combo-box-container" id="combo2">
+            <input type="text" class="combo-box-input" placeholder="Type to add..." id="input2">
+            <div class="combo-box-arrow" id="arrow2"></div>
+            <div class="combo-box-dropdown" id="dropdown2">
+                <div class="combo-box-option" data-value="Add...">Add...</div>
+                <div class="combo-box-option" data-value="Role 1">Role 1</div>
+                <div class="combo-box-option" data-value="Role 2">Role 2</div>
+            </div>
+        </div>
+        <div class="combo-box-container" id="combo3">
+            <input type="text" class="combo-box-input" placeholder="Type to add..." id="input3">
+            <div class="combo-box-arrow" id="arrow3"></div>
+            <div class="combo-box-dropdown" id="dropdown3">
+                <div class="combo-box-option" data-value="Add...">Add...</div>
+                <div class="combo-box-option" data-value="Action 1">Action 1</div>
+                <div class="combo-box-option" data-value="Action 2">Action 2</div>
+            </div>
+        </div>
+        <br>
+        <button class="button" onclick="testMultipleCombos()">🔍 Test Multiple</button>
+        <button class="button secondary" onclick="resetAllCombos()">🔄 Reset All</button>
+        <button class="button success" onclick="runAutomatedTest2()">🤖 Run Auto Test</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>📊 Test Results</h2>
+        <div class="test-results" id="testResults">No tests run yet. Click a test button to see results.</div>
+    </div>
+
+    <script>
+        // Global mode state - start in Display mode
+        let isEditMode = false;
+        
+        // Mode toggle functionality
+        function toggleMode() {
+            isEditMode = !isEditMode;
+            updateModeButton();
+            updateAllComboBoxes();
+        }
+        
+        function updateModeButton() {
+            const button = document.getElementById('mode-toggle');
+            const status = document.getElementById('mode-status');
+            
+            if (isEditMode) {
+                button.textContent = 'Display Mode';
+                button.className = 'button'; // Normal button (depressed state)
+                status.textContent = 'Currently in Edit mode';
+            } else {
+                button.textContent = 'Edit Mode';
+                button.className = 'button secondary'; // Secondary button (not depressed)
+                status.textContent = 'Currently in Display mode';
+            }
+        }
+        
+        function updateAllComboBoxes() {
+            // Update all combo boxes to reflect the new mode
+            if (combo1) combo1.updateMode();
+            if (combo2) combo2.updateMode();
+            if (combo3) combo3.updateMode();
+        }
+        
+        class CustomComboBox {
+            constructor(containerId) {
+                this.container = document.getElementById(containerId);
+                this.input = this.container.querySelector('.combo-box-input');
+                this.dropdown = this.container.querySelector('.combo-box-dropdown');
+                this.arrow = this.container.querySelector('.combo-box-arrow');
+                this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+                
+                this.selectedOption = null;
+                this.highlightedIndex = -1;
+                this.isDropdownVisible = false;
+                
+                this.setupEventListeners();
+                this.updateOptions();
+            }
+            
+            setupEventListeners() {
+                // Focus events - always show dropdown
+                this.input.addEventListener('focus', () => this.showDropdown());
+                
+                // Key events
+                this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
+                
+                // Arrow click - only way to close dropdown
+                this.arrow.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleDropdown();
+                });
+                
+                // Option clicks
+                this.options.forEach((option, index) => {
+                    option.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.selectOption(index);
+                    });
+                    option.addEventListener('mouseenter', () => this.highlightOption(index));
+                });
+                
+                // Click outside to close
+                document.addEventListener('click', (e) => {
+                    if (!this.container.contains(e.target)) {
+                        this.hideDropdown();
+                    }
+                });
+            }
+            
+            handleKeyDown(e) {
+                switch(e.key) {
+                    case 'Enter':
+                        e.preventDefault();
+                        this.handleEnter();
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.navigateDown();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.navigateUp();
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        this.hideDropdown();
+                        break;
+                    case 'Tab':
+                        // Let default tab behavior work
+                        break;
+                }
+            }
+            
+            handleEnter() {
+                const entryText = this.input.value.trim();
+                
+                // In Display mode, disable add/edit/delete functionality
+                if (!isEditMode) {
+                    // In Display mode, only allow selection
+                    if (this.selectedOption && this.selectedOption !== 'Select item...') {
+                        this.input.value = this.selectedOption;
+                    }
+                    this.showDropdown();
+                    return;
+                }
+                
+                // Edit mode functionality (original behavior)
+                if (this.selectedOption) {
+                    // Item is selected - update or delete
+                    if (entryText === '') {
+                        // Remove selected option
+                        this.removeOption(this.selectedOption);
+                    } else {
+                        // Replace selected option
+                        this.replaceOption(this.selectedOption, entryText);
+                    }
+                } else {
+                    // No item selected - default to add behavior
+                    if (entryText !== '') {
+                        this.addOption(entryText);
+                        this.input.value = '';
+                    }
+                }
+                
+                // Always keep dropdown open
+                this.showDropdown();
+            }
+            
+            navigateDown() {
+                if (!this.isDropdownVisible) {
+                    this.showDropdown();
+                }
+                
+                this.highlightedIndex = Math.min(this.highlightedIndex + 1, this.options.length - 1);
+                this.updateHighlight();
+            }
+            
+            navigateUp() {
+                if (!this.isDropdownVisible) {
+                    this.showDropdown();
+                }
+                
+                this.highlightedIndex = Math.max(this.highlightedIndex - 1, 0);
+                this.updateHighlight();
+            }
+            
+            selectOption(index) {
+                if (index < 0 || index >= this.options.length) return;
+                
+                const option = this.options[index];
+                if (option.dataset.value === 'Add...') {
+                    // Handle Add... like a button - always works
+                    const entryText = this.input.value.trim();
+                    if (entryText !== '') {
+                        this.addOption(entryText);
+                        this.input.value = '';
+                    }
+                    // Keep dropdown open and focus on input
+                    this.showDropdown();
+                    setTimeout(() => this.input.focus(), 10);
+                    return;
+                }
+                
+                // Select the option
+                this.selectedOption = option.dataset.value;
+                this.input.value = option.dataset.value;
+                this.updateSelection();
+                
+                // Keep dropdown open and focus on input
+                this.showDropdown();
+                setTimeout(() => this.input.focus(), 10);
+                
+                // Select all text in input field
+                this.input.select();
+            }
+            
+            highlightOption(index) {
+                this.highlightedIndex = index;
+                this.updateHighlight();
+            }
+            
+            showDropdown() {
+                this.dropdown.classList.add('show');
+                this.arrow.classList.add('up');
+                this.isDropdownVisible = true;
+            }
+            
+            hideDropdown() {
+                this.dropdown.classList.remove('show');
+                this.arrow.classList.remove('up');
+                this.isDropdownVisible = false;
+                this.highlightedIndex = -1;
+                this.updateHighlight();
+            }
+            
+            toggleDropdown() {
+                if (this.isDropdownVisible) {
+                    this.hideDropdown();
+                } else {
+                    this.showDropdown();
+                }
+            }
+            
+            updateHighlight() {
+                this.options.forEach((option, index) => {
+                    option.classList.toggle('highlighted', index === this.highlightedIndex);
+                });
+            }
+            
+            updateSelection() {
+                this.options.forEach(option => {
+                    const isSelected = option.dataset.value === this.selectedOption;
+                    option.classList.toggle('selected', isSelected);
+                    if (isSelected) {
+                        option.style.backgroundColor = '#555';
+                        option.style.color = 'white';
+                        option.style.fontWeight = 'bold';
+                    } else {
+                        option.style.backgroundColor = '';
+                        option.style.color = '';
+                        option.style.fontWeight = '';
+                    }
+                });
+            }
+            
+            addOption(value) {
+                // Add new option after "Add..." option
+                const addOption = this.options[0];
+                const newOption = document.createElement('div');
+                newOption.className = 'combo-box-option';
+                newOption.dataset.value = value;
+                newOption.textContent = value;
+                
+                // Add event listeners
+                newOption.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.selectOption(this.options.indexOf(newOption));
+                });
+                newOption.addEventListener('mouseenter', () => this.highlightOption(this.options.indexOf(newOption)));
+                
+                addOption.parentNode.insertBefore(newOption, addOption.nextSibling);
+                this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+                this.selectedOption = value;
+                this.updateSelection();
+                
+                // Clear any previous highlighting
+                this.highlightedIndex = -1;
+                this.updateHighlight();
+            }
+            
+            replaceOption(oldValue, newValue) {
+                const option = this.options.find(opt => opt.dataset.value === oldValue);
+                if (option) {
+                    option.dataset.value = newValue;
+                    option.textContent = newValue;
+                    this.selectedOption = newValue;
+                    this.updateSelection();
+                    
+                    // Clear any previous highlighting
+                    this.highlightedIndex = -1;
+                    this.updateHighlight();
+                }
+            }
+            
+            removeOption(value) {
+                const option = this.options.find(opt => opt.dataset.value === value);
+                if (option && option.dataset.value !== 'Add...') {
+                    option.remove();
+                    this.options = Array.from(this.dropdown.querySelectorAll('.combo-box-option'));
+                    this.selectedOption = null;
+                    this.updateSelection();
+                    
+                    // Clear any previous highlighting
+                    this.highlightedIndex = -1;
+                    this.updateHighlight();
+                }
+            }
+            
+            updateOptions() {
+                this.updateSelection();
+            }
+            
+            updateMode() {
+                // Update the first option and placeholder based on mode
+                if (this.options.length > 0) {
+                    if (isEditMode) {
+                        this.options[0].textContent = 'Add...';
+                        this.options[0].dataset.value = 'Add...';
+                        this.input.placeholder = 'Type to add...';
+                    } else {
+                        this.options[0].textContent = 'Select item...';
+                        this.options[0].dataset.value = 'Select item...';
+                        this.input.placeholder = 'Select item...';
+                    }
+                }
+            }
+            
+            // Test methods
+            getEntryText() {
+                return this.input.value;
+            }
+            
+            getSelectedOption() {
+                return this.selectedOption;
+            }
+            
+            getOptions() {
+                return this.options.map(opt => opt.dataset.value);
+            }
+            
+            isDropdownVisible() {
+                return this.isDropdownVisible;
+            }
+            
+            setEntryText(text) {
+                this.input.value = text;
+            }
+            
+            focus() {
+                this.input.focus();
+            }
+        }
+        
+        // Initialize combo boxes
+        let combo1, combo2, combo3;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            combo1 = new CustomComboBox('combo1');
+            combo2 = new CustomComboBox('combo2');
+            combo3 = new CustomComboBox('combo3');
+            
+            // Set up mode toggle button
+            document.getElementById('mode-toggle').addEventListener('click', toggleMode);
+            
+            // Initialize in Display mode
+            updateModeButton();
+            updateAllComboBoxes();
+        });
+        
+        // Test functions
+        function testCombo1() {
+            const results = [];
+            results.push('=== Testing Combo Box 1 ===');
+            results.push(`Initial options: ${combo1.getOptions().join(', ')}`);
+            results.push(`Selected option: ${combo1.getSelectedOption() || 'None'}`);
+            results.push(`Entry text: "${combo1.getEntryText()}"`);
+            results.push(`Dropdown visible: ${combo1.isDropdownVisible()}`);
+            
+            document.getElementById('testResults').textContent = results.join('\n');
+        }
+        
+        function testMultipleCombos() {
+            const results = [];
+            results.push('=== Testing Multiple Combo Boxes ===');
+            results.push(`Combo 2 options: ${combo2.getOptions().join(', ')}`);
+            results.push(`Combo 3 options: ${combo3.getOptions().join(', ')}`);
+            results.push(`Combo 2 selected: ${combo2.getSelectedOption() || 'None'}`);
+            results.push(`Combo 3 selected: ${combo3.getSelectedOption() || 'None'}`);
+            
+            document.getElementById('testResults').textContent = results.join('\n');
+        }
+        
+        function resetCombo1() {
+            combo1.input.value = '';
+            combo1.selectedOption = null;
+            combo1.hideDropdown();
+            combo1.updateSelection();
+        }
+        
+        function resetAllCombos() {
+            [combo1, combo2, combo3].forEach(combo => {
+                if (combo) {
+                    combo.input.value = '';
+                    combo.selectedOption = null;
+                    combo.hideDropdown();
+                    combo.updateSelection();
+                }
+            });
+        }
+        
+        // Automated tests
+        function runAutomatedTest1() {
+            const results = [];
+            results.push('🤖 Running Automated Test 1...');
+            
+            // Test 1: Initial state
+            results.push('✓ Initial state test');
+            if (combo1.getOptions().includes('Add...') && combo1.getOptions().includes('Option 1')) {
+                results.push('  ✓ Options correctly initialized');
+            } else {
+                results.push('  ✗ Options not correctly initialized');
+            }
+            
+            // Test 2: Add new option (no selection)
+            results.push('✓ Add new option test (no selection)');
+            combo1.setEntryText('New Test Option');
+            combo1.handleEnter();
+            if (combo1.getOptions().includes('New Test Option')) {
+                results.push('  ✓ New option added successfully');
+            } else {
+                results.push('  ✗ Failed to add new option');
+            }
+            
+            // Test 3: Select and replace option
+            results.push('✓ Select and replace option test');
+            combo1.selectOption(1); // Select "Option 1"
+            combo1.setEntryText('Replaced Option');
+            combo1.handleEnter();
+            if (combo1.getOptions().includes('Replaced Option')) {
+                results.push('  ✓ Option replaced successfully');
+            } else {
+                results.push('  ✗ Failed to replace option');
+            }
+            
+            // Test 4: Delete option
+            results.push('✓ Delete option test');
+            combo1.selectOption(1); // Select "Replaced Option"
+            combo1.setEntryText('');
+            combo1.handleEnter();
+            if (!combo1.getOptions().includes('Replaced Option')) {
+                results.push('  ✓ Option deleted successfully');
+            } else {
+                results.push('  ✗ Failed to delete option');
+            }
+            
+            document.getElementById('testResults').textContent = results.join('\n');
+        }
+        
+        function runAutomatedTest2() {
+            const results = [];
+            results.push('🤖 Running Automated Test 2...');
+            
+            // Test tab navigation
+            results.push('✓ Tab navigation test');
+            combo2.focus();
+            if (document.activeElement === combo2.input) {
+                results.push('  ✓ Focus works correctly');
+            } else {
+                results.push('  ✗ Focus not working');
+            }
+            
+            // Test dropdown visibility
+            results.push('✓ Dropdown visibility test');
+            combo2.showDropdown();
+            if (combo2.isDropdownVisible()) {
+                results.push('  ✓ Dropdown shows correctly');
+            } else {
+                results.push('  ✗ Dropdown not showing');
+            }
+            
+            document.getElementById('testResults').textContent = results.join('\n');
+        }
+        
+        // Initialize combo boxes
+        let combo1, combo2, combo3;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            combo1 = new CustomComboBox('combo1');
+            combo2 = new CustomComboBox('combo2');
+            combo3 = new CustomComboBox('combo3');
+            
+            // Set up mode toggle button
+            document.getElementById('mode-toggle').addEventListener('click', toggleMode);
+            
+            // Initialize in Display mode
+            updateModeButton();
+            updateAllComboBoxes();
+        });
+    </script>
+</body>
+</html>

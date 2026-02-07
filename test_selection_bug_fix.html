@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selection Bug Fix Test</title>
+    <link rel="stylesheet" href="src/prompt_manager/static/css/custom-combo-box.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .button:hover {
+            background-color: #0056b3;
+        }
+        
+        .button.secondary {
+            background-color: #6c757d;
+        }
+        
+        .button.secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .test-results {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐛 Selection Bug Fix Test</h1>
+    
+    <div class="test-container">
+        <h2>Test Combo Box</h2>
+        <div class="combo-box-container" id="combo1">
+            <input type="text" class="combo-box-input" placeholder="Select item..." id="input1">
+            <div class="combo-box-arrow" id="arrow1"></div>
+            <div class="combo-box-dropdown" id="dropdown1">
+                <div class="combo-box-option" data-value="Select item...">Select item...</div>
+            </div>
+        </div>
+        
+        <br>
+        <button class="button secondary" id="mode-toggle">Edit Mode</button>
+        <button class="button" onclick="runTests()">Run Tests</button>
+        <button class="button" onclick="resetCombo()">Reset</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test Results</h2>
+        <div class="test-results" id="testResults">No tests run yet. Click "Run Tests" to see results.</div>
+    </div>
+
+    <script src="src/prompt_manager/static/js/custom-combo-box-working.js"></script>
+    <script>
+        let combo1;
+        let isEditMode = false;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            combo1 = new CustomComboBox('combo1');
+            
+            // Set up mode toggle
+            document.getElementById('mode-toggle').addEventListener('click', function() {
+                isEditMode = !isEditMode;
+                combo1.setMode(isEditMode ? 'edit' : 'display');
+                
+                const button = document.getElementById('mode-toggle');
+                if (isEditMode) {
+                    button.textContent = 'Display Mode';
+                    button.className = 'button';
+                } else {
+                    button.textContent = 'Edit Mode';
+                    button.className = 'button secondary';
+                }
+            });
+        });
+        
+        function runTests() {
+            const results = [];
+            results.push('🧪 Running Selection Bug Fix Tests...\n');
+            
+            // Test 1: Add duplicate items
+            results.push('Test 1: Add duplicate items');
+            combo1.setMode('edit');
+            combo1.input.value = 'Test Item';
+            combo1.addOption('Test Item');
+            combo1.input.value = 'Test Item';
+            combo1.addOption('Test Item');
+            
+            const options = combo1.options.map(opt => opt.textContent);
+            const selectedCount = combo1.options.filter(opt => opt.classList.contains('selected')).length;
+            
+            results.push(`  Options: ${options.join(', ')}`);
+            results.push(`  Selected count: ${selectedCount}`);
+            results.push(`  Selected index: ${combo1.selectedIndex}`);
+            results.push(`  Selected option: ${combo1.selectedOption}`);
+            
+            if (selectedCount === 1 && combo1.selectedIndex === 2) {
+                results.push('  ✅ PASS: Only one item selected (the last added)');
+            } else {
+                results.push('  ❌ FAIL: Multiple items selected or wrong index');
+            }
+            
+            // Test 2: Click on different items
+            results.push('\nTest 2: Click on different items');
+            combo1.selectOption(1); // Select first "Test Item"
+            results.push(`  Selected index after clicking first: ${combo1.selectedIndex}`);
+            results.push(`  Selected option: ${combo1.selectedOption}`);
+            
+            combo1.selectOption(2); // Select second "Test Item"
+            results.push(`  Selected index after clicking second: ${combo1.selectedIndex}`);
+            results.push(`  Selected option: ${combo1.selectedOption}`);
+            
+            const selectedAfter = combo1.options.filter(opt => opt.classList.contains('selected')).length;
+            if (selectedAfter === 1) {
+                results.push('  ✅ PASS: Only one item selected after clicking different items');
+            } else {
+                results.push('  ❌ FAIL: Multiple items selected');
+            }
+            
+            // Test 3: Edit selected item
+            results.push('\nTest 3: Edit selected item');
+            combo1.input.value = 'Edited Item';
+            combo1.handleEnter();
+            results.push(`  Selected index after edit: ${combo1.selectedIndex}`);
+            results.push(`  Selected option: ${combo1.selectedOption}`);
+            results.push(`  Options after edit: ${combo1.options.map(opt => opt.textContent).join(', ')}`);
+            
+            const editedCount = combo1.options.filter(opt => opt.classList.contains('selected')).length;
+            if (editedCount === 1 && combo1.selectedOption === 'Edited Item') {
+                results.push('  ✅ PASS: Only edited item selected');
+            } else {
+                results.push('  ❌ FAIL: Selection not working correctly after edit');
+            }
+            
+            // Test 4: Delete selected item
+            results.push('\nTest 4: Delete selected item');
+            combo1.input.value = '';
+            combo1.handleEnter();
+            results.push(`  Selected index after delete: ${combo1.selectedIndex}`);
+            results.push(`  Selected option: ${combo1.selectedOption}`);
+            results.push(`  Options after delete: ${combo1.options.map(opt => opt.textContent).join(', ')}`);
+            
+            const deletedCount = combo1.options.filter(opt => opt.classList.contains('selected')).length;
+            if (deletedCount === 0 && combo1.selectedIndex === -1) {
+                results.push('  ✅ PASS: No items selected after delete');
+            } else {
+                results.push('  ❌ FAIL: Selection not cleared after delete');
+            }
+            
+            document.getElementById('testResults').textContent = results.join('\n');
+        }
+        
+        function resetCombo() {
+            // Clear all options except the first one
+            combo1.options.slice(1).forEach(option => option.remove());
+            combo1.options = Array.from(combo1.dropdown.querySelectorAll('.combo-box-option'));
+            combo1.selectedIndex = -1;
+            combo1.selectedOption = null;
+            combo1.input.value = '';
+            combo1.updateSelection();
+        }
+    </script>
+</body>
+</html>

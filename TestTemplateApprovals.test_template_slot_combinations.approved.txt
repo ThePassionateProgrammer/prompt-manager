@@ -1,0 +1,8 @@
+developer + create + users benefit = As a developer, I want to create so that users benefit.
+developer + create + system works better = As a developer, I want to create so that system works better.
+developer + improve + users benefit = As a developer, I want to improve so that users benefit.
+developer + improve + system works better = As a developer, I want to improve so that system works better.
+designer + create + users benefit = As a designer, I want to create so that users benefit.
+designer + create + system works better = As a designer, I want to create so that system works better.
+designer + improve + users benefit = As a designer, I want to improve so that users benefit.
+designer + improve + system works better = As a designer, I want to improve so that system works better.

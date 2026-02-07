@@ -1,0 +1,88 @@
+[
+  {
+    "name": "User Story",
+    "pattern": "As a {role}, I want to {action} so that {reason}.",
+    "slots": {
+      "role": [
+        "developer",
+        "designer",
+        "manager"
+      ],
+      "action": [
+        "create",
+        "improve",
+        "fix",
+        "optimize"
+      ],
+      "reason": [
+        "users benefit",
+        "system works better",
+        "team is efficient"
+      ]
+    }
+  },
+  {
+    "name": "Code Review",
+    "pattern": "Review this code as a {role} with focus on {aspect}.",
+    "slots": {
+      "role": [
+        "senior developer",
+        "junior developer",
+        "architect"
+      ],
+      "aspect": [
+        "security",
+        "performance",
+        "readability",
+        "best practices"
+      ]
+    }
+  },
+  {
+    "name": "Bug Report",
+    "pattern": "As a {reporter}, I found a bug in {component} that {description}.",
+    "slots": {
+      "reporter": [
+        "developer",
+        "tester",
+        "user"
+      ],
+      "component": [
+        "frontend",
+        "backend",
+        "database",
+        "API"
+      ],
+      "description": [
+        "causes crashes",
+        "shows wrong data",
+        "is too slow",
+        "doesn't work"
+      ]
+    }
+  },
+  {
+    "name": "Feature Request",
+    "pattern": "I would like to add {feature} to {component} because {benefit}.",
+    "slots": {
+      "feature": [
+        "search functionality",
+        "export feature",
+        "user authentication",
+        "dark mode"
+      ],
+      "component": [
+        "the main app",
+        "the dashboard",
+        "the settings page",
+        "the API"
+      ],
+      "benefit": [
+        "users can find things faster",
+        "data can be shared easily",
+        "accounts are secure",
+        "it's easier on the eyes"
+      ]
+    }
+  }
+]

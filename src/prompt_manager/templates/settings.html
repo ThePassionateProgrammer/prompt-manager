@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Prompt Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #1a202c;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+            color: #2d3748;
+            font-family: inherit;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #4299e1;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234299e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 20px;
+            padding-right: 45px;
+            cursor: pointer;
+        }
+
+        input[type="password"] {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #718096;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .toggle-password:hover {
+            color: #4299e1;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-back {
+            background: #718096;
+            margin-bottom: 15px;
+        }
+
+        .btn-back:hover {
+            background: #4a5568;
+        }
+
+        .saved-keys {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .saved-keys h2 {
+            font-size: 18px;
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .key-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .key-item:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .key-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .key-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .key-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .key-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 15px;
+        }
+
+        .key-status {
+            font-size: 13px;
+            color: #48bb78;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .key-status.unavailable {
+            color: #fc8181;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #48bb78;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.unavailable {
+            background: #fc8181;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .btn-delete {
+            padding: 8px 16px;
+            background: #fc8181;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            background: #f56565;
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .info-box {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            color: #2c5282;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .info-box-text {
+            color: #2c5282;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.success {
+            border-left: 4px solid #48bb78;
+        }
+
+        .notification.error {
+            border-left: 4px solid #fc8181;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="header-icon">🔐</div>
+                <h1>Settings</h1>
+                <p class="subtitle">Manage your API keys and preferences</p>
+            </div>
+
+            <button class="btn btn-back" onclick="window.location.href='/chat'">
+                ← Back to Chat
+            </button>
+
+            <div class="info-box">
+                <div class="info-box-title">🛡️ Secure Storage</div>
+                <div class="info-box-text">
+                    Your API keys are encrypted and stored locally. They never leave your device.
+                </div>
+            </div>
+
+            <form id="key-form">
+                <div class="form-group">
+                    <label for="provider">Select Provider</label>
+                    <select id="provider" required>
+                        <option value="">Choose a provider...</option>
+                        <option value="openai">OpenAI (ChatGPT)</option>
+                        <option value="anthropic">Anthropic (Claude)</option>
+                        <option value="google">Google (Gemini)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="api-key">API Key</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="password" 
+                            id="api-key" 
+                            placeholder="sk-..." 
+                            required
+                        >
+                        <button type="button" class="toggle-password" onclick="togglePassword()">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">
+                    💾 Save API Key
+                </button>
+            </form>
+
+            <div class="saved-keys" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e2e8f0;">
+                <h2>System Prompt</h2>
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <div class="info-box-title">💭 What is a system prompt?</div>
+                    <div class="info-box-text">
+                        The system prompt sets the AI's behavior and personality for all conversations.
+                    </div>
+                </div>
+                
+                <form id="system-prompt-form">
+                    <div class="form-group">
+                        <label for="system-prompt">Custom System Prompt</label>
+                        <textarea 
+                            id="system-prompt" 
+                            rows="4"
+                            style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-family: inherit; resize: vertical;"
+                            placeholder="You are a helpful assistant..."
+                        ></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn" style="flex: 1;">
+                            💾 Save System Prompt
+                        </button>
+                        <button type="button" class="btn" style="flex: 1; background: #718096;" onclick="loadDefaultSystemPrompt()">
+                            🔄 Reset to Default
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="saved-keys">
+                <h2>Saved API Keys</h2>
+                <div id="keys-list">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔑</div>
+                        <p>No API keys saved yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load saved keys and system prompt on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedKeys();
+            loadSystemPrompt();
+        });
+
+        function togglePassword() {
+            const input = document.getElementById('api-key');
+            const button = event.target;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
+        document.getElementById('key-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const provider = document.getElementById('provider').value;
+            const apiKey = document.getElementById('api-key').value;
+
+            if (!provider || !apiKey) {
+                showNotification('Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/providers/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: provider,
+                        api_key: apiKey
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification(`${provider} API key saved successfully!`, 'success');
+                    document.getElementById('provider').value = '';
+                    document.getElementById('api-key').value = '';
+                    loadSavedKeys();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Failed to save API key', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error: ' + error.message, 'error');
+            }
+        });
+
+        async function loadSavedKeys() {
+            try {
+                const response = await fetch('/api/providers/list');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayKeys(data.providers || {});
+                }
+            } catch (error) {
+                console.error('Error loading keys:', error);
+            }
+        }
+
+        function displayKeys(providers) {
+            const container = document.getElementById('keys-list');
+            
+            if (Object.keys(providers).length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔑</div>
+                        <p>No API keys saved yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            for (const [name, provider] of Object.entries(providers)) {
+                const isAvailable = provider.is_available;
+                const statusClass = isAvailable ? '' : 'unavailable';
+                const iconBg = name === 'openai' ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)' :
+                              name === 'anthropic' ? 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)' :
+                              'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)';
+                
+                html += `
+                    <div class="key-item">
+                        <div class="key-info">
+                            <div class="key-icon" style="background: ${iconBg};">
+                                ${name === 'openai' ? '🤖' : name === 'anthropic' ? '🧠' : '✨'}
+                            </div>
+                            <div class="key-details">
+                                <div class="key-name">${name.charAt(0).toUpperCase() + name.slice(1)}</div>
+                                <div class="key-status ${statusClass}">
+                                    <span class="status-dot ${statusClass}"></span>
+                                    ${isAvailable ? 'Active & Verified' : 'Unavailable'}
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-delete" onclick="deleteKey('${name}')">Delete</button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function deleteKey(provider) {
+            if (!confirm(`Are you sure you want to remove ${provider} API key?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/providers/remove/${provider}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showNotification(`${provider} API key removed successfully!`, 'success');
+                    loadSavedKeys();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Failed to remove API key', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error: ' + error.message, 'error');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // System prompt management
+        async function loadSystemPrompt() {
+            try {
+                const response = await fetch('/api/settings/system-prompt');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('system-prompt').value = data.prompt;
+                }
+            } catch (error) {
+                console.error('Error loading system prompt:', error);
+            }
+        }
+
+        async function loadDefaultSystemPrompt() {
+            try {
+                const response = await fetch('/api/settings/system-prompt/default');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('system-prompt').value = data.prompt;
+                    showNotification('System prompt reset to default', 'success');
+                }
+            } catch (error) {
+                showNotification('Error loading default prompt', 'error');
+            }
+        }
+
+        document.getElementById('system-prompt-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const prompt = document.getElementById('system-prompt').value.trim();
+
+            if (!prompt) {
+                showNotification('Please enter a system prompt', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/settings/system-prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                if (response.ok) {
+                    showNotification('System prompt saved successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Failed to save system prompt', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error: ' + error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,521 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">🤖 AI Prompt Builder</h2>
+                    <p class="text-muted mb-0">Craft powerful prompts with precision controls</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary" id="clear-form">
+                        <i class="fas fa-eraser me-1"></i>Reset
+                    </button>
+                    <button type="button" class="btn btn-success" id="send-to-chat" disabled>
+                        <i class="fas fa-rocket me-1"></i>Launch to Chat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Left Panel: Prompt Components -->
+        <div class="col-lg-8">
+            <div class="row">
+                <!-- Prompt Pieces Card -->
+                <div class="col-12 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-puzzle-piece me-2"></i>Prompt Components</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="prompt-builder-form">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="role-category" class="form-label fw-bold">🎭 Role Category</label>
+                                        <select class="form-select form-select-lg" id="role-category">
+                                            <option value="">Choose category...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="role" class="form-label fw-bold">👤 Role</label>
+                                        <select class="form-select form-select-lg" id="role" disabled>
+                                            <option value="">Choose role...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="context-category" class="form-label fw-bold">🎯 Context Category</label>
+                                        <select class="form-select form-select-lg" id="context-category">
+                                            <option value="">Choose category...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="context" class="form-label fw-bold">📋 Context</label>
+                                        <select class="form-select form-select-lg" id="context" disabled>
+                                            <option value="">Choose context...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="voice" class="form-label fw-bold">🎤 Voice/Tone</label>
+                                        <select class="form-select form-select-lg" id="voice">
+                                            <option value="">Choose voice...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="audience" class="form-label fw-bold">👥 Audience</label>
+                                        <select class="form-select form-select-lg" id="audience">
+                                            <option value="">Choose audience...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="format" class="form-label fw-bold">📝 Format</label>
+                                        <select class="form-select form-select-lg" id="format">
+                                            <option value="">Choose format...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="model" class="form-label fw-bold">🧠 AI Model</label>
+                                        <select class="form-select form-select-lg" id="model">
+                                            <option value="">Choose model...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label for="custom-text" class="form-label fw-bold">✏️ Custom Instructions</label>
+                                        <textarea class="form-control form-control-lg" id="custom-text" rows="3" 
+                                                  placeholder="Add any additional instructions or specific requirements..."></textarea>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Parameters Card -->
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>AI Parameters</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="temperature" class="form-label fw-bold">
+                                        🌡️ Temperature: <span id="temperature-value">0.7</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                                    <div class="d-flex justify-content-between small text-muted">
+                                        <span>Focused (0.0)</span>
+                                        <span>Balanced (1.0)</span>
+                                        <span>Creative (2.0)</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <label for="max-tokens" class="form-label fw-bold">
+                                        📏 Max Tokens: <span id="max-tokens-value">1000</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="max-tokens" min="100" max="4000" step="100" value="1000">
+                                    <div class="d-flex justify-content-between small text-muted">
+                                        <span>Short (100)</span>
+                                        <span>Medium (2000)</span>
+                                        <span>Long (4000)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="min-tokens" class="form-label fw-bold">
+                                        📏 Min Tokens: <span id="min-tokens-value">50</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="min-tokens" min="10" max="500" step="10" value="50">
+                                    <div class="d-flex justify-content-between small text-muted">
+                                        <span>Brief (10)</span>
+                                        <span>Standard (100)</span>
+                                        <span>Detailed (500)</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <div class="d-flex align-items-center h-100">
+                                        <button type="button" class="btn btn-primary btn-lg w-100" id="build-prompt">
+                                            <i class="fas fa-magic me-2"></i>Generate Prompt
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel: Results -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-robot me-2"></i>Generated Prompt</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div id="prompt-preview" class="border rounded p-3 bg-light flex-grow-1" style="min-height: 300px;">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-magic fa-3x mb-3"></i>
+                            <p>Your AI prompt will appear here...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-6">
+                                <button class="btn btn-outline-primary w-100" id="copy-prompt" disabled>
+                                    <i class="fas fa-copy me-1"></i>Copy
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-outline-secondary w-100" id="save-template" disabled>
+                                    <i class="fas fa-save me-1"></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let promptPieces = {};
+let currentPrompt = null;
+
+// Load prompt pieces on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadPromptPieces();
+    setupEventListeners();
+    setupSliders();
+});
+
+function loadPromptPieces() {
+    fetch('/api/prompt-builder/pieces')
+        .then(response => response.json())
+        .then(data => {
+            promptPieces = data;
+            populateDropdowns();
+        })
+        .catch(error => {
+            console.error('Error loading prompt pieces:', error);
+            showAlert('Error loading prompt pieces', 'error');
+        });
+}
+
+function populateDropdowns() {
+    // Populate role categories
+    const roleCategorySelect = document.getElementById('role-category');
+    roleCategorySelect.innerHTML = '<option value="">Choose category...</option>';
+    Object.keys(promptPieces.roles).forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+        roleCategorySelect.appendChild(option);
+    });
+    
+    // Populate context categories
+    const contextCategorySelect = document.getElementById('context-category');
+    contextCategorySelect.innerHTML = '<option value="">Choose category...</option>';
+    Object.keys(promptPieces.contexts).forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+        contextCategorySelect.appendChild(option);
+    });
+    
+    // Populate voices
+    const voiceSelect = document.getElementById('voice');
+    voiceSelect.innerHTML = '<option value="">Choose voice...</option>';
+    Object.keys(promptPieces.voices).forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice;
+        option.textContent = voice.charAt(0).toUpperCase() + voice.slice(1);
+        voiceSelect.appendChild(option);
+    });
+    
+    // Populate audiences
+    const audienceSelect = document.getElementById('audience');
+    audienceSelect.innerHTML = '<option value="">Choose audience...</option>';
+    Object.keys(promptPieces.audiences).forEach(audience => {
+        const option = document.createElement('option');
+        option.value = audience;
+        option.textContent = audience.charAt(0).toUpperCase() + audience.slice(1);
+        audienceSelect.appendChild(option);
+    });
+    
+    // Populate formats
+    const formatSelect = document.getElementById('format');
+    formatSelect.innerHTML = '<option value="">Choose format...</option>';
+    Object.keys(promptPieces.formats).forEach(format => {
+        const option = document.createElement('option');
+        option.value = format;
+        option.textContent = format.charAt(0).toUpperCase() + format.slice(1);
+        formatSelect.appendChild(option);
+    });
+    
+    // Populate models
+    const modelSelect = document.getElementById('model');
+    modelSelect.innerHTML = '<option value="">Choose model...</option>';
+    Object.keys(promptPieces.models).forEach(model => {
+        const option = document.createElement('option');
+        option.value = model;
+        option.textContent = model.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        modelSelect.appendChild(option);
+    });
+}
+
+function setupSliders() {
+    // Temperature slider
+    const temperatureSlider = document.getElementById('temperature');
+    const temperatureValue = document.getElementById('temperature-value');
+    temperatureSlider.addEventListener('input', function() {
+        temperatureValue.textContent = this.value;
+    });
+    
+    // Max tokens slider
+    const maxTokensSlider = document.getElementById('max-tokens');
+    const maxTokensValue = document.getElementById('max-tokens-value');
+    maxTokensSlider.addEventListener('input', function() {
+        maxTokensValue.textContent = this.value;
+    });
+    
+    // Min tokens slider
+    const minTokensSlider = document.getElementById('min-tokens');
+    const minTokensValue = document.getElementById('min-tokens-value');
+    minTokensSlider.addEventListener('input', function() {
+        minTokensValue.textContent = this.value;
+    });
+}
+
+function setupEventListeners() {
+    // Role category change
+    document.getElementById('role-category').addEventListener('change', function() {
+        const roleSelect = document.getElementById('role');
+        const category = this.value;
+        
+        roleSelect.innerHTML = '<option value="">Choose role...</option>';
+        roleSelect.disabled = !category;
+        
+        if (category && promptPieces.roles[category]) {
+            Object.keys(promptPieces.roles[category]).forEach(role => {
+                const option = document.createElement('option');
+                option.value = role;
+                option.textContent = role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                roleSelect.appendChild(option);
+            });
+        }
+    });
+    
+    // Context category change
+    document.getElementById('context-category').addEventListener('change', function() {
+        const contextSelect = document.getElementById('context');
+        const category = this.value;
+        
+        contextSelect.innerHTML = '<option value="">Choose context...</option>';
+        contextSelect.disabled = !category;
+        
+        if (category && promptPieces.contexts[category]) {
+            Object.keys(promptPieces.contexts[category]).forEach(context => {
+                const option = document.createElement('option');
+                option.value = context;
+                option.textContent = context.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                contextSelect.appendChild(option);
+            });
+        }
+    });
+    
+    // Build prompt button
+    document.getElementById('build-prompt').addEventListener('click', buildPrompt);
+    
+    // Clear form button
+    document.getElementById('clear-form').addEventListener('click', clearForm);
+    
+    // Copy prompt button
+    document.getElementById('copy-prompt').addEventListener('click', copyPrompt);
+    
+    // Send to chat button
+    document.getElementById('send-to-chat').addEventListener('click', sendToChat);
+    
+    // Save template button
+    document.getElementById('save-template').addEventListener('click', saveTemplate);
+}
+
+function buildPrompt() {
+    const formData = {
+        role_category: document.getElementById('role-category').value,
+        role: document.getElementById('role').value,
+        context_category: document.getElementById('context-category').value,
+        context: document.getElementById('context').value,
+        voice: document.getElementById('voice').value,
+        audience: document.getElementById('audience').value,
+        format_type: document.getElementById('format').value,
+        model: document.getElementById('model').value,
+        custom_text: document.getElementById('custom-text').value,
+        temperature: parseFloat(document.getElementById('temperature').value),
+        max_tokens: parseInt(document.getElementById('max-tokens').value),
+        min_tokens: parseInt(document.getElementById('min-tokens').value)
+    };
+    
+    fetch('/api/prompt-builder/build', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Error building prompt: ' + data.error, 'error');
+        } else {
+            currentPrompt = data;
+            displayPrompt(data);
+        }
+    })
+    .catch(error => {
+        console.error('Error building prompt:', error);
+        showAlert('Error building prompt', 'error');
+    });
+}
+
+function displayPrompt(data) {
+    const preview = document.getElementById('prompt-preview');
+    if (data.prompt) {
+        const promptHtml = `
+            <div class="mb-3">
+                <h6 class="text-success mb-2"><i class="fas fa-robot me-1"></i>Generated Prompt:</h6>
+                <pre class="bg-light p-3 rounded border">${data.prompt}</pre>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <small class="text-muted">
+                        <i class="fas fa-brain me-1"></i>Model: <strong>${data.model}</strong>
+                    </small>
+                </div>
+                <div class="col-6">
+                    <small class="text-muted">
+                        <i class="fas fa-thermometer-half me-1"></i>Temp: <strong>${data.temperature}</strong>
+                    </small>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6">
+                    <small class="text-muted">
+                        <i class="fas fa-arrows-alt-h me-1"></i>Tokens: <strong>${data.min_tokens}-${data.max_tokens}</strong>
+                    </small>
+                </div>
+            </div>
+        `;
+        preview.innerHTML = promptHtml;
+        document.getElementById('copy-prompt').disabled = false;
+        document.getElementById('send-to-chat').disabled = false;
+        document.getElementById('save-template').disabled = false;
+    } else {
+        preview.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-magic fa-3x mb-3"></i>
+                <p>Your AI prompt will appear here...</p>
+            </div>
+        `;
+        document.getElementById('copy-prompt').disabled = true;
+        document.getElementById('send-to-chat').disabled = true;
+        document.getElementById('save-template').disabled = true;
+    }
+}
+
+function clearForm() {
+    document.getElementById('prompt-builder-form').reset();
+    document.getElementById('role').disabled = true;
+    document.getElementById('context').disabled = true;
+    document.getElementById('temperature').value = 0.7;
+    document.getElementById('max-tokens').value = 1000;
+    document.getElementById('min-tokens').value = 50;
+    document.getElementById('temperature-value').textContent = '0.7';
+    document.getElementById('max-tokens-value').textContent = '1000';
+    document.getElementById('min-tokens-value').textContent = '50';
+    
+    const preview = document.getElementById('prompt-preview');
+    preview.innerHTML = `
+        <div class="text-center text-muted">
+            <i class="fas fa-magic fa-3x mb-3"></i>
+            <p>Your AI prompt will appear here...</p>
+        </div>
+    `;
+    
+    document.getElementById('copy-prompt').disabled = true;
+    document.getElementById('send-to-chat').disabled = true;
+    document.getElementById('save-template').disabled = true;
+    currentPrompt = null;
+}
+
+function copyPrompt() {
+    if (!currentPrompt) return;
+    
+    const promptText = currentPrompt.prompt;
+    navigator.clipboard.writeText(promptText).then(() => {
+        showAlert('Prompt copied to clipboard!', 'success');
+    }).catch(() => {
+        showAlert('Failed to copy prompt', 'error');
+    });
+}
+
+function sendToChat() {
+    if (!currentPrompt) return;
+    
+    const promptText = currentPrompt.prompt;
+    sessionStorage.setItem('promptToInject', promptText);
+    window.location.href = '/chat?inject=' + encodeURIComponent(promptText);
+}
+
+function saveTemplate() {
+    if (!currentPrompt) return;
+    
+    const templateName = prompt('Enter a name for this template:');
+    if (templateName) {
+        const templates = JSON.parse(localStorage.getItem('promptTemplates') || '{}');
+        templates[templateName] = currentPrompt;
+        localStorage.setItem('promptTemplates', JSON.stringify(templates));
+        showAlert('Template saved successfully!', 'success');
+    }
+}
+
+function showAlert(message, type) {
+    // Create a Bootstrap alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 3000);
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Component Test</title>
+    <link rel="stylesheet" href="src/prompt_manager/static/css/custom-combo-box.css">
+</head>
+<body>
+    <h1>Simple Component Test</h1>
+    
+    <div class="combo-box-container" id="combo1">
+        <input type="text" class="combo-box-input" placeholder="Select item..." id="input1">
+        <div class="combo-box-arrow" id="arrow1"></div>
+        <div class="combo-box-dropdown" id="dropdown1">
+            <div class="combo-box-option" data-value="Select item...">Select item...</div>
+        </div>
+    </div>
+    
+    <button onclick="testComponent()">Test Component</button>
+    <div id="results"></div>
+
+    <script src="src/prompt_manager/static/js/custom-combo-box.js"></script>
+    <script>
+        let combo1;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, creating component...');
+            try {
+                combo1 = new CustomComboBox({
+                    containerId: 'combo1',
+                    initialMode: 'display'
+                });
+                console.log('Component created successfully:', combo1);
+                document.getElementById('results').innerHTML = 'Component created successfully';
+            } catch (error) {
+                console.error('Error creating component:', error);
+                document.getElementById('results').innerHTML = 'Error: ' + error.message;
+            }
+        });
+        
+        function testComponent() {
+            if (combo1) {
+                const results = [];
+                results.push('Component exists: ' + (combo1 !== null));
+                results.push('Options count: ' + combo1.options.length);
+                if (combo1.options.length > 0) {
+                    results.push('First option text: "' + combo1.options[0].textContent + '"');
+                    results.push('First option value: "' + combo1.options[0].dataset.value + '"');
+                }
+                results.push('Current state: ' + combo1.currentState.constructor.name);
+                results.push('Mode: ' + combo1.getMode());
+                
+                document.getElementById('results').innerHTML = results.join('<br>');
+            } else {
+                document.getElementById('results').innerHTML = 'Component not created';
+            }
+        }
+    </script>
+</body>
+</html>

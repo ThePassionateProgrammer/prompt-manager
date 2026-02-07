@@ -1,0 +1,61 @@
+Step: Template Input
+Data: "As a [role], I want to [what], so that I can [why]"
+---
+Step: Parse Template
+Data: {
+  "variables": [
+    "role",
+    "what",
+    "why"
+  ]
+}
+---
+Step: Generate Dropdowns
+Data: {
+  "role": [
+    "Programmer",
+    "Chef",
+    "Soccer Coach"
+  ],
+  "what": [
+    "Write code",
+    "Shop for food",
+    "Create tests"
+  ],
+  "why": [
+    "Build better software",
+    "Cook delicious meals",
+    "Improve quality"
+  ]
+}
+---
+Step: User Selection
+Data: {
+  "role": "Programmer"
+}
+---
+Step: Context Update
+Data: {
+  "what": [
+    "Write code",
+    "Create tests",
+    "Refactor",
+    "Debug"
+  ],
+  "why": [
+    "Build better software",
+    "Solve problems",
+    "Learn new skills"
+  ]
+}
+---
+Step: Final Selection
+Data: {
+  "role": "Programmer",
+  "what": "Write code",
+  "why": "Build better software"
+}
+---
+Step: Final Prompt
+Data: "As a Programmer, I want to Write code, so that I can Build better software"
+---

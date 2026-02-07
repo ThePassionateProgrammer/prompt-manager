@@ -1,0 +1,12 @@
+Template: As a [role], I want to [what], so that I can [why]
+Selections: {'role': 'Programmer', 'what': 'Write code', 'why': 'Build better software'}
+Final Prompt: As a Programmer, I want to Write code, so that I can Build better software
+---
+Template: Review this [component] as a [reviewer]
+Selections: {'component': 'API endpoint', 'reviewer': 'Senior Developer'}
+Final Prompt: Review this API endpoint as a Senior Developer
+---
+Template: I need to [action] the [target] because [reason]
+Selections: {'action': 'fix', 'target': 'bug', 'reason': "it's causing crashes"}
+Final Prompt: I need to fix the bug because it's causing crashes
+---

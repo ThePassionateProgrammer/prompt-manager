@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4" style="max-width: 700px;">
+  <h2>LLM Chat</h2>
+  <div id="chat-history" class="border rounded p-3 mb-3 bg-light" style="height: 400px; overflow-y: auto;">
+    <!-- Chat messages will be rendered here -->
+  </div>
+  <form id="chat-form" autocomplete="off">
+    <div class="input-group">
+      <input type="text" class="form-control" id="chat-input" placeholder="Type your message..." autocomplete="off">
+      <button class="btn btn-primary" type="submit">Send</button>
+    </div>
+  </form>
+</div>
+<script>
+  // Chat history in sessionStorage
+  function getHistory() {
+    return JSON.parse(sessionStorage.getItem('chatHistory') || '[]');
+  }
+  function setHistory(history) {
+    sessionStorage.setItem('chatHistory', JSON.stringify(history));
+  }
+  function renderHistory() {
+    const history = getHistory();
+    const chatDiv = document.getElementById('chat-history');
+    chatDiv.innerHTML = '';
+    history.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = msg.role === 'user' ? 'text-end mb-2' : 'text-start mb-2';
+      div.innerHTML = `<span class="badge bg-${msg.role === 'user' ? 'primary' : 'secondary'}">${msg.role === 'user' ? 'You' : 'LLM'}</span> <span>${msg.text}</span>`;
+      chatDiv.appendChild(div);
+    });
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+  }
+  function sendMessage(text) {
+    const history = getHistory();
+    history.push({role: 'user', text});
+    setHistory(history);
+    renderHistory();
+    fetch('/api/llm/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({prompt: text})
+    })
+    .then(r => r.json())
+    .then(data => {
+      const history = getHistory();
+      history.push({role: 'llm', text: data.response || data.error || 'Error'});
+      setHistory(history);
+      renderHistory();
+    })
+    .catch(() => {
+      const history = getHistory();
+      history.push({role: 'llm', text: 'Error contacting LLM API'});
+      setHistory(history);
+      renderHistory();
+    });
+  }
+  document.getElementById('chat-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (text) {
+      sendMessage(text);
+      input.value = '';
+    }
+  });
+  // On page load, check for ?inject=...
+  function getQueryParam(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+  }
+  window.addEventListener('DOMContentLoaded', function() {
+    renderHistory();
+    const inject = getQueryParam('inject');
+    if (inject) {
+      const input = document.getElementById('chat-input');
+      input.value = inject;
+      // Optionally auto-send the injected prompt:
+      // sendMessage(inject);
+      // input.value = '';
+    }
+  });
+</script>
+{% endblock %} 

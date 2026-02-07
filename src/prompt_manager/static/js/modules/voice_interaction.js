@@ -99,22 +99,6 @@ export function initializeVoiceRecognition() {
     voiceRecognition.onresult = function(event) {
         const chatInput = document.getElementById('chat-input');
 
-        // BARGE-IN: If AI is speaking and user speaks, interrupt the AI
-        if (conversationMode && conversationMode.isActive && conversationMode.state === 'PLAYING') {
-            console.log('[Voice] Barge-in detected - interrupting AI speech');
-            // Stop the AI speech
-            IncrementalSpeech.stop();
-            voiceSynthesis.cancel();
-            isSpeaking = false;
-            // Transition to LISTENING state
-            try {
-                conversationMode.interruptPlayback();
-                showNotification('Interrupted - listening...', 'info');
-            } catch (e) {
-                console.error('Failed to interrupt playback:', e);
-            }
-        }
-
         // In hands-free mode, ANY result (interim or final) indicates ongoing speech
         // Reset the silence timer to prevent premature auto-send
         if (conversationMode && conversationMode.handsFreeModeEnabled) {
@@ -142,16 +126,11 @@ export function initializeVoiceRecognition() {
 
                 // Process transcript using TranscriptProcessor
                 if (transcriptProcessor) {
-                    console.log('[Hands-free] Processing transcript:', transcript);
-                    console.log('[Hands-free] State:', conversationMode?.state);
-
                     const processingResult = transcriptProcessor.process(transcript);
-                    console.log('[Hands-free] Processing result:', processingResult);
 
                     // Handle the action based on processing result
                     switch (processingResult.action) {
                         case 'WAKE':
-                            console.log('[Hands-free] Wake word detected - starting transcription');
                             conversationMode.onWakeWordDetected();
                             if (processingResult.message) {
                                 showNotification(processingResult.message, 'success');
@@ -160,7 +139,6 @@ export function initializeVoiceRecognition() {
                             continue;
 
                         case 'SLEEP':
-                            console.log('[Hands-free] Sleep word detected - stopping transcription');
                             conversationMode.onSleepWordDetected();
                             if (processingResult.message) {
                                 showNotification(processingResult.message, 'info');
@@ -169,7 +147,6 @@ export function initializeVoiceRecognition() {
                             continue;
 
                         case 'PAUSE':
-                            console.log('[Hands-free] Pause command detected');
                             conversationMode.pauseListening();
                             if (processingResult.message) {
                                 showNotification(processingResult.message, 'info');
@@ -178,7 +155,6 @@ export function initializeVoiceRecognition() {
                             continue;
 
                         case 'RESUME':
-                            console.log('[Hands-free] Resume command detected');
                             conversationMode.resumeListening();
                             if (processingResult.message) {
                                 showNotification(processingResult.message, 'success');
@@ -187,7 +163,6 @@ export function initializeVoiceRecognition() {
                             continue;
 
                         case 'REPEAT':
-                            console.log('[Hands-free] Repeat command detected');
                             if (lastAIResponse) {
                                 speakText(lastAIResponse);
                                 showNotification('Repeating last response...', 'info');
@@ -198,7 +173,6 @@ export function initializeVoiceRecognition() {
                             continue;
 
                         case 'TRANSCRIBE_MODE':
-                            console.log('[Hands-free] Transcribe command detected');
                             if (processingResult.message) {
                                 showNotification(processingResult.message, 'info');
                             }
@@ -206,7 +180,6 @@ export function initializeVoiceRecognition() {
                             continue;
 
                         case 'IGNORE':
-                            console.log('[Hands-free] In standby/paused mode - not transcribing');
                             processedResultIndex = i + 1;
                             continue;
 
@@ -258,13 +231,11 @@ export function initializeVoiceRecognition() {
     };
 
     voiceRecognition.onstart = function() {
-        console.log('[Hands-free] Voice recognition started, state:', conversationMode?.state);
         // Don't mark speech start here - voice recognition auto-restarts even when silent
         // Speech start should only be marked when we actually receive a transcript
     };
 
     voiceRecognition.onend = function() {
-        console.log('[Hands-free] Voice recognition ended, state:', conversationMode?.state);
         // Note: Silence checking is started in onresult after each final transcript.
         // This gives accurate 5-second timing from when user actually stopped speaking,
         // not from when Chrome's recognition session ends (~10s later).
@@ -273,16 +244,14 @@ export function initializeVoiceRecognition() {
         if (!conversationMode.isActive) {
             stopListening();
         } else {
-            // Voice recognition stopped unexpectedly in conversation mode - restart it
+            // Voice recognition stopped - restart it if we should still be listening
             if (conversationMode.shouldBeListening() && !getIsLoading()) {
-                console.log('Voice recognition ended unexpectedly, restarting...');
-                // Small delay before restarting
                 setTimeout(() => {
                     if (conversationMode.shouldBeListening() && !getIsLoading()) {
                         try {
                             voiceRecognition.start();
                         } catch (e) {
-                            console.error('Failed to restart voice recognition:', e);
+                            // Silently fail - recognition will restart next time
                         }
                     }
                 }, 300);
@@ -296,30 +265,21 @@ export function initializeVoiceRecognition() {
  */
 function startSilenceChecking() {
     if (!conversationMode || !conversationMode.handsFreeModeEnabled) {
-        console.log('[Hands-free] Not starting silence check - hands-free disabled');
         return;
     }
 
     if (!silenceCheckingService) {
-        console.log('[Hands-free] No silence checking service available');
         return;
     }
 
     // Define callback for silence detection (triggers auto-send)
     const onSilenceDetected = () => {
-        console.log('[Hands-free] Silence threshold exceeded - auto-sending message...');
         const chatInput = document.getElementById('chat-input');
         if (chatInput && chatInput.value.trim()) {
-            console.log('[Hands-free] Message content:', chatInput.value.trim());
-            // Just click send button - sendMessage() handles state transition
             const sendBtn = document.getElementById('send-btn');
             if (sendBtn) {
                 sendBtn.click();
-            } else {
-                console.error('[Hands-free] Send button not found!');
             }
-        } else {
-            console.log('[Hands-free] No message to send (empty input)');
         }
     };
 
@@ -371,14 +331,12 @@ export function toggleVoiceInput() {
  * Uses continuous mode when in conversation mode.
  */
 export function startListening() {
-    console.log('[Voice] startListening called, isListening:', isListening);
     if (!voiceRecognition) {
         showNotification('Voice recognition not available', 'error');
         return;
     }
 
     if (isListening) {
-        console.log('[Voice] startListening called but already listening, skipping');
         return;
     }
 
@@ -390,7 +348,6 @@ export function startListening() {
         processedResultIndex = 0;
 
         isListening = true;
-        console.log('[Voice] Starting listening, state:', conversationMode?.state);
         voiceRecognition.start();
 
         const voiceBtn = document.getElementById('voice-btn');
@@ -411,13 +368,11 @@ export function startListening() {
  * Stop listening for speech input.
  */
 export function stopListening() {
-    console.log('[Voice] stopListening called, isListening:', isListening);
     if (!isListening) {
         return;
     }
 
     isListening = false;
-    console.log('[Voice] Stopped listening');
 
     // Stop silence checking service
     if (silenceCheckingService) {
@@ -623,7 +578,6 @@ export function cancelSpeech() {
  */
 export function storeLastResponse(responseText) {
     lastAIResponse = responseText;
-    console.log('[Voice] Stored last AI response for repeat command');
 }
 
 // ============================================================

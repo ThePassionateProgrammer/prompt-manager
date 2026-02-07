@@ -2,18 +2,19 @@
  * Voice Settings Module
  *
  * Manages user preferences for text-to-speech and speech recognition.
- * Allows customization of voice, rate, pitch, and recognition language.
- *
  * Settings are persisted to localStorage and applied to voice interactions.
  */
 
 const STORAGE_KEY = 'voiceSettings';
 
-// Default settings
+// ============================================================
+// DEFAULT SETTINGS
+// ============================================================
+
 const defaultSettings = {
     tts: {
-        rate: 1.0,          // Speech rate: 0.1 to 10
-        pitch: 1.0,         // Voice pitch: 0 to 2
+        rate: 1.0,          // Speech rate: 0.5 to 2
+        pitch: 1.0,         // Voice pitch: 0.5 to 2
         volume: 1.0,        // Volume: 0 to 1
         voice: null,        // Voice name (null = system default)
         lang: 'en-US'       // Language code
@@ -21,180 +22,136 @@ const defaultSettings = {
     stt: {
         lang: 'en-US',      // Recognition language
         continuous: true,   // Continuous recognition in conversation mode
-        interimResults: false  // Show interim results
+        interimResults: false
     }
 };
 
-// Current settings (loaded from storage or defaults)
-// Deep copy to avoid mutation of defaultSettings
+// Current settings (deep copy to avoid mutation)
 let settings = {
     tts: { ...defaultSettings.tts },
     stt: { ...defaultSettings.stt }
 };
 
+// ============================================================
+// INITIALIZATION & PERSISTENCE
+// ============================================================
+
 /**
- * Initialize voice settings module.
- * Loads settings from localStorage.
+ * Initialize voice settings module. Loads settings from localStorage.
  */
 export function initializeVoiceSettings() {
     loadSettings();
 }
 
-/**
- * Load settings from localStorage.
- */
 function loadSettings() {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
-        console.log('[VoiceSettings] Loading from localStorage:', stored);
         if (stored) {
             const parsed = JSON.parse(stored);
             settings = {
                 tts: { ...defaultSettings.tts, ...parsed.tts },
                 stt: { ...defaultSettings.stt, ...parsed.stt }
             };
-            console.log('[VoiceSettings] Loaded settings:', settings);
-        } else {
-            console.log('[VoiceSettings] No stored settings, using defaults');
         }
     } catch (error) {
-        console.error('Error loading voice settings:', error);
-        settings = { ...defaultSettings };
+        console.error('[VoiceSettings] Error loading:', error);
+        settings = {
+            tts: { ...defaultSettings.tts },
+            stt: { ...defaultSettings.stt }
+        };
     }
 }
 
-/**
- * Save settings to localStorage.
- */
 function saveSettings() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
-        console.error('Error saving voice settings:', error);
+        console.error('[VoiceSettings] Error saving:', error);
     }
 }
 
-/**
- * Get current TTS settings.
- *
- * @returns {Object} TTS settings
- */
+// ============================================================
+// GETTERS & SETTERS
+// ============================================================
+
 export function getTTSSettings() {
-    console.log('[VoiceSettings] getTTSSettings called, returning:', settings.tts);
     return { ...settings.tts };
 }
 
-/**
- * Get current STT (speech recognition) settings.
- *
- * @returns {Object} STT settings
- */
 export function getSTTSettings() {
     return { ...settings.stt };
 }
 
-/**
- * Update TTS settings.
- *
- * @param {Object} newSettings - New TTS settings (partial)
- */
 export function updateTTSSettings(newSettings) {
-    console.log('[VoiceSettings] Updating TTS settings with:', newSettings);
     settings.tts = { ...settings.tts, ...newSettings };
-    console.log('[VoiceSettings] New TTS settings:', settings.tts);
     saveSettings();
 }
 
-/**
- * Update STT settings.
- *
- * @param {Object} newSettings - New STT settings (partial)
- */
 export function updateSTTSettings(newSettings) {
     settings.stt = { ...settings.stt, ...newSettings };
     saveSettings();
 }
 
-/**
- * Reset all settings to defaults.
- */
 export function resetToDefaults() {
     settings = JSON.parse(JSON.stringify(defaultSettings));
     saveSettings();
 }
 
+// ============================================================
+// VOICE UTILITIES
+// ============================================================
+
 /**
- * Get available voices from the browser.
- *
- * @returns {Promise<Array>} Array of available voices
+ * Get available voices from the browser (async - voices load lazily).
  */
 export function getAvailableVoices() {
     return new Promise((resolve) => {
         let voices = speechSynthesis.getVoices();
-
         if (voices.length > 0) {
             resolve(voices);
         } else {
-            // Voices may load asynchronously
             speechSynthesis.onvoiceschanged = () => {
-                voices = speechSynthesis.getVoices();
-                resolve(voices);
+                resolve(speechSynthesis.getVoices());
             };
         }
     });
 }
 
 /**
- * Get voices filtered by language.
- *
- * @param {string} lang - Language code (e.g., 'en-US')
- * @returns {Promise<Array>} Filtered voices
- */
-export async function getVoicesForLanguage(lang) {
-    const voices = await getAvailableVoices();
-    return voices.filter(voice => voice.lang === lang);
-}
-
-/**
  * Apply TTS settings to a SpeechSynthesisUtterance.
- *
- * @param {SpeechSynthesisUtterance} utterance - Utterance to configure
  */
 export async function applyTTSSettings(utterance) {
-    const ttsSettings = getTTSSettings();
+    const tts = getTTSSettings();
 
-    utterance.rate = ttsSettings.rate;
-    utterance.pitch = ttsSettings.pitch;
-    utterance.volume = ttsSettings.volume;
-    utterance.lang = ttsSettings.lang;
+    utterance.rate = tts.rate;
+    utterance.pitch = tts.pitch;
+    utterance.volume = tts.volume;
+    utterance.lang = tts.lang;
 
-    // Apply selected voice if specified
-    if (ttsSettings.voice) {
+    if (tts.voice) {
         const voices = await getAvailableVoices();
-        const selectedVoice = voices.find(v => v.name === ttsSettings.voice);
-        if (selectedVoice) {
-            utterance.voice = selectedVoice;
+        const voice = voices.find(v => v.name === tts.voice);
+        if (voice) {
+            utterance.voice = voice;
         }
     }
 }
 
 /**
  * Apply STT settings to a SpeechRecognition instance.
- *
- * @param {SpeechRecognition} recognition - Recognition instance to configure
  */
 export function applySTTSettings(recognition) {
-    const sttSettings = getSTTSettings();
-
-    recognition.lang = sttSettings.lang;
-    recognition.interimResults = sttSettings.interimResults;
-    // Note: continuous mode is managed by conversation mode state
+    const stt = getSTTSettings();
+    recognition.lang = stt.lang;
+    recognition.interimResults = stt.interimResults;
 }
 
+// ============================================================
+// SETTINGS UI
+// ============================================================
+
 /**
- * Create a settings UI panel (returns HTML element).
- *
- * @returns {HTMLElement} Settings panel element
+ * Create a settings UI panel.
  */
 export function createSettingsPanel() {
     const panel = document.createElement('div');
@@ -223,7 +180,7 @@ export function createSettingsPanel() {
             <div class="setting-item">
                 <label for="tts-voice">Voice:</label>
                 <select id="tts-voice">
-                    <option value="">Default</option>
+                    <option value="">System Default</option>
                 </select>
             </div>
         </div>
@@ -239,10 +196,6 @@ export function createSettingsPanel() {
                     <option value="es-ES" ${settings.stt.lang === 'es-ES' ? 'selected' : ''}>Spanish</option>
                     <option value="fr-FR" ${settings.stt.lang === 'fr-FR' ? 'selected' : ''}>French</option>
                     <option value="de-DE" ${settings.stt.lang === 'de-DE' ? 'selected' : ''}>German</option>
-                    <option value="it-IT" ${settings.stt.lang === 'it-IT' ? 'selected' : ''}>Italian</option>
-                    <option value="pt-BR" ${settings.stt.lang === 'pt-BR' ? 'selected' : ''}>Portuguese (BR)</option>
-                    <option value="ja-JP" ${settings.stt.lang === 'ja-JP' ? 'selected' : ''}>Japanese</option>
-                    <option value="zh-CN" ${settings.stt.lang === 'zh-CN' ? 'selected' : ''}>Chinese (Simplified)</option>
                 </select>
             </div>
         </div>
@@ -253,22 +206,14 @@ export function createSettingsPanel() {
         </div>
     `;
 
-    // Set up event listeners
     setupSettingsListeners(panel);
-
-    // Load available voices
     loadVoicesIntoSelect(panel);
 
     return panel;
 }
 
-/**
- * Set up event listeners for settings panel.
- *
- * @param {HTMLElement} panel - Settings panel element
- */
 function setupSettingsListeners(panel) {
-    // TTS Rate
+    // Rate slider
     const rateSlider = panel.querySelector('#tts-rate');
     const rateValue = panel.querySelector('#tts-rate-value');
     rateSlider.addEventListener('input', (e) => {
@@ -277,7 +222,7 @@ function setupSettingsListeners(panel) {
         updateTTSSettings({ rate: value });
     });
 
-    // TTS Pitch
+    // Pitch slider
     const pitchSlider = panel.querySelector('#tts-pitch');
     const pitchValue = panel.querySelector('#tts-pitch-value');
     pitchSlider.addEventListener('input', (e) => {
@@ -286,7 +231,7 @@ function setupSettingsListeners(panel) {
         updateTTSSettings({ pitch: value });
     });
 
-    // TTS Volume
+    // Volume slider
     const volumeSlider = panel.querySelector('#tts-volume');
     const volumeValue = panel.querySelector('#tts-volume-value');
     volumeSlider.addEventListener('input', (e) => {
@@ -295,138 +240,65 @@ function setupSettingsListeners(panel) {
         updateTTSSettings({ volume: value });
     });
 
-    // TTS Voice
-    const voiceSelect = panel.querySelector('#tts-voice');
-    voiceSelect.addEventListener('change', (e) => {
+    // Voice select
+    panel.querySelector('#tts-voice').addEventListener('change', (e) => {
         updateTTSSettings({ voice: e.target.value || null });
     });
 
-    // STT Language
-    const langSelect = panel.querySelector('#stt-lang');
-    langSelect.addEventListener('change', (e) => {
+    // Language select
+    panel.querySelector('#stt-lang').addEventListener('change', (e) => {
         updateSTTSettings({ lang: e.target.value });
+        // Reload voices for new language
+        loadVoicesIntoSelect(panel);
     });
 
     // Reset button
-    const resetBtn = panel.querySelector('#reset-voice-settings');
-    resetBtn.addEventListener('click', () => {
+    panel.querySelector('#reset-voice-settings').addEventListener('click', () => {
         resetToDefaults();
-        // Recreate panel to reflect defaults
         const newPanel = createSettingsPanel();
         panel.replaceWith(newPanel);
     });
 
     // Test button
-    const testBtn = panel.querySelector('#test-voice-settings');
-    testBtn.addEventListener('click', async () => {
+    panel.querySelector('#test-voice-settings').addEventListener('click', async () => {
         const utterance = new SpeechSynthesisUtterance('This is a test of the current voice settings.');
         await applyTTSSettings(utterance);
         speechSynthesis.speak(utterance);
     });
 }
 
-/**
- * Check if a voice is high-quality (enhanced, premium, or neural).
- *
- * @param {SpeechSynthesisVoice} voice - Voice to check
- * @returns {boolean} True if voice is high-quality
- */
+// ============================================================
+// VOICE LIST HELPERS
+// ============================================================
+
 function isHighQualityVoice(voice) {
     const name = voice.name.toLowerCase();
-    const indicators = [
-        'enhanced', 'premium', 'neural', 'natural',
-        'wavenet', 'studio', 'online', 'compact'
-    ];
-    return indicators.some(indicator => name.includes(indicator));
+    return ['enhanced', 'premium', 'neural', 'natural', 'wavenet', 'studio'].some(
+        indicator => name.includes(indicator)
+    );
 }
 
-/**
- * Get a quality label for a voice.
- *
- * @param {SpeechSynthesisVoice} voice - Voice to check
- * @returns {string} Quality indicator string
- */
 function getVoiceQualityLabel(voice) {
     const name = voice.name.toLowerCase();
-    if (name.includes('neural') || name.includes('wavenet')) return '✨ Neural';
-    if (name.includes('enhanced') || name.includes('premium')) return '⭐ Enhanced';
-    if (name.includes('natural')) return '🎯 Natural';
-    if (voice.localService === false) return '☁️ Cloud';
+    if (name.includes('neural') || name.includes('wavenet')) return '✨';
+    if (name.includes('enhanced') || name.includes('premium')) return '⭐';
+    if (name.includes('natural')) return '🎯';
     return '';
 }
 
-/**
- * Group voices by language.
- *
- * @param {Array<SpeechSynthesisVoice>} voices - Array of voices
- * @returns {Object} Voices grouped by language code
- */
-function groupVoicesByLanguage(voices) {
-    const groups = {};
-    voices.forEach(voice => {
-        const langCode = voice.lang.split('-')[0]; // 'en-US' -> 'en'
-        if (!groups[langCode]) {
-            groups[langCode] = [];
-        }
-        groups[langCode].push(voice);
-    });
-    return groups;
-}
-
-/**
- * Get language display name from code.
- *
- * @param {string} langCode - Language code (e.g., 'en')
- * @returns {string} Display name
- */
-function getLanguageDisplayName(langCode) {
-    const names = {
-        'en': 'English',
-        'es': 'Spanish',
-        'fr': 'French',
-        'de': 'German',
-        'it': 'Italian',
-        'pt': 'Portuguese',
-        'ja': 'Japanese',
-        'zh': 'Chinese',
-        'ko': 'Korean',
-        'ru': 'Russian',
-        'ar': 'Arabic',
-        'hi': 'Hindi',
-        'nl': 'Dutch',
-        'pl': 'Polish',
-        'sv': 'Swedish',
-        'da': 'Danish',
-        'no': 'Norwegian',
-        'fi': 'Finnish'
-    };
-    return names[langCode] || langCode.toUpperCase();
-}
-
-/**
- * Load available voices into the voice select dropdown.
- * Only shows voices matching the current language setting.
- * Highlights high-quality voices.
- *
- * @param {HTMLElement} panel - Settings panel element
- */
 async function loadVoicesIntoSelect(panel) {
     const voiceSelect = panel.querySelector('#tts-voice');
     const voices = await getAvailableVoices();
-    const currentLang = settings.tts.lang; // e.g., 'en-US'
-    const currentLangPrefix = currentLang.split('-')[0]; // e.g., 'en'
+    const langPrefix = settings.tts.lang.split('-')[0]; // 'en-US' -> 'en'
 
-    // Clear existing options
+    // Clear and add default
     voiceSelect.innerHTML = '<option value="">System Default</option>';
 
-    // Filter voices to only show those matching current language
-    const matchingVoices = voices.filter(voice => {
-        const voiceLangPrefix = voice.lang.split('-')[0];
-        return voiceLangPrefix === currentLangPrefix;
-    });
+    // Filter to current language only
+    const matching = voices.filter(v => v.lang.split('-')[0] === langPrefix);
 
-    // Sort voices: high-quality first, then alphabetically by name
-    const sortedVoices = [...matchingVoices].sort((a, b) => {
+    // Sort: high-quality first, then alphabetically
+    const sorted = [...matching].sort((a, b) => {
         const aHQ = isHighQualityVoice(a);
         const bHQ = isHighQualityVoice(b);
         if (aHQ && !bHQ) return -1;
@@ -434,43 +306,33 @@ async function loadVoicesIntoSelect(panel) {
         return a.name.localeCompare(b.name);
     });
 
-    // Add high-quality voices first as a special group
-    const highQualityVoices = sortedVoices.filter(isHighQualityVoice);
-    if (highQualityVoices.length > 0) {
-        const hqGroup = document.createElement('optgroup');
-        hqGroup.label = '⭐ High Quality Voices';
-        highQualityVoices.forEach(voice => {
+    // Add high-quality voices
+    const hqVoices = sorted.filter(isHighQualityVoice);
+    if (hqVoices.length > 0) {
+        const group = document.createElement('optgroup');
+        group.label = '⭐ High Quality';
+        hqVoices.forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.name;
-            const qualityLabel = getVoiceQualityLabel(voice);
-            option.textContent = `${voice.name} ${qualityLabel}`;
-            if (voice.name === settings.tts.voice) {
-                option.selected = true;
-            }
-            hqGroup.appendChild(option);
+            option.textContent = `${voice.name} ${getVoiceQualityLabel(voice)}`;
+            option.selected = voice.name === settings.tts.voice;
+            group.appendChild(option);
         });
-        voiceSelect.appendChild(hqGroup);
+        voiceSelect.appendChild(group);
     }
 
-    // Add remaining standard voices
-    const standardVoices = sortedVoices.filter(v => !isHighQualityVoice(v));
-    if (standardVoices.length > 0) {
-        const stdGroup = document.createElement('optgroup');
-        stdGroup.label = 'Standard Voices';
-
-        standardVoices.forEach(voice => {
+    // Add standard voices
+    const stdVoices = sorted.filter(v => !isHighQualityVoice(v));
+    if (stdVoices.length > 0) {
+        const group = document.createElement('optgroup');
+        group.label = 'Standard';
+        stdVoices.forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
-            if (voice.name === settings.tts.voice) {
-                option.selected = true;
-            }
-            stdGroup.appendChild(option);
+            option.selected = voice.name === settings.tts.voice;
+            group.appendChild(option);
         });
-
-        voiceSelect.appendChild(stdGroup);
+        voiceSelect.appendChild(group);
     }
-
-    // Show count of available voices for this language
-    console.log(`[VoiceSettings] Loaded ${matchingVoices.length} voices for ${currentLang}`);
 }

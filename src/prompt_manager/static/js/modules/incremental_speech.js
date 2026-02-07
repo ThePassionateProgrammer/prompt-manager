@@ -1,13 +1,12 @@
 /**
  * Incremental Speech Module
+ * Version: 2024-02-06-v2
  *
  * Enables speaking text as it streams in, rather than waiting for the complete response.
  * Buffers incoming text and speaks complete sentences as they're detected.
- *
- * Dependencies:
- * - VoiceSettings module for TTS configuration
- * - Browser speechSynthesis API
  */
+
+console.log('[IncrementalSpeech] Module loaded - version 2024-02-06-v2');
 
 import * as VoiceSettings from './voice_settings.js';
 

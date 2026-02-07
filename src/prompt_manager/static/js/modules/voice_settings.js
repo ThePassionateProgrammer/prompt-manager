@@ -1,9 +1,12 @@
 /**
  * Voice Settings Module
+ * Version: 2024-02-06-v2
  *
  * Manages user preferences for text-to-speech and speech recognition.
  * Settings are persisted to localStorage and applied to voice interactions.
  */
+
+console.log('[VoiceSettings] Module loaded - version 2024-02-06-v2');
 
 const STORAGE_KEY = 'voiceSettings';
 
